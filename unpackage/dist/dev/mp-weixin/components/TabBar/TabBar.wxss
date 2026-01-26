@@ -1,0 +1,35 @@
+
+.tabbar.data-v-43a9aa84 {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 100rpx;
+  background-color: #ffffff;
+  border-top: 1px solid #e5e5e5;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  box-shadow: 0 -2rpx 10rpx rgba(0, 0, 0, 0.1);
+  z-index: 999;
+/* 适配 iPhone 底部安全区 */
+padding-bottom: env(safe-area-inset-bottom);
+}
+.tabbar-item.data-v-43a9aa84 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 20rpx;
+  height: 100%;
+}
+.tab-icon.data-v-43a9aa84 {
+  width: 48rpx;
+  height: 48rpx;
+  margin-bottom: 6rpx;
+}
+.tab-text.data-v-43a9aa84 {
+  font-size: 28rpx;
+  color: #333333;
+}
+

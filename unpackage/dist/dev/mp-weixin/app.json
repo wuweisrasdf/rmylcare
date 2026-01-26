@@ -1,0 +1,20 @@
+{
+  "pages": [
+    "pages/me/me",
+    "pages/me/profile",
+    "pages/agreement/privacy",
+    "pages/agreement/agreement",
+    "pages/index/index",
+    "pages/login/login",
+    "pages/order/order",
+    "pages/order/detail"
+  ],
+  "subPackages": [],
+  "window": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "智数健管",
+    "navigationBarBackgroundColor": "#ffffff",
+    "backgroundColor": "#f5f5f5"
+  },
+  "usingComponents": {}
+}
