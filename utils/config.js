@@ -1,4 +1,4 @@
 export default {
-	baseUrl:"https://xxx/api",
+	baseUrl:"http://47.94.145.40:8080",
 	imgUrl:"https://xxx/",
 }

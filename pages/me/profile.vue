@@ -1,89 +1,96 @@
 <template>
-  <view class="container">
-
-    <scroll-view scroll-y class="main-content">
-      <!-- 头像区域 -->
-      <view class="profile-item" @click="changeAvatar">
-        <text class="label">头像</text>
-        <view class="right">
-          <image 
-            class="avatar" 
-            :src="userAvatar" 
-            mode="aspectFill"
-          />
-          <u-icon name="arrow-right" size="28" color="#c0c4cc"></u-icon>
-        </view>
-      </view>
-
-      <!-- 姓名（微信昵称） -->
-	<view class="profile-item">
-	  <text class="label">姓名</text>
-	  <view class="right">
-		<text class="value">{{ wechatName || '未获取' }}</text>
-		<button 
-			v-if="!wechatName"
-		      class="mini-auth-btn"
-		      @click="handleGetUserInfo"
-		    >
-		      获取
-		</button>
-		
+  <view class="container" :style="{ paddingTop: containerPaddingTop }">
+	<u-navbar
+	  :fixed="true"
+	  :autoBack="true"
+	  title="个人中心"
+	  leftIconSize="36" leftIconColor="#2C2C2C"
+	  :titleStyle="{ fontWeight: 'bold', fontSize: '36rpx', color: '#2C2C2C' }"
+	>
+	</u-navbar>
+	
+	<view class="user-info-container">
+	    <!-- 姓名 -->
+	    <view class="list-item" @click="handleGetUserInfo">
+	      <view class="item-left">
+	        <image class="icon" src="/static/icons/user.png" mode="aspectFill"></image>
+	        <text class="label">姓名</text>
+	      </view>
+	      <view class="item-right">
+	        <text class="value">{{ formData.userName || '未获取' }}</text>
+	        <text class="arrow">></text>
+	      </view>
+	    </view>
+	
+	    <!-- 昵称 -->
+	    <view class="list-item" @click="editNickname">
+	      <view class="item-left">
+	        <image class="icon" src="/static/icons/nickname.png" mode="aspectFill"></image>
+	        <text class="label">昵称</text>
+	      </view>
+	      <view class="item-right">
+	        <text class="value">{{ formData.nickName || '未设置' }}</text>
+	        <text class="arrow">></text>
+	      </view>
+	    </view>
+	
+	    <!-- 手机号 -->
+	    <view class="list-item" @click="editMobile">
+	      <view class="item-left">
+	        <image class="icon" src="/static/icons/phone.png" mode="aspectFill"></image>
+	        <text class="label">手机号</text>
+	      </view>
+	      <view class="item-right">
+	        <text class="value">{{ formData.phonenumber || '未绑定' }}</text>
+	        <text class="arrow">></text>
+	      </view>
+	    </view>
+	
+	    <!-- 邮箱 -->
+	    <view class="list-item" @click="editEmail">
+	      <view class="item-left">
+	        <image class="icon" src="/static/icons/email.png" mode="aspectFill"></image>
+	        <text class="label">邮箱</text>
+	      </view>
+	      <view class="item-right">
+	        <text class="value">{{ formData.email || '未绑定' }}</text>
+	        <text class="arrow">></text>
+	      </view>
+	    </view>
+	
+	    <!-- 隐私政策 -->
+	    <view class="list-item" @click="viewPrivacy">
+	      <view class="item-left">
+	        <image class="icon" src="/static/icons/privacy.png" mode="aspectFill"></image>
+	        <text class="label">隐私政策</text>
+	      </view>
+	      <view class="item-right">
+	        <text class="arrow">></text>
+	      </view>
+	    </view>
+	
+	    <!-- 用户服务协议 -->
+	    <view class="list-item" @click="viewAgreement">
+	      <view class="item-left">
+	        <image class="icon" src="/static/icons/agreement.png" mode="aspectFill"></image>
+	        <text class="label">用户服务协议</text>
+	      </view>
+	      <view class="item-right">
+	        <text class="arrow">></text>
+	      </view>
+	    </view>
+	
+	    <!-- 退出 -->
+	    <view class="list-item" @click="logout">
+	      <view class="item-left">
+	        <image class="icon" src="/static/icons/logout.png" mode="aspectFill"></image>
+	        <text class="label">退出</text>
+	      </view>
+	      <view class="item-right">
+	        <text class="arrow">></text>
+	      </view>
+	    </view>
 	  </view>
-	</view>
-
-      <!-- 昵称 -->
-      <view class="profile-item" @click="editNickname">
-        <text class="label">昵称</text>
-        <view class="right">
-          <text class="value">{{ formData.nickname || '未设置' }}</text>
-          <u-icon name="arrow-right" size="28" color="#c0c4cc"></u-icon>
-        </view>
-      </view>
-
-      <!-- 手机号 -->
-      <view class="profile-item" @click="editMobile">
-        <text class="label">手机号</text>
-        <view class="right">
-          <text class="value">{{ formData.mobile || '未绑定' }}</text>
-          <u-icon name="arrow-right" size="28" color="#c0c4cc"></u-icon>
-        </view>
-      </view>
-
-      <!-- 邮箱 -->
-      <view class="profile-item" @click="editEmail">
-        <text class="label">邮箱</text>
-        <view class="right">
-          <text class="value">{{ formData.email || '未绑定' }}</text>
-          <u-icon name="arrow-right" size="28" color="#c0c4cc"></u-icon>
-        </view>
-      </view>
-
-      <!-- 分割线 -->
-      <view class="divider"></view>
-
-      <!-- 隐私政策 -->
-      <view class="profile-item" @click="viewPrivacy">
-        <text class="label">隐私政策</text>
-        <u-icon name="arrow-right" size="28" color="#c0c4cc"></u-icon>
-      </view>
-
-      <!-- 用户协议 -->
-      <view class="profile-item" @click="viewAgreement">
-        <text class="label">用户服务协议</text>
-        <u-icon name="arrow-right" size="28" color="#c0c4cc"></u-icon>
-      </view>
-
-      <!-- 分割线 -->
-      <view class="divider"></view>
-
-      <!-- 登录/退出按钮 -->
-      <view class="profile-item" @click="toggleLogin">
-        <text class="label logout">{{ isLogin ? '退出登录' : '立即登录' }}</text>
-      </view>
-    </scroll-view>
-
-    <!-- 底部占位 -->
-    <view style="height: 120rpx;"></view>
 
     <!-- uView 2 组件 -->
     <u-toast ref="uToast" />
@@ -144,36 +151,32 @@
 </template>
 
 <script>
+import * as api from '@/utils/api.js'
 import { mapState } from 'vuex'
 
 export default {
   computed: {
-    ...mapState(['user', 'token']),
-    isLogin() {
-      return !!this.token && this.user
-    },
-    userAvatar() {
-      if (this.localAvatar) return this.localAvatar; // 优先使用本地选择的头像
-      if (this.user?.avatar) {
-        // 如果是完整 URL 直接用，否则拼接（根据你后端返回格式调整）
-        return this.user.avatar.startsWith('http') 
-          ? this.user.avatar 
-          : 'https://' + this.user.avatar;
-      }
-      return '/static/images/avatar-placeholder.png';
-    },
-    wechatName() {
-      return this.wechatNickname || this.user?.wechat_nickname || this.user?.nickname || '';
-    }
+	...mapState({
+		user: state => state.user,
+		token: state => state.token
+	}),
+
+	// 计算容器顶部内边距（转为 rpx）
+	containerPaddingTop() {
+	  // CustomBar 是 px，uni-app 中 1px = 2rpx
+	  const barHeight = (this.CustomBar || 0) * 2 + 'rpx';
+	  console.log(barHeight)
+	  return barHeight;
+	}
   },
   data() {
     return {
       formData: {
-        nickname: '',
-        mobile: '',
-        email: ''
+		userName: '', // 微信姓名
+        nickName: '', // 昵称
+        phonenumber: '', // 电话
+        email: '' // 邮箱
       },
-	  localAvatar: '',
 	  // 微信昵称（临时）
 	   wechatNickname: '',
       // 昵称
@@ -193,33 +196,56 @@ export default {
   methods: {
     initData() {
       if (this.user) {
-        this.formData.nickname = this.user.nickname || '';
-        this.formData.mobile = this.user.mobile || '';
+		this.formData.userName = this.user.userName || '';
+        this.formData.nickName = this.user.nickName || '';
+        this.formData.phonenumber = this.user.phonenumber || '';
         this.formData.email = this.user.email || '';
 		
 		// 重置本地状态
-		this.localAvatar = '';
 		this.wechatNickname = '';
+		this.tempNickname = '';
+		this.tempMobile = '';
+		this.tempEmail = '';
       }
     },
 
-    // ========== 功能方法（占位，无真实 API 调用）==========
 	handleGetUserInfo() {
-	  console.log('点击获取用户信息');
-	  
-	  // 先检查是否支持
-	  if (typeof uni.getUserProfile === 'function') {
-		this.useUniGetUserProfile();
-	  } else if (wx.getUserProfile) {
-		// 使用微信原生 API
-		this.useWxGetUserProfile();
+	  // 判断是否有已存在的微信姓名
+	  const hasUserName = this.user && this.user.userName;
+	
+	  if (!hasUserName) {
+	    // 没有姓名：直接获取，不弹确认框
+	    console.log('当前无微信姓名，直接获取...');
+	    this._triggerGetUserProfile();
 	  } else {
-		// 都不支持，提示升级
-		uni.showModal({
-		  title: '提示',
-		  content: '当前微信版本过低，请升级微信后重试',
-		  showCancel: false
-		});
+	    // 已有姓名：弹出确认框，询问是否重新获取
+	    uni.showModal({
+	      title: '提示',
+	      content: '是否获取微信姓名？',
+	      confirmText: '确定',
+	      cancelText: '取消',
+	      success: (res) => {
+	        if (res.confirm) {
+	          console.log('用户同意重新获取微信姓名');
+	          this._triggerGetUserProfile();
+	        }
+	      }
+	    });
+	  }
+	},
+	
+	// 抽离获取逻辑，避免重复代码
+	_triggerGetUserProfile() {
+	  if (typeof uni.getUserProfile === 'function') {
+	    this.useUniGetUserProfile();
+	  } else if (wx && typeof wx.getUserProfile === 'function') {
+	    this.useWxGetUserProfile();
+	  } else {
+	    uni.showModal({
+	      title: '提示',
+	      content: '当前微信版本过低，请升级微信后重试',
+	      showCancel: false
+	    });
 	  }
 	},
 	
@@ -231,8 +257,8 @@ export default {
 	      console.log('uni.getUserProfile 成功:', res);
 	      const { nickName, avatarUrl } = res.userInfo;
 	      this.wechatNickname = nickName;
-	      //this.localAvatar = avatarUrl;
-		  this.saveUserInfo(nickName);
+		  this.formData.userName = this.wechatNickname
+		  this.saveUserInfo({userName: this.wechatNickname});
 	      
 	      uni.showToast({
 	        title: '获取成功',
@@ -249,44 +275,63 @@ export default {
 	  });
 	},
 	
-
-	saveUserInfo(nickName) {
-	    // 这里调用你的API接口
-	    console.log('保存用户信息到后端:', nickName);
-	    
-		// 2. 【占位】提交到后端保存（重要！）
-		// TODO: 调用你的更新接口，例如：
-		// this.$http.post('/api/user/update', {
-		//   nickname: nickName,
-		//   avatar: avatarUrl
-		// }).then(res => {
-		//   // 成功后更新 Vuex 的 user 数据
-		//   this.$store.commit('UPDATE_USER', { nickname: nickName, avatar: avatarUrl });
-		// });
-	  },
-
-    changeAvatar() {
-		uni.chooseImage({
-			count: 1,
-			sizeType: ['compressed'],
-			sourceType: ['album', 'camera'],
-			success: (res) => {
-			  const tempFilePath = res.tempFilePaths[0];
-			  // 立即更新本地预览
-			  this.localAvatar = tempFilePath;
-			  console.log('【已选头像】本地路径:', tempFilePath);
-			  // TODO: 调用上传接口，成功后 dispatch updateUserInfo
-			},
-			fail: (err) => {
-			  console.error('选择头像失败', err);
+	// 保存用户信息
+	async saveUserInfo(options) {
+		
+		const params = {
+			userId: this.user.userId, 
+			userName: options.userName || this.user.userName,
+			//phonenumber: options.phonenumber || this.user.phonenumber,
+			//email: options.email || this.user.email,
+			//"password": "87654321",
+		};
+		
+		// 修改手机号
+		// if (options.phonenumber) {
+		// 	params.phonenumber = options.phonenumber;
+		// }
+		
+		// 修改邮箱
+		if (options.email) {
+			params.email = options.email;
+		}
+		
+		// // 修改姓名
+		// if (options.userName) {
+		// 	params.userName = options.userName;
+		// }
+		
+		// 修改昵称
+		// if (options.nickName) {
+		// 	params.nickName = options.nickName;
+		// }
+		
+		try {
+			const res = await api.updateUser(params);
+			
+			if (res.code == 200) {
+				this.updateUserInfo();
 			}
-		});
-    },
+		} catch(err) {
+			console.log('err',err);
+			uni.showToast({ title: '网络错误', icon: 'none' });
+		}
+	},
+	// 更新用户信息
+	async updateUserInfo(){
+		const res = await api.getUserDetail();
+		if (res.code == 200) {
+			const user = res.user;
+			this.$store.dispatch('updateUserInfo',{user});
+			
+			uni.showToast({ title: '更新成功', icon: 'success' });
+		}
+		console.log("获取用户信息失败")
+	},
 
     // --- 昵称 ---
     editNickname() {
-		console.log('【点击昵称】准备打开弹窗')
-      this.tempNickname = this.formData.nickname;
+      this.tempNickname = this.formData.nickName;
       this.showNicknameModal = true;
     },
     confirmNickname() {
@@ -295,10 +340,9 @@ export default {
         uni.showToast({ title: '昵称不能为空', icon: 'none' });
         return;
       }
-      this.formData.nickname = val;
+      this.formData.nickName = val;
       this.showNicknameModal = false;
-      console.log('【待提交】昵称:', this.formData.nickname);
-      // TODO: 调用 updateUser 接口
+	  this.saveUserInfo({nickName: this.formData.nickName});
     },
 
     // --- 手机号 ---
@@ -318,10 +362,9 @@ export default {
         uni.showToast({ title: '手机号格式不正确', icon: 'none' });
         return;
       }
-      this.formData.mobile = val;
+      this.formData.phonenumber = val;
       this.showMobileModal = false;
-      console.log('【待提交】手机号:', this.formData.mobile);
-      // TODO: 跳转到验证码验证页 或 调用绑定接口
+      this.saveUserInfo({phonenumber: this.formData.phonenumber});
     },
 
     // --- 邮箱 ---
@@ -343,140 +386,117 @@ export default {
       }
       this.formData.email = val;
       this.showEmailModal = false;
-      console.log('【待提交】邮箱:', this.formData.email);
-      // TODO: 调用绑定邮箱接口（通常需发送验证码）
+      this.saveUserInfo({email: this.formData.email});
     },
 
     viewPrivacy() {
-      console.log('【占位】跳转隐私政策页面');
       uni.navigateTo({ url: '/pages/agreement/privacy' });
     },
 
     viewAgreement() {
-      console.log('【占位】跳转用户协议页面');
       uni.navigateTo({ url: '/pages/agreement/agreement' });
     },
 
-    toggleLogin() {
-      if (this.isLogin) {
-        // 退出登录
-        this.$store.dispatch('logout');
-        uni.showToast({ title: '已退出登录', icon: 'success' });
-        // 清空本地状态
-		this.localAvatar = '';
-		this.wechatNickname = '';
-		this.formData = { nickname: '', mobile: '', email: '' };
-		// 返回首页
-		setTimeout(() => {
-		  uni.redirectTo({ url: '/pages/login/login' });
-		}, 1000);
-      } else {
-        // 跳转登录页
-        uni.redirectTo({ url: '/pages/login/login' });
-      }
-    }
+    logout() {
+	  uni.showModal({
+	    title: '提示',
+	    content: '确定退出吗？',
+	    confirmText: '确定',
+	    cancelText: '取消',
+	    success: (res) => {
+	      if (res.confirm) {
+	        this._logout();
+	      }
+	    }
+	  });
+    },
+	async _logout(){
+		const res = await api.logout('');
+		if (res.code == 200) {
+			  this.$store.dispatch('logout');
+			  uni.showToast({ title: '已退出登录', icon: 'success' });
+			  // 返回首页
+			  setTimeout(() => {
+				uni.reLaunch({ url: '/pages/login/login' });
+			  }, 1000);
+		}
+	}
   }
 };
 </script>
 
 <style lang="scss" scoped>
 .container {
-  background-color: #f5f5f5;
+  background-color: #ffffff;
+  /* 使用 padding-bottom 为 TabBar 留出空间 */
+  padding: 0rpx 26rpx 180rpx;
   min-height: 100vh;
+  box-sizing: border-box; /* 确保 padding 包含在 100vh 内 */
 }
 
-/* 自定义导航栏 */
-.custom-nav {
+.user-info-container {
+  background: #F5F5F7;
+  border-radius: 40rpx;
+  margin-top: 96rpx;
+  padding: 0rpx 48rpx;
+}
+
+.list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 36rpx 0;
+  position: relative;
+
+  &:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 2rpx;
+    background: #ACACAC;
+    opacity: 0.2;
+  }
+}
+
+.item-left {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  height: 88rpx; /* 状态栏(44px) + 导航栏(44px) ≈ 88rpx */
-  padding: 0 30rpx;
-  background-color: #ffffff;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.05);
-  position: sticky;
-  top: 0;
-  z-index: 999;
+  gap: 30rpx;
 }
 
-.nav-title {
-  font-size: 36rpx;
-  font-weight: 600;
-  color: #333333;
-}
-
-.main-content {
-  padding: 20rpx 0;
-}
-
-.profile-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 32rpx 30rpx;
-  background-color: #ffffff;
-  margin: 0 20rpx 20rpx;
-  border-radius: 16rpx;
-  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.03);
+.icon {
+  width: 38rpx;
+  height: 38rpx;
 }
 
 .label {
+  font-weight: bold;
   font-size: 32rpx;
-  color: #333333;
-  font-weight: 500;
+  color: #000000;
 }
 
-.logout {
-  color: #ff3b30;
-}
-
-.right {
+.item-right {
   display: flex;
   align-items: center;
-  gap: 16rpx;
+  gap: 10rpx;
+  justify-content: flex-end;
 }
 
 .value {
-  font-size: 30rpx;
-  color: #999999;
-  max-width: 300rpx;
-  text-align: right;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-weight: 500;
+  font-size: 28rpx;
+  color: #ACACAC;
+  line-height: 58rpx;
 }
 
-.avatar {
-  width: 80rpx;
-  height: 80rpx;
-  border-radius: 50%;
-  background-color: #f0f0f0;
+.arrow {
+  font-weight: 400;
+  font-size: 36rpx;
+  color: #161421;
+  line-height: 58rpx;
+  opacity: 0.5;
 }
 
-.divider {
-  height: 20rpx;
-  background-color: #f5f5f5;
-  margin: 20rpx 0;
-}
-
-// 小型授权按钮样式
-.mini-auth-btn {
-  width: auto;
-  height: 48rpx;
-  min-width: 80rpx;
-  padding: 0 16rpx;
-  font-size: 24rpx;
-  line-height: 48rpx;
-  color: #fff;
-  background-color: #5ac725;;
-  border: 1rpx solid #5ac725;;
-  border-radius: 8rpx;
-  outline: none;
-  box-shadow: none;
-  -webkit-tap-highlight-color: transparent;
-
-  // 关键：清除微信 button 默认边框
-  &::after {
-    border: none;
-  }
-}
 </style>

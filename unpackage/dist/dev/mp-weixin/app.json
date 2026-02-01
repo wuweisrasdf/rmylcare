@@ -1,20 +1,30 @@
 {
   "pages": [
-    "pages/me/me",
-    "pages/me/profile",
+    "pages/order/order",
+    "pages/order/detail",
+    "pages/index/init",
+    "pages/index/index",
+    "pages/sign/guide",
+    "pages/sign/form",
+    "pages/sign/auth",
+    "pages/sign/agreement",
+    "pages/sign/confirm-price",
+    "pages/sign/signature",
+    "pages/sign/pay",
+    "pages/sign/success",
     "pages/agreement/privacy",
     "pages/agreement/agreement",
-    "pages/index/index",
     "pages/login/login",
-    "pages/order/order",
-    "pages/order/detail"
+    "pages/me/profile",
+    "pages/me/me"
   ],
   "subPackages": [],
   "window": {
     "navigationBarTextStyle": "black",
     "navigationBarTitleText": "智数健管",
     "navigationBarBackgroundColor": "#ffffff",
-    "backgroundColor": "#f5f5f5"
+    "backgroundColor": "#f5f5f5",
+    "navigationStyle": "custom"
   },
   "usingComponents": {}
 }

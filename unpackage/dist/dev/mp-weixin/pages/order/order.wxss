@@ -1,0 +1,166 @@
+@charset "UTF-8";
+/**
+ * 这里是uni-app内置的常用样式变量
+ *
+ * uni-app 官方扩展插件及插件市场（https://ext.dcloud.net.cn）上很多三方插件均使用了这些样式变量
+ * 如果你是插件开发者，建议你使用scss预处理，并在插件代码中直接使用这些变量（无需 import 这个文件），方便用户通过搭积木的方式开发整体风格一致的App
+ *
+ */
+/**
+ * 如果你是App开发者（插件使用者），你可以通过修改这些变量来定制自己的插件主题，实现自定义主题功能
+ *
+ * 如果你的项目同样使用了scss预处理，你也可以直接在你的 scss 代码中使用如下变量，同时无需 import 这个文件
+ */
+/* 颜色变量 */
+/* 行为相关颜色 */
+/* 文字基本颜色 */
+/* 背景颜色 */
+/* 边框颜色 */
+/* 尺寸变量 */
+/* 文字尺寸 */
+/* 图片尺寸 */
+/* Border Radius */
+/* 水平间距 */
+/* 垂直间距 */
+/* 透明度 */
+/* 文章场景相关 */
+.container.data-v-127632e4 {
+  background-color: #F5F5F5;
+  /* 使用 padding-bottom 为 TabBar 留出空间 */
+  padding: 0rpx 26rpx 180rpx 26rpx;
+  /* bottom padding >= TabBar高度(100rpx) + 安全区(～40rpx) */
+  min-height: 100vh;
+  box-sizing: border-box;
+  /* 确保 padding 包含在 100vh 内 */
+}
+.content-container.data-v-127632e4 {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+}
+.tab-switch.data-v-127632e4 {
+  display: flex;
+  gap: 26rpx;
+  margin: 60rpx  0;
+  padding: 16rpx 0;
+}
+.tab-item.data-v-127632e4 {
+  width: 160rpx;
+  height: 60rpx;
+  background: #FFFFFF;
+  border-radius: 28rpx;
+  font-weight: bold;
+  font-size: 26rpx;
+  color: #AEAEAE;
+  text-align: center;
+  line-height: 60rpx;
+}
+.tab-item.active.data-v-127632e4 {
+  background: #EDEFF7;
+  border: 2px solid #A4AFDE;
+  color: #4A63E4;
+}
+.order-card.data-v-127632e4 {
+  padding: 36rpx 20rpx;
+  margin-bottom: 40rpx;
+  background: #FFFFFF;
+  box-shadow: 0rpx 10rpx 26rpx 0rpx rgba(0, 88, 133, 0.08);
+  border-radius: 40rpx;
+  position: relative;
+}
+.header.data-v-127632e4 {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 46rpx;
+}
+.name.data-v-127632e4 {
+  font-weight: bold;
+  font-size: 32rpx;
+  color: #2C2C2C;
+  position: relative;
+  padding-left: 18rpx;
+}
+.name.data-v-127632e4::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  -webkit-transform: translateY(-50%);
+          transform: translateY(-50%);
+  width: 6rpx;
+  height: 28rpx;
+  background: #4A63E4;
+  border-radius: 3rpx;
+}
+.status-tag.data-v-127632e4 {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 162rpx;
+  height: 62rpx;
+  z-index: 10;
+}
+.status-bg.data-v-127632e4 {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.status-text.data-v-127632e4 {
+  position: absolute;
+  top: 36%;
+  left: 50%;
+  -webkit-transform: translate(-50%, -50%);
+          transform: translate(-50%, -50%);
+  font-size: 24rpx;
+  font-weight: bold;
+  white-space: nowrap;
+  text-align: center;
+  pointer-events: none;
+}
+/* 严格按照你的规范设置颜色 */
+.status-tag.signed .status-text.data-v-127632e4 {
+  color: #2449FF;
+  /* 已签约 */
+}
+.status-tag.unsigned .status-text.data-v-127632e4 {
+  color: #00A9E8;
+  /* 未签约 */
+}
+.status-tag.unbound .status-text.data-v-127632e4 {
+  color: #FF9C00;
+  /* 已解约 */
+}
+.info-row.data-v-127632e4 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  /* 两等分 */
+  gap: 20rpx;
+  /* 列间距 */
+  padding-left: 18rpx;
+  margin-bottom: 20rpx;
+}
+.field.data-v-127632e4 {
+  display: flex;
+  align-items: center;
+  /* 垂直居中 */
+  min-height: 56rpx;
+  /* 与原 line-height 一致 */
+}
+.label.data-v-127632e4 {
+  font-weight: bold;
+  font-size: 26rpx;
+  color: #969696;
+  min-width: 120rpx;
+  /* 固定 label 宽度，确保对齐 */
+  white-space: nowrap;
+}
+.value.data-v-127632e4 {
+  font-weight: bold;
+  font-size: 26rpx;
+  color: #969696;
+  flex: 1;
+  padding-left: 12rpx;
+  word-break: break-all;
+}
+

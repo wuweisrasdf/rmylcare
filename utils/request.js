@@ -1,6 +1,57 @@
 import $store from '@/store/index.js';
 import $C from '@/utils/config.js';
 
+// 错误码处理策略表（集中管理）
+const ERROR_HANDLERS = {
+  401: {
+    message: '登录状态过期，请重新登录',
+    action: 'logoutAndRedirect'
+  },
+  402: {
+    message: '账号异常，请重新登录',
+    action: 'logoutAndRedirect'
+  },
+  403: {
+    message: '没有操作权限',
+    action: 'toastOnly'
+  },
+  404: {
+    message: '请求地址错误',
+    action: 'toastOnly'
+  },
+  500: {
+    message: '服务器开小差了',
+    action: 'toastOnly'
+  }
+};
+
+// 执行登出并跳转
+function handleLogoutAndRedirect() {
+  $store.dispatch('logout');
+  setTimeout(() => {
+    uni.reLaunch({ url: '/pages/login/login' });
+  }, 3000);
+}
+
+// 统一错误处理器
+function handleError(result, options) {
+  const code = result.data.code;
+  const handler = ERROR_HANDLERS[code] || { message: '请求失败', action: 'toastOnly' };
+  const msg = result.data.msg || handler.message;
+
+  if (options.toast !== false) {
+    uni.showToast({ title: msg, icon: 'none', duration: 3000 });
+  }
+
+  if (handler.action === 'logoutAndRedirect') {
+    console.log(`触发登出 (code: ${code})`);
+   // handleLogoutAndRedirect();
+  }
+
+  return new Error(msg);
+}
+
+
 export default {
     // 全局配置
     common:{
@@ -45,7 +96,7 @@ export default {
 				options.header.Authorization = 'Bearer ' + token 
 			}
 			 
-			console.info('token',token)
+			//console.info('token',token)
 			 
             // 请求中...
             uni.request({
@@ -55,9 +106,8 @@ export default {
                     if(options.native){
                         return resolve(result)
                     }
-					console.log('result',result);
+					//console.log('result',result);
                     
-					// 服务端失败 
 					// HTTP 层错误（如 404, 500）					
 					if (result.statusCode !== 200) {
 						const msg = result.data?.data || '服务端失败';
@@ -81,65 +131,9 @@ export default {
 						return resolve(result.data);
 					}
 					
-					const msg = result.data.msg || '请求失败';
-					
-					// 业务错误处理
-					switch (result.data.code) {
-						case 401: // 用于后台接口控制账号是否重新登录
-							uni.showToast({
-								title: '登录状态过期，请重新登录',
-								icon: 'none',
-								duration: 3000
-							});
-						
-							console.log('未登录 或者token过期');
-							$store.dispatch('logout')
-							
-							// 延迟跳转（确保状态清理完成）
-							setTimeout(() => {
-								uni.reLaunch({ // 使用 reLaunch 避免后退回到旧页面
-								  url: '/pages/login/login'
-								});
-							}, 3000);
-							
-							return reject(new Error(msg));
-						case 402:
-							  uni.showToast({ title: msg || '账号异常，请重新登录', icon: 'none', duration: 3000 });
-							  console.log('账号异常');
-							  
-							  $store.dispatch('logout'); // 登出
-							  
-							  setTimeout(() => {
-								uni.reLaunch({ url: '/pages/login/login' });
-							  }, 3000);
-							  
-							  return reject(new Error(msg));
-						case 403:
-							if (options.toast !== false) {
-								uni.showToast({ title: msg || '没有操作权限', icon: 'none' });
-							}
-							return reject(new Error(msg));
-						case 404:
-							  console.log('接口不存在');
-							  if (options.toast !== false) {
-								uni.showToast({ title: msg || '请求地址错误', icon: 'none' });
-							  }
-							  return reject(new Error(msg));
-
-						case 500:
-						  console.log('服务器内部错误');
-						  if (options.toast !== false) {
-							uni.showToast({ title: msg || '服务器开小差了', icon: 'none' });
-						  }
-						  return reject(new Error(msg));
-
-						default: // 其他业务错误
-						  if (options.toast !== false) {
-							uni.showToast({ title: msg, icon: 'none' });
-						  }
-						  return reject(new Error(msg));
-					  }
-					
+				    // 业务错误
+				    const error = handleError(result, options);
+				    return reject(error);
                 },
                 fail: (error) => {
                     uni.showToast({ title: error.errMsg || '请求失败', icon: 'none' });

@@ -1,1 +1,1 @@
-<view> 这是隐私政策页 </view>
+<view class="container" style="{{'padding-top:'+(containerPaddingTop)+';'}}"><u-navbar vue-id="1689486c-1" fixed="{{true}}" autoBack="{{true}}" title="隐私政策" leftIconSize="36" leftIconColor="#2C2C2C" titleStyle="{{({fontWeight:'bold',fontSize:'36rpx',color:'#2C2C2C'})}}" bind:__l="__l"></u-navbar></view>

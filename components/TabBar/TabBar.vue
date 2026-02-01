@@ -1,6 +1,10 @@
 <template>
   <view class="tabbar">
-    <view class="tabbar-item" v-for="(item, index) in tabList" :key="index" @click="handleTabClick(index)">
+    <view class="tabbar-item" 
+		:class="{ 'active': currentTab === index }"
+		v-for="(item, index) in tabList" 
+		:key="index" 
+		@click="handleTabClick(index)">
       <image :src="currentTab === index ? item.selectedIcon : item.icon" mode="widthFix" class="tab-icon"></image>
       <text class="tab-text">{{ item.name }}</text>
     </view>
@@ -69,13 +73,12 @@ export default {
   bottom: 0;
   left: 0;
   right: 0;
-  height: 100rpx;
+  height: 140rpx;
   background-color: #ffffff;
   border-top: 1px solid #e5e5e5;
   display: flex;
   justify-content: space-around;
   align-items: center;
-  box-shadow: 0 -2rpx 10rpx rgba(0, 0, 0, 0.1);
   z-index: 999;
 /* 适配 iPhone 底部安全区 */
 padding-bottom: env(safe-area-inset-bottom);
@@ -91,13 +94,19 @@ padding-bottom: env(safe-area-inset-bottom);
 }
 
 .tab-icon {
-  width: 48rpx;
-  height: 48rpx;
-  margin-bottom: 6rpx;
+  width: 40rpx;
+  height: 40rpx;
+  margin-bottom: 22rpx;
+  margin-top:22rpx;
 }
 
 .tab-text {
-  font-size: 28rpx;
-  color: #333333;
+  font-size: 32rpx;
+  color: #727272; /* 默认颜色为未激活状态的颜色 */
+  font-weight: bold;
+}
+
+.tabbar-item.active .tab-text {
+  color: #4A63E2; /* 激活状态的颜色 */
 }
 </style>

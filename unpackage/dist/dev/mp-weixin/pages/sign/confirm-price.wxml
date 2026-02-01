@@ -1,0 +1,1 @@
+<view class="container data-v-3ad39263"><text class="title data-v-3ad39263">合同信息</text><view class="info data-v-3ad39263"><text class="data-v-3ad39263">签署人：张三</text><text class="data-v-3ad39263">金额：9999.00 元</text></view><button type="primary" data-event-opts="{{[['tap',[['startSign',['$event']]]]]}}" bindtap="__e" class="data-v-3ad39263">立即签署</button></view>

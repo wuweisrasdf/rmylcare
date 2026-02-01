@@ -1,0 +1,1 @@
+<view class="container data-v-6beddec2"><web-view style="width:100vw;height:100vh;" src="{{decodedSignUrl}}" data-event-opts="{{[['message',[['onMessage',['$event']]]]]}}" bindmessage="__e" class="data-v-6beddec2"></web-view></view>

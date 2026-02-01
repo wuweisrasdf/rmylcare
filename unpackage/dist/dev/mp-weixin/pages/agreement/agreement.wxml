@@ -1,1 +1,1 @@
-<view> 这是协议页 </view>
+<view class="container" style="{{'padding-top:'+(containerPaddingTop)+';'}}"><u-navbar vue-id="2e6491aa-1" fixed="{{true}}" autoBack="{{true}}" title="用户服务协议" leftIconSize="36" leftIconColor="#2C2C2C" titleStyle="{{({fontWeight:'bold',fontSize:'36rpx',color:'#2C2C2C'})}}" bind:__l="__l"></u-navbar></view>

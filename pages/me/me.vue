@@ -1,8 +1,20 @@
 <template>
-  <view class="my-page">
+  <view class="container" :style="{ paddingTop: containerPaddingTop }">
+	<u-navbar
+	  :fixed="true"
+	  title="我的"
+	  :titleStyle="{ fontWeight: 'bold', fontSize: '36rpx', color: '#2C2C2C' }"
+	  :autoBack="false"
+	>
+	  <view slot="left"></view>
+	</u-navbar>
+	
     <!-- 头像区域 -->
-    <view class="avatar-container">
-      <image class="avatar" :src="userAvatar" mode="aspectFill"></image>
+    <view class="avatar-container" @click="changeAvatar">
+		  <view v-if="!userAvatar" class="default-avatar" :style="{ width: '168rpx', height: '168rpx' }">
+			  <text class="avatar-text">头像</text>
+		  </view>
+		  <image v-else class="avatar" :src="userAvatar" mode="aspectFill"></image>
     </view>
 
     <!-- 功能卡片区域 -->
@@ -16,7 +28,7 @@
 			<text class="card-desc">实时查看订单进度</text>
 		  </view>
 		</view>
-        <image class="arrow-right" src="/static/icons/arrow-right.png" mode="aspectFill"></image>
+        <text class="arrow-right">></text>
       </view>
 
       <!-- 个人中心 -->
@@ -28,18 +40,18 @@
             <text class="card-desc">管理个人信息</text>
           </view>
         </view>
-        <image class="arrow-right" src="/static/icons/arrow-right.png" mode="aspectFill"></image>
+        <text class="arrow-right">></text>
       </view>
     </view>
 
     <!-- 温馨提示区域 -->
     <view class="notice-container">
-      <view class="notice-header">
-        <image class="notice-icon" src="/static/icons/notice.png" mode="aspectFill"></image>
-        <text class="notice-title">温馨提示</text>
-      </view>
+		<view class="notice-header">
+			<view class="notice-icon"></view>
+			<text class="notice-title">温馨提示</text>
+		</view>
 
-	<text class="notice-text">如有任何问题，请联系客服团队。我们随时准备为您服务。</text>
+		<view class="notice-text">如有任何问题，请联系客服团队。我们随时准备为您服务。</view>
 
     </view>
 
@@ -80,18 +92,25 @@
 		    
 		    // 计算属性：返回有效的头像URL
 		    userAvatar() {
-		      // 检查 user 是否存在，以及 avatar 字段是否有有效值
-		      if (this.user && this.user.avatar) {
-		        // 如果 avatar 是一个完整的 URL (http/https)，直接返回
-		        if (this.user.avatar.startsWith('http')) {
-		          return this.user.avatar;
-		        }
-		        // 如果 avatar 是一个相对路径（可能性小），也返回
-		        return this.user.avatar;
-		      }
-		      // 否则，返回默认头像
-		      return '/static/images/avatar-placeholder.png';
-		    }
+				// 检查 user 是否存在，以及 avatar 字段是否有有效值
+			   if (this.user && this.user.avatar) {
+				 // 如果 avatar 是一个完整的 URL (http/https)，直接返回
+				 if (this.user.avatar.startsWith('http')) {
+				   return this.user.avatar;
+				 }
+				 // 如果 avatar 是一个相对路径（可能性小），也返回
+				 return this.user.avatar;
+			   }
+			   // 否则，返回 null 表示没有头像
+			   return null;
+		    },
+			// 计算容器顶部内边距（转为 rpx）
+			containerPaddingTop() {
+			  // CustomBar 是 px，uni-app 中 1px = 2rpx
+			  const barHeight = (this.CustomBar || 0) * 2 + 'rpx';
+			  console.log(barHeight)
+			  return barHeight;
+			}
 		  },
 		data() {
 			return {
@@ -113,16 +132,35 @@
 				uni.navigateTo({
 					url : "/pages/order/order"
 				})
+			},
+			
+			// 更换头像
+			changeAvatar() {
+				uni.chooseImage({
+					count: 1,
+					sizeType: ['compressed'],
+					sourceType: ['album', 'camera'],
+					success: (res) => {
+					  const tempFilePath = res.tempFilePaths[0];
+					  // 立即更新本地预览
+					  const localAvatar = tempFilePath;
+					  console.log('【已选头像】本地路径:', tempFilePath);
+					  // TODO: 调用上传接口，成功后 dispatch updateUserInfo
+					},
+					fail: (err) => {
+					  console.error('选择头像失败', err);
+					}
+				});
 			}
 		}
 
 	};
 </script>
 <style lang="scss" scoped>
-	.my-page {
-	  background-color: #f5f5f5;
+	.container {
+	  background-color: #ffffff;
 	  /* 使用 padding-bottom 为 TabBar 留出空间 */
-	  padding: 40rpx 30rpx 140rpx; /* bottom padding >= TabBar高度(100rpx) + 安全区(～40rpx) */
+	  padding: 0rpx 26rpx 180rpx 26rpx; /* bottom padding >= TabBar高度(100rpx) + 安全区(～40rpx) */
 	  min-height: 100vh;
 	  box-sizing: border-box; /* 确保 padding 包含在 100vh 内 */
 	}
@@ -130,7 +168,27 @@
 	.avatar-container {
 	  display: flex;
 	  justify-content: center;
-	  margin-bottom: 60rpx;
+	  padding-bottom: 94rpx;
+	  background-color: #ffffff;
+	  margin-top:78rpx;
+	 //padding-top: 78rpx;
+	}
+	
+	.default-avatar {
+	  width: 168rpx;
+	  height: 168rpx;
+	  background: #161421;
+	  border-radius: 50%;
+	  display: flex;
+	  align-items: center;
+	  justify-content: center;
+	
+	  .avatar-text {
+	    font-weight: 500;
+	    font-size: 36rpx;
+	    color: #F2F4FA;
+	    line-height: 72rpx;
+	  }
 	}
 	
 	.avatar {
@@ -142,19 +200,17 @@
 	}
 		
 	.cards-container {
-	  padding: 0 30rpx;
-	  margin-bottom: 40rpx;
+	  // padding: 0 30rpx;
+	  // margin-bottom: 40rpx;
 	}
 	
 	.card-item {
 	  display: flex;
 	  align-items: center;
-
-	  background-color: white;
-	  border-radius: 16rpx;
-	  padding: 30rpx 24rpx;
+	  padding: 40rpx 42rpx;
 	  margin-bottom: 24rpx;
-	  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.04);
+	  background: #F2F4FA;
+	  border-radius: 40rpx;
 	}
 	
 	
@@ -166,11 +222,9 @@
 	}
 		
 	.card-icon {
-	  width: 86rpx;
-	  height: 86rpx;
-	  border-radius: 16rpx;
-	  background-color: #e8f4ff;
-	  margin-right: 20rpx;
+	  width: 68rpx;
+	  height: 68rpx;
+	  margin-right: 40rpx;
 	}
 	
 	.card-content {
@@ -179,61 +233,68 @@
 	}
 	
 	.card-title {
-	  font-size: 28rpx;
-	  color: #333333;
-	  font-weight: 500;
-	  line-height: 1.4;
+	  font-weight: bold;
+	  font-size: 36rpx;
+	  color: #000000;
+	  line-height: 1.2;
 	}
 	
 	.card-desc {
-	  font-size: 24rpx;
-	  color: #999999;
-	  margin-top: 4rpx;
+	  font-weight: 500;
+	  font-size: 26rpx;
+	  color: #676767;
+	  line-height: 1.2;
+	  margin-top:24rpx;
 	}
 	
 	.arrow-right {
-	  width: 32rpx;
-	  height: 32rpx;
+	  font-weight: 400;
+	  font-size: 36rpx;
+	  color: #161421;
 	  opacity: 0.5;
-	  flex-shrink: 0;
+	  flex-shrink: 0; /* 不允许被压缩 */
 	  margin-left: 16rpx;
+	  align-self: center; /* ← 关键！强制垂直居中 */
+	  line-height: 1; /* 避免额外行高影响 */
 	}
 	
 	.notice-container {
-	  background-color: #f0f8f0;
-	  border-radius: 16rpx;
-	  margin: 0 30rpx 40rpx;
-	  padding: 28rpx 24rpx;
+	  margin-top:88rpx;
 	}
 	
 	.notice-header {
 	  display: flex;
+	  flex-direction: row;
 	  align-items: center;
-	  margin-bottom: 16rpx;
+	  margin-bottom: 0;
 	}
 	
 	.notice-icon {
-	  width: 32rpx;
-	  height: 32rpx;
-	  margin-right: 12rpx;
+		width: 6rpx;
+		height: 28rpx;
+		background: #4A63E4;
+		border-radius: 3rpx;
 	}
 	
 	.notice-title {
-	  font-size: 28rpx;
-	  color: #333333;
-	  font-weight: 500;
+		font-weight: bold;
+		font-size: 32rpx;
+		color: #2C2C2C;
+		margin-left:20rpx;
 	}
 		
 	.notice-text {
-	  font-size: 26rpx;
-	  color: #666666;
-	  line-height: 1.5;
+		font-weight: bold;
+		font-size: 26rpx;
+		color: #5B5B5B;
+		margin-left:20rpx;
+		margin-top: 44rpx;
 	}
 	
 	.bottom-buttons {
 	  display: flex;
-	  justify-content: space-between;
-	  padding: 0 30rpx;
+
+	  margin-top: 104rpx;
 	  gap: 20rpx;
 	}
 	
@@ -241,28 +302,27 @@
 	  display: flex;
 	  flex-direction: column;
 	  align-items: center;
-	  background-color: white;
-	  border-radius: 16rpx;
-	  padding: 32rpx 20rpx;
+	  background: #F2F4FA;
+	  border-radius: 26rpx;
+	  padding: 46rpx 0 28rpx;
 	  flex: 1;
 	  min-width: 0;
+	  
+
 	}
 	
 	.button-number {
-	  font-size: 32rpx;
-	  font-weight: 700;
-	  color: #007aff;
-	  margin-bottom: 8rpx;
-	}
-	
-	.button-item:nth-child(2) .button-number {
-	  color: #07c160 !important; // 微信绿或可自定义绿色
+		font-weight: bold;
+		font-size: 44rpx;
+		color: #4A63E2;
+		line-height: 52rpx;
 	}
 	
 	.button-label {
-	  font-size: 26rpx;
-	  color: #999999;
-	  margin-top: 4rpx;
+		font-weight: bold;
+		font-size: 28rpx;
+		color: #161421;
+		margin-top:24rpx;
 	}
 	
 </style>

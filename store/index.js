@@ -39,6 +39,9 @@ export default new Vuex.Store({
 	modules:{
 		appx
 	},
+	getters: {
+		isLogined: (state) => !!state.token,
+	},
 	// state 全局数据
 	state:{
 		user:null,
@@ -48,6 +51,7 @@ export default new Vuex.Store({
 	},
 	// 所有状态变更必须通过 mutations
 	// 通过 commit 调用 mutation
+	// storage 通过 saveAuthToStorage
 	mutations: {
 		SET_AUTH(state, { user, token, role }) {
 		  state.user = user
@@ -61,6 +65,9 @@ export default new Vuex.Store({
 		},
 		SET_USER(state, user) {
 		  state.user = user
+		},
+		SET_TOKEN(state, token) {
+		  state.token = token
 		}
 	},
 	 // actions的每一个函数，都将 Vuex.Store对象的上下文，作为第一个参数， {state} 从上下文环境中解构出 state
@@ -113,40 +120,26 @@ export default new Vuex.Store({
 	    },
 	
 	    // 登录
-	    login({ commit }, options) {
-	      const { data } = options
-	      const user = data
-	      const token = data.wx_token || '' //按照接口实际返回数据更改
-	      const role = data.role || ''
-	
-	      commit('SET_AUTH', { user, token, role })
-	      saveAuthToStorage({ user, token, role })
-	
-	      // 如果需要 openid 检查，可在此处返回标识
-	      // if (!user.wx_openid) {
-	      //   return { needWxLogin: true }
-	      // }
-	
-	      if (typeof options.callback === 'function') {
-	        options.callback()
-	      }
-	
-	      return { success: true }
-	    },
+		login({ commit },options){
+			if (!options?.user) return
+			
+			const user = options.user
+			const token = uni.getStorageSync('token') // 从本地缓存中获取token
+			const role = '' // TODO 从user中获取role
+			
+			commit('SET_AUTH', { user, token, role })
+			saveAuthToStorage({ user, token, role })
+		},
 	
 	    // 更新用户信息
 	    updateUserInfo({ commit, state }, options) {
-	      if (!options?.user) return
+	      if (!options?.user) return false;
 	
 	      const user = options.user
 	      commit('SET_USER', user)
 	      saveAuthToStorage({ user, token: state.token, role: state.role })
 	
-	      console.log('updateUserInfo', user)
-	      if (typeof options.callback === 'function') {
-	        console.log('callback')
-	        options.callback()
-	      }
+	      return true;
 	    }
 	  }
 })
