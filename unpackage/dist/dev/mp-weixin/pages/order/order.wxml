@@ -1,1 +1,0 @@
-<view class="container"><tab-bar vue-id="3c50aaa2-1" current-tab="{{currentTab}}" bind:__l="__l"></tab-bar></view>
