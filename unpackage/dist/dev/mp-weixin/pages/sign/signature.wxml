@@ -1,1 +1,0 @@
-<view class="container data-v-6beddec2"><web-view style="width:100vw;height:100vh;" src="{{decodedSignUrl}}" class="data-v-6beddec2"></web-view><view class="tip data-v-6beddec2">签署完成后请返回</view></view>

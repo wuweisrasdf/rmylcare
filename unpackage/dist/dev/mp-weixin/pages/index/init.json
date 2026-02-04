@@ -1,7 +1,0 @@
-{
-  "navigationBarTitleText": "启动页",
-  "navigationStyle": "custom",
-  "usingComponents": {
-    "u-loading-page": "/node-modules/uview-ui/components/u-loading-page/u-loading-page"
-  }
-}

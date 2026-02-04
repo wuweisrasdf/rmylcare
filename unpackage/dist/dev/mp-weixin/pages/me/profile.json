@@ -1,9 +1,0 @@
-{
-  "navigationBarTitleText": "个人信息",
-  "usingComponents": {
-    "u-navbar": "/node-modules/uview-ui/components/u-navbar/u-navbar",
-    "u-toast": "/node-modules/uview-ui/components/u-toast/u-toast",
-    "u-modal": "/node-modules/uview-ui/components/u-modal/u-modal",
-    "u--input": "/node-modules/uview-ui/components/u--input/u--input"
-  }
-}
