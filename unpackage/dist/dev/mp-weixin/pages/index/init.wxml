@@ -1,1 +1,0 @@
-<view class="data-v-41a19ae6"><u-loading-page vue-id="1adb7a40-1" loading-mode="spinner" loading-text="loading..." font-size="36" icon-size="80" loading="{{loading}}" class="data-v-41a19ae6" bind:__l="__l"></u-loading-page></view>

@@ -1,7 +1,0 @@
-{
-  "navigationBarTitleText": "确认费用",
-  "usingComponents": {
-    "u-navbar": "/node-modules/uview-ui/components/u-navbar/u-navbar",
-    "u-button": "/node-modules/uview-ui/components/u-button/u-button"
-  }
-}
