@@ -3,14 +3,14 @@ import $C from '@/utils/config.js';
 
 // 错误码处理策略表（集中管理）
 const ERROR_HANDLERS = {
-  401: {
+  401: { // 与服务器端沟通， 401 表示登录过期
     message: '登录状态过期，请重新登录',
     action: 'logoutAndRedirect'
   },
-  402: {
-    message: '账号异常，请重新登录',
-    action: 'logoutAndRedirect'
-  },
+  // 402: {
+  //   message: '账号异常，请重新登录',
+  //   action: 'logoutAndRedirect'
+  // },
   403: {
     message: '没有操作权限',
     action: 'toastOnly'
@@ -40,12 +40,17 @@ function handleError(result, options) {
   const msg = result.data.msg || handler.message;
 
   if (options.toast !== false) {
-    uni.showToast({ title: msg, icon: 'none', duration: 3000 });
+	let title = msg;
+	// 对外隐藏服务器错误
+	if (code == 500) {
+		title = '服务器开小差了';
+	}
+    uni.showToast({ title: title, icon: 'none', duration: 3000 });
   }
 
   if (handler.action === 'logoutAndRedirect') {
     console.log(`触发登出 (code: ${code})`);
-   // handleLogoutAndRedirect();
+    handleLogoutAndRedirect();
   }
 
   return new Error(msg);
@@ -62,7 +67,8 @@ export default {
         data:{},
         method:'GET',
         dataType:'json',
-		useToken:true
+		useToken:true,
+		toast: true
     },
     // 请求 返回promise
     request(options = {}){
@@ -73,6 +79,7 @@ export default {
         options.data = options.data || this.common.data
         options.method = options.method || this.common.method
         options.dataType = options.dataType || this.common.dataType
+		options.toast = options.toast || this.common.toast
 
 		if (typeof(options.useToken) == 'undefined'){
 			options.useToken = this.common.useToken

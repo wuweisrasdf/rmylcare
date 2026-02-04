@@ -3,33 +3,33 @@
 		<view class="content-container">
 			<view class="top">
 				<image src="/static/icons/sign-success.png" mode="widthFix"></image>
-				<text class="title">签约成功！</text>
+				<text class="title">支付成功！</text>
 			</view>
 
 			<view class="info">
 				<view class="item">
 					<text class="label">甲方名称</text>
-					<text class="value">{{ info.userName }}</text>
+					<text class="value">张三</text>
 				</view>
 
 				<view class="item">
 					<text class="label">产品名称</text>
-					<text class="value">{{ info.productName }}</text>
+					<text class="value">胎盘冻干粉</text>
 				</view>
 
 				<view class="item">
 					<text class="label">签约金额</text>
-					<text class="value">￥{{ info.price }}</text>
+					<text class="value">￥19800</text>
 				</view>
 
 				<view class="item">
 					<text class="label">协议号</text>
-					<text class="value">{{ info.orderCode }}</text>
+					<text class="value">D356834</text>
 				</view>
 
 				<view class="item">
-					<text class="label">签约时间</text>
-					<text class="value">{{ info.signDate }}</text>
+					<text class="label">支付时间</text>
+					<text class="value">2026-02-16 15:00</text>
 				</view>
 			</view>
 
@@ -59,10 +59,7 @@
 
 		<!-- 按钮组容器 -->
 		<view class="btn-group">
-			<u-button :custom-style="primaryBtnStyle" @click="toPay">
-				去支付
-			</u-button>
-			<u-button :custom-style="secondaryBtnStyle" @click="viewOrder">
+			<u-button :custom-style="secondaryBtnStyle" @click="">
 				查看订单
 			</u-button>
 		</view>
@@ -70,17 +67,8 @@
 </template>
 
 <script>
-	import * as api from '@/utils/api.js'
-	import {
-		mapState
-	} from 'vuex'
-
 	export default {
 		computed: {
-			...mapState({
-				user: state => state.user,
-				token: state => state.token,
-			}),
 			containerPaddingTop() {
 				const barHeight = (this.CustomBar || 0) * 2 + 'rpx';
 				return barHeight;
@@ -107,113 +95,16 @@
 				};
 			}
 		},
-		onLoad(options) {
-			if (options.orderId) {
-				this.orderId = options.orderId;
-			}
-			this.init();
-		},
-		data() {
-			return {
-				orderId: '17', // TODO 模拟用 17
-				paying: false, // 支付防重复点击
-				info: {
-					userName: '', // 甲方姓名
-					productName: '', // 产品名称
-					price: 0, // 签约金额
-					orderCode: '', // 协议号
-					signDate: '', // 签约时间
-				}
-			};
-		},
 		methods: {
-			async init() {
-				const orderId = Number(this.orderId)
-				if (!orderId || orderId === 0) {
-					return;
-				}
-
-				const res = await api.getFdpOrder(orderId);
-				if (res.code == 200 && res.rows.length > 0) {
-					const info = res.rows[0];
-					this.info = res.data || {};
-				}
-			},
-			// 去支付
-			async toPay() {
-				if (!this.orderId) {
-					uni.showToast({
-						title: '订单信息缺失',
-						icon: 'none'
-					});
-					return;
-				}
-				
-				  // 防止重复点击
-				  if (this.paying) return;
-				  this.paying = true;
-
-				try {
-					// 1. 调用后端接口，获取微信支付参数
-					const res = await api.createPayment(this.orderId);
-
-					if (res.code !== 200 || !res.data) {
-						uni.showToast({
-							title: res.msg || '获取支付参数失败',
-							icon: 'none'
-						});
-						return;
-					}
-
-					const payData = res.data;
-
-					// 2. 调起微信支付
-					    const paymentResult = await uni.requestPayment({
-					      provider: 'wxpay', // 明确指定支付提供商
-					      timeStamp: String(payData.timeStamp),
-					      nonceStr: payData.nonceStr,
-					      package: payData.package,
-					      signType: payData.signType || 'MD5',
-					      paySign: payData.paySign
-					    });
-
-					// 3. 支付成功
-					uni.showToast({
-						title: '支付成功！',
-						icon: 'success'
-					});
-
-					// 可选：跳转到订单详情或首页
-					setTimeout(() => {
-						uni.redirectTo({
-							url: '/pages/order/detail?orderId=' + this.orderId
-						});
-						// 或者回到首页：this.goHome();
-					}, 1500);
-
-				} catch (err) {
-					// 支付失败或用户取消
-					console.error('支付失败:', err);
-
-					// err.errMsg 可能包含 "requestPayment:fail cancel"（用户取消）
-					if (err.errMsg && err.errMsg.includes('cancel')) {
-						uni.showToast({
-							title: '已取消支付',
-							icon: 'none'
-						});
-					} else {
-						uni.showToast({
-							title: '支付失败，请重试',
-							icon: 'none'
-						});
-					}
-				}
-			},
-			// 查看订单
-			viewOrder() {
+			handleStart() {
 				uni.navigateTo({
-					url: `/pages/order/detail?orderId=${this.orderId}`
-				});
+					url: "/pages/sign/form"
+				})
+			},
+			goHome() {
+				uni.reLaunch({
+					url: "/pages/index/index"
+				})
 			}
 		}
 	};
@@ -306,25 +197,22 @@
 				color: #2C2C2C;
 			}
 		}
-
-		.desc-content {
-			margin-top: 52rpx;
-
-			.content-item {
+		
+		.desc-content{
+			margin-top:52rpx;
+			.content-item{
 				display: flex;
 				flex-direction: row;
 				align-items: center;
 				margin-bottom: 20rpx;
-
-				.list-icon {
+				.list-icon{
 					width: 12rpx;
 					height: 12rpx;
 					background: #4A63E4;
 					border-radius: 50%;
 					margin-right: 18rpx;
 				}
-
-				.text {
+				.text{
 					font-weight: bold;
 					font-size: 26rpx;
 					color: #5B5B5B;

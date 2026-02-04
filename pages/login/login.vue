@@ -101,9 +101,10 @@ export default {
 				const phone = res.phone;
 				
 				uni.setStorageSync('token', token || '');
-				
-				this.getUserInfo();
-				
+				if (token) {
+					uni.setStorageSync('token', token);
+					this.getUserInfo();
+				}
 		      }
 		    } catch (err) {
 			  console.log('err',err);

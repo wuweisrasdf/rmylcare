@@ -1,11 +1,7 @@
 <template>
   <view class="container">
-    <!-- 注意：web-view 必须占满全屏 -->
-    <web-view 
-      :src="decodedSignUrl" 
-      @message="onMessage"
-      style="width: 100vw; height: 100vh;"
-    />
+    <web-view :src="decodedSignUrl" style="width: 100vw; height: 100vh;" />
+    <view class="tip">签署完成后请返回</view>
   </view>
 </template>
 
@@ -20,33 +16,8 @@ export default {
     if (options.signUrl) {
       this.decodedSignUrl = decodeURIComponent(options.signUrl);
     } else {
-      uni.showToast({ title: '无效的签署链接', icon: 'none' });
+      uni.showToast({ title: '无效链接', icon: 'none' });
       setTimeout(() => uni.navigateBack(), 1500);
-    }
-  },
-  methods: {
-    onMessage(e) {
-      const msg = e.detail.data?.[0];
-      if (!msg) return;
-
-      try {
-        const payload = typeof msg === 'string' ? JSON.parse(msg) : msg;
-        switch (payload.type) {
-          case 'SIGN_SUCCESS':
-            uni.showToast({ title: '签署成功！', icon: 'success' });
-            setTimeout(() => uni.navigateBack(), 1500);
-            break;
-          case 'SIGN_CANCEL':
-            uni.navigateBack();
-            break;
-          case 'SIGN_ERROR':
-            uni.showToast({ title: '签署失败', icon: 'error' });
-            uni.navigateBack();
-            break;
-        }
-      } catch (err) {
-        console.error('解析消息失败:', err);
-      }
     }
   }
 };
@@ -56,6 +27,15 @@ export default {
 .container {
   width: 100vw;
   height: 100vh;
-  overflow: hidden;
+  position: relative;
+}
+.tip {
+  position: absolute;
+  bottom: 20rpx;
+  left: 0;
+  right: 0;
+  text-align: center;
+  color: #666;
+  font-size: 24rpx;
 }
 </style>

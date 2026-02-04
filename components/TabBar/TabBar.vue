@@ -67,7 +67,7 @@ export default {
 };
 </script>
 
-<style scoped>
+<style lang="scss"  scoped>
 .tabbar {
   position: fixed;
   bottom: 0;
@@ -94,10 +94,8 @@ padding-bottom: env(safe-area-inset-bottom);
 }
 
 .tab-icon {
-  width: 40rpx;
-  height: 40rpx;
-  margin-bottom: 22rpx;
-  margin-top:22rpx;
+  width: 70rpx;
+  height: auto;
 }
 
 .tab-text {

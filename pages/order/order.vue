@@ -8,51 +8,46 @@
     >
       <view slot="left"></view>
     </u-navbar>
-	
-	<view class="tab-switch">
-	  <view class="tab-item active">进行中</view>
-	  <view class="tab-item">已完成</view>
-	</view>
-		
-	<view class="content-container">
-		<view v-for="(item, index) in orderList" :key="index" class="order-card">
-			<!-- 姓名 + 状态标签 -->
-			<view class="header">
-				<text class="name">{{ item.name }}</text>
-				<view class="status-tag" :class="item.statusClass">
-				  <image 
-					:src="getStatusImage(item.statusClass)" 
-					mode="widthFix" 
-					class="status-bg" 
-				  />
-				  <text class="status-text">{{ item.status }}</text>
-				</view>
-			</view>
 
-			<!-- 详细信息 -->
-			<view class="info-row">
-			  <view class="field">
-				<text class="label">预产期:</text>
-				<text class="value">{{ item.dueDate }}</text>
-			  </view>
-			  <view class="field">
-				<text class="label">预产医院:</text>
-				<text class="value">{{ item.hospital }}</text>
-			  </view>
-			</view>
-			<view class="info-row">
-			  <view class="field">
-				<text class="label">协议号:</text>
-				<text class="value">{{ item.agreementNo }}</text>
-			  </view>
-			  <view class="field">
-				<text class="label">签约日期:</text>
-				<text class="value">{{ item.signDate }}</text>
-			  </view>
-			</view>
-		</view>
-	</view>
-    
+    <view class="tab-switch">
+      <view class="tab-item active">进行中</view>
+      <view class="tab-item">已完成</view>
+    </view>
+
+    <view class="content-container">
+      <view v-for="(item, index) in orderList" :key="index" class="order-card">
+        <!-- 姓名 + 状态标签 -->
+        <view class="header">
+          <text class="name">{{ item.name }}</text>
+          <view class="status-tag" :class="item.statusClass">
+            {{ item.status }}
+          </view>
+        </view>
+
+        <!-- 详细信息 -->
+        <view class="info-row">
+          <view class="field">
+            <text class="label">预产期:</text>
+            <text class="value">{{ item.dueDate }}</text>
+          </view>
+          <view class="field">
+            <text class="label">预产医院:</text>
+            <text class="value">{{ item.hospital }}</text>
+          </view>
+        </view>
+        <view class="info-row">
+          <view class="field">
+            <text class="label">协议号:</text>
+            <text class="value">{{ item.agreementNo }}</text>
+          </view>
+          <view class="field">
+            <text class="label">签约日期:</text>
+            <text class="value">{{ item.signDate }}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
     <TabBar :current-tab="currentTab"/>
   </view>
 </template>
@@ -67,54 +62,45 @@ export default {
   computed: {
     // 计算容器顶部内边距（转为 rpx）
     containerPaddingTop() {
-      // CustomBar 是 px，uni-app 中 1px = 2rpx
       const barHeight = (this.CustomBar || 0) * 2 + 'rpx';
       return barHeight;
-    } 
+    }
   },
   data() {
     return {
       currentTab: 1,
-	  orderList: [
-	        {
-	          name: '张菲',
-	          status: '已签约',
-	          statusClass: 'signed',
-	          dueDate: '2026-03-12',
-	          hospital: '朝阳医院',
-	          agreementNo: '2934054876',
-	          signDate: '2026-03-12'
-	        },
-	        {
-	          name: '张菲',
-	          status: '未签约',
-	          statusClass: 'unsigned',
-	          dueDate: '2026-03-12',
-	          hospital: '朝阳医院',
-	          agreementNo: '2934054876',
-	          signDate: '2026-03-12'
-	        },
-	        {
-	          name: '张菲',
-	          status: '已解约',
-	          statusClass: 'unbound',
-	          dueDate: '2026-03-12',
-	          hospital: '朝阳医院',
-	          agreementNo: '2934054876',
-	          signDate: '2026-03-12'
-	        }
-	    ]
+      orderList: [
+        {
+          name: '张菲',
+          status: '已签约',
+          statusClass: 'signed',
+          dueDate: '2026-03-12',
+          hospital: '朝阳医院',
+          agreementNo: '2934054876',
+          signDate: '2026-03-12'
+        },
+        {
+          name: '张菲',
+          status: '未签约',
+          statusClass: 'unsigned',
+          dueDate: '2026-03-12',
+          hospital: '朝阳医院',
+          agreementNo: '2934054876',
+          signDate: '2026-03-12'
+        },
+        {
+          name: '张菲',
+          status: '已解约',
+          statusClass: 'unbound',
+          dueDate: '2026-03-12',
+          hospital: '朝阳医院',
+          agreementNo: '2934054876',
+          signDate: '2026-03-12'
+        }
+      ]
     };
   },
   methods: {
-    getStatusImage(statusClass) {
-        const map = {
-          signed: '/static/images/signed.png',
-          unsigned: '/static/images/unsigned.png',
-          unbound: '/static/images/unbound.png'
-        };
-        return map[statusClass] || '';
-      }
   }
 };
 </script>
@@ -122,12 +108,12 @@ export default {
 <style lang="scss" scoped>
 .container {
   background-color: #F5F5F5;
-  /* 使用 padding-bottom 为 TabBar 留出空间 */
-  padding: 0rpx 26rpx 180rpx 26rpx; /* bottom padding >= TabBar高度(100rpx) + 安全区(～40rpx) */
+  padding: 0rpx 26rpx 180rpx 26rpx;
   min-height: 100vh;
-  box-sizing: border-box; /* 确保 padding 包含在 100vh 内 */
+  box-sizing: border-box;
 }
-.content-container{
+
+.content-container {
   display: flex;
   justify-content: center;
   flex-direction: column;
@@ -136,7 +122,7 @@ export default {
 .tab-switch {
   display: flex;
   gap: 26rpx;
-  margin: 60rpx  0;
+  margin: 60rpx 0;
   padding: 16rpx 0;
 }
 
@@ -162,7 +148,7 @@ export default {
   padding: 36rpx 20rpx;
   margin-bottom: 40rpx;
   background: #FFFFFF;
-  box-shadow: 0rpx 10rpx 26rpx 0rpx rgba(0,88,133,0.08);
+  box-shadow: 0rpx 10rpx 26rpx 0rpx rgba(0, 88, 133, 0.08);
   border-radius: 40rpx;
   position: relative;
 }
@@ -175,11 +161,11 @@ export default {
 }
 
 .name {
-	font-weight: bold;
-	font-size: 32rpx;
-	color: #2C2C2C;
-	position: relative;
-	padding-left: 18rpx;
+  font-weight: bold;
+  font-size: 32rpx;
+  color: #2C2C2C;
+  position: relative;
+  padding-left: 18rpx;
 }
 
 .name::before {
@@ -187,7 +173,7 @@ export default {
   position: absolute;
   left: 0;
   top: 50%;
-  transform: translateY(-50%);  
+  transform: translateY(-50%);
   width: 6rpx;
   height: 28rpx;
   background: #4A63E4;
@@ -196,65 +182,55 @@ export default {
 
 .status-tag {
   position: absolute;
-  top: 0;
-  right: 0;
+  right: -1px;
+  top: -1px;
   width: 162rpx;
   height: 62rpx;
-  z-index: 10;
-}
-
-.status-bg {
-  width: 100%;
-  height: 100%;
-  display: block;
-}
-
-.status-text {
-  position: absolute;
-  top: 36%;
-  left: 50%;
-  transform: translate(-50%, -50%);
   font-size: 24rpx;
   font-weight: bold;
-  white-space: nowrap;
   text-align: center;
-  pointer-events: none;
+  background-repeat: no-repeat;
+  background-size: contain;
+  text-align: center;
+  padding-top: 8rpx;
+  font-weight: bold;
+  font-size: 24rpx;
 }
 
-/* 严格按照你的规范设置颜色 */
-.status-tag.signed .status-text {
-  color: #2449FF; /* 已签约 */
+.status-tag.signed {
+  background-image: url('/static/images/signed.png');
+  color: #2449FF;
 }
 
-.status-tag.unsigned .status-text {
-  color: #00A9E8; /* 未签约 */
+.status-tag.unsigned {
+  background-image: url('/static/images/unsigned.png');
+  color: #00A9E8;
 }
 
-.status-tag.unbound .status-text {
-  color: #FF9C00; /* 已解约 */
+.status-tag.unbound {
+  background-image: url('/static/images/unbound.png');
+  color: #FF9C00;
 }
-
-//
 
 .info-row {
   display: grid;
-  grid-template-columns: 1fr 1fr; /* 两等分 */
-  gap: 20rpx; /* 列间距 */
+  grid-template-columns: 1fr 1fr;
+  gap: 20rpx;
   padding-left: 18rpx;
   margin-bottom: 20rpx;
 }
 
 .field {
   display: flex;
-  align-items: center; /* 垂直居中 */
-  min-height: 56rpx; /* 与原 line-height 一致 */
+  align-items: center;
+  min-height: 56rpx;
 }
 
 .label {
   font-weight: bold;
   font-size: 26rpx;
   color: #969696;
-  min-width: 120rpx; /* 固定 label 宽度，确保对齐 */
+  min-width: 120rpx;
   white-space: nowrap;
 }
 
