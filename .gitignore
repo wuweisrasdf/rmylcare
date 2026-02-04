@@ -1,11 +1,9 @@
-<<<<<<< HEAD
-# uni-app 构建输出目录
-unpackage/
-dist/
-# ========================
-.DS_Store
-=======
 node_modules
 
 unpackage
->>>>>>> 11d7b432edb47d596622f61b25fe1601affec1b4
+
+.vscode
+.vscode-test
+.idea
+.DS_Store
+.git
