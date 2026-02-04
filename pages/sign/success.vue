@@ -110,12 +110,12 @@
 		onLoad(options) {
 			if (options.orderId) {
 				this.orderId = options.orderId;
+				this.init();
 			}
-			this.init();
 		},
 		data() {
 			return {
-				orderId: '17', // TODO 模拟用 17
+				orderId: '',
 				paying: false, // 支付防重复点击
 				info: {
 					userName: '', // 甲方姓名
@@ -128,16 +128,26 @@
 		},
 		methods: {
 			async init() {
-				const orderId = Number(this.orderId)
-				if (!orderId || orderId === 0) {
-					return;
+				this.info.userName = this.user.nickName;
+				
+				// 获取产品信息
+				const productId = 1; // 固定值 1
+				const res = await api.getProductById(productId);
+				if (res.code == 200) {
+					const data = res.data || {};
+					this.info.productName = data.productName || '';
+				}
+				
+				// 获取合同信息
+				const result = await api.getFdpOrder(this.orderId);
+				if (result.code == 200 && result.rows.length > 0) {
+					const order = result.rows[0];
+					
+					this.info.price = order.priceOut;
+					this.info.orderCode = order.orderCode; // 协议号
+					this.info.signDate = order.signDate;
 				}
 
-				const res = await api.getFdpOrder(orderId);
-				if (res.code == 200 && res.rows.length > 0) {
-					const info = res.rows[0];
-					this.info = res.data || {};
-				}
 			},
 			// 去支付
 			async toPay() {
@@ -148,10 +158,10 @@
 					});
 					return;
 				}
-				
-				  // 防止重复点击
-				  if (this.paying) return;
-				  this.paying = true;
+
+				// 防止重复点击
+				if (this.paying) return;
+				this.paying = true;
 
 				try {
 					// 1. 调用后端接口，获取微信支付参数
@@ -168,14 +178,13 @@
 					const payData = res.data;
 
 					// 2. 调起微信支付
-					    const paymentResult = await uni.requestPayment({
-					      provider: 'wxpay', // 明确指定支付提供商
-					      timeStamp: String(payData.timeStamp),
-					      nonceStr: payData.nonceStr,
-					      package: payData.package,
-					      signType: payData.signType || 'MD5',
-					      paySign: payData.paySign
-					    });
+					const paymentResult = await uni.requestPayment({
+						timeStamp: String(payData.timeStamp),
+						nonceStr: payData.nonceStr,
+						package: payData.package,
+						signType: payData.signType || 'MD5',
+						paySign: payData.paySign
+					});
 
 					// 3. 支付成功
 					uni.showToast({
@@ -183,12 +192,11 @@
 						icon: 'success'
 					});
 
-					// 可选：跳转到订单详情或首页
+					// 跳转到支付成功页
 					setTimeout(() => {
 						uni.redirectTo({
-							url: '/pages/order/detail?orderId=' + this.orderId
+							url: '/pages/sign/pay-success?orderId=' + this.orderId
 						});
-						// 或者回到首页：this.goHome();
 					}, 1500);
 
 				} catch (err) {
@@ -207,6 +215,8 @@
 							icon: 'none'
 						});
 					}
+				} finally {
+					this.paying = false
 				}
 			},
 			// 查看订单

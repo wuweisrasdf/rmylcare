@@ -27,7 +27,7 @@
 					// #endif
 				}
 			});
-						
+
 			//this.$store.dispatch('initUser'); // 初始化登录状态
 			this.init();
 		},
@@ -37,19 +37,25 @@
 		onHide: function() {
 			console.log('App Hide')
 		},
-		methods:{
+		methods: {
 			async init() {
 				const isLoggedIn = await this.$store.dispatch('initUser')
 				if (!isLoggedIn) {
-				    const pages = getCurrentPages();
-					const currentRoute = pages.length > 0 
-					  ? pages[pages.length - 1].route 
-					  : '';
-					
-					if (currentRoute !== 'pages/login/login') {
-					  uni.redirectTo({
-						url: '/pages/login/login'
-					  });
+					const pages = getCurrentPages();
+					const currentRoute = pages.length > 0 ?
+						pages[pages.length - 1].route :
+						'';
+
+					// 白名单：这些页面允许未登录访问
+					const whiteList = [
+						'pages/login/login',
+						'pages/index/scan'
+					];
+
+					if (!whiteList.includes(currentRoute)) {
+						uni.redirectTo({
+							url: '/pages/login/login'
+						});
 					}
 				}
 			}

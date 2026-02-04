@@ -3,6 +3,7 @@
 		"^u-(.*)": "uview-ui/components/u-$1/u-$1.vue"
 	},
 	"pages": [ //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
+
 		// 首页 & 产品
 		{
 			"path": "pages/index/init",
@@ -18,33 +19,11 @@
 			}
 		},
 		{
-			"path": "pages/sign/success",
+			"path": "pages/index/scan",
 			"style": {
-				"navigationBarTitleText": "签约成功"
+				"navigationBarTitleText": "扫码解析页"
 			}
 		},
-		
-		{
-			"path": "pages/sign/confirm-price",
-			"style": {
-				"navigationBarTitleText": "确认费用"
-			}
-		},
-
-		{
-			"path": "pages/sign/pay-success",
-			"style": {
-				"navigationBarTitleText": "支付成功"
-			}
-		},
-		
-		{
-			"path": "pages/sign/pay",
-			"style": {
-				"navigationBarTitleText": "支付"
-			}
-		},
-
 
 		// 签约流程		
 		{
@@ -79,12 +58,12 @@
 				"navigationBarTitleText": "授权书"
 			}
 		},
-		// {
-		// 	"path": "pages/sign/confirm-price",
-		// 	"style": {
-		// 		"navigationBarTitleText": "确认费用"
-		// 	}
-		// },
+		{
+			"path": "pages/sign/confirm-price",
+			"style": {
+				"navigationBarTitleText": "确认费用"
+			}
+		},
 		{
 			"path": "pages/sign/signature",
 			"style": {
@@ -92,7 +71,18 @@
 				//	"pageOrientation": "landscape", // 必须是竖屏
 			}
 		},
-
+		{
+			"path": "pages/sign/success",
+			"style": {
+				"navigationBarTitleText": "签约成功"
+			}
+		},
+		{
+			"path": "pages/sign/pay-success",
+			"style": {
+				"navigationBarTitleText": "支付成功"
+			}
+		},
 
 		// 订单
 		{
@@ -108,8 +98,6 @@
 			}
 		},
 
-
-
 		// 协议
 		{
 			"path": "pages/agreement/privacy",
@@ -123,11 +111,6 @@
 				"navigationBarTitleText": "用户协议"
 			}
 		},
-
-
-
-
-
 
 
 		// 登录

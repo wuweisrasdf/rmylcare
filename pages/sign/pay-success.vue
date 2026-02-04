@@ -9,27 +9,27 @@
 			<view class="info">
 				<view class="item">
 					<text class="label">甲方名称</text>
-					<text class="value">张三</text>
+					<text class="value">{{ info.userName }}</text>
 				</view>
 
 				<view class="item">
 					<text class="label">产品名称</text>
-					<text class="value">胎盘冻干粉</text>
+					<text class="value">{{ info.productName }}</text>
 				</view>
 
 				<view class="item">
 					<text class="label">签约金额</text>
-					<text class="value">￥19800</text>
+					<text class="value">￥{{ info.price }}</text>
 				</view>
 
 				<view class="item">
 					<text class="label">协议号</text>
-					<text class="value">D356834</text>
+					<text class="value">{{ info.orderCode }}</text>
 				</view>
 
 				<view class="item">
 					<text class="label">支付时间</text>
-					<text class="value">2026-02-16 15:00</text>
+					<text class="value">{{ info.payDate }}</text>
 				</view>
 			</view>
 
@@ -59,7 +59,7 @@
 
 		<!-- 按钮组容器 -->
 		<view class="btn-group">
-			<u-button :custom-style="secondaryBtnStyle" @click="">
+			<u-button :custom-style="secondaryBtnStyle" @click="viewOrder">
 				查看订单
 			</u-button>
 		</view>
@@ -67,8 +67,17 @@
 </template>
 
 <script>
+	import * as api from '@/utils/api.js'
+	import {
+		mapState
+	} from 'vuex'
+	
 	export default {
 		computed: {
+			...mapState({
+				user: state => state.user,
+				token: state => state.token,
+			}),
 			containerPaddingTop() {
 				const barHeight = (this.CustomBar || 0) * 2 + 'rpx';
 				return barHeight;
@@ -95,16 +104,52 @@
 				};
 			}
 		},
+		onLoad(options) {  //options.orderId = 17
+			if (options.orderId) {
+				this.orderId = options.orderId;
+				this.init();
+			}
+		},
+		data() {
+			return {
+				orderId: '',
+				info: {
+					userName: '', // 甲方姓名
+					productName: '', // 产品名称
+					price: 0, // 签约金额
+					orderCode: '', // 协议号
+					payDate: '', // 支付时间
+				}
+			};
+		},
 		methods: {
-			handleStart() {
-				uni.navigateTo({
-					url: "/pages/sign/form"
-				})
+			async init() {
+				this.info.userName = this.user.nickName;
+				
+				// 获取产品信息
+				const productId = 1; // 固定值 1
+				const res = await api.getProductById(productId);
+				if (res.code == 200) {
+					const data = res.data || {};
+					this.info.productName = data.productName || '';
+				}
+				
+				// 获取合同信息
+				const result = await api.getFdpOrder(this.orderId);
+				if (result.code == 200 && result.rows.length > 0) {
+					const order = result.rows[0];
+					
+					this.info.price = order.priceOut;
+					this.info.orderCode = order.orderCode; // 协议号
+					this.info.payDate = order.payDate || ''; // 支付时间
+				}
+			
 			},
-			goHome() {
-				uni.reLaunch({
-					url: "/pages/index/index"
-				})
+			// 查看订单
+			viewOrder() {
+				uni.redirectTo({
+					url: `/pages/order/detail?orderId=${this.orderId}`
+				});
 			}
 		}
 	};

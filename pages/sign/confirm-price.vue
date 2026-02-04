@@ -89,24 +89,24 @@
 			if (this.isSigning) {
 				// 增加一个提示框，避免直接跳转，会影响性能
 				uni.showModal({
-				      title: '提示',
-				      content: '您已完成电子签署？',
-				      confirmText: '已完成',
-				      cancelText: '取消',
-				      success: (res) => {
-				        if (res.confirm) {
-				          // 用户点击“确认”
-				          this.checkIfSigned();
-				        } else if (res.cancel) {
-				          // 用户点击“取消”，可选：重置状态或不做处理
-				          this.isSigning = false;
-				        }
-				      },
-				      fail: (err) => {
-				        console.error('弹窗失败:', err);
-				        this.isSigning = false;
-				      }
-				    });
+					title: '签署完成确认',
+					content: '您已完成电子签署？',
+					confirmText: '已完成',
+					cancelText: '取消',
+					success: (res) => {
+						if (res.confirm) {
+							// 用户点击“确认”
+							this.checkIfSigned();
+						} else if (res.cancel) {
+							// 用户点击“取消”，可选：重置状态或不做处理
+							this.isSigning = false;
+						}
+					},
+					fail: (err) => {
+						console.error('弹窗失败:', err);
+						this.isSigning = false;
+					}
+				});
 			}
 		},
 		data() {
@@ -118,6 +118,7 @@
 					navbar: '',
 					details: ''
 				},
+				motherInfo: {},
 				motherId: 0, // 产妇id
 				salesId: 0, // 销售id
 				orderId: '', // 订单id
@@ -125,7 +126,6 @@
 			};
 		},
 		methods: {
-			// TODO 从缓存读取销售id
 			async init() {
 				// 获取产品信息
 				const productId = 1; // 固定值 1
@@ -145,10 +145,11 @@
 				const result = await api.getMotherAndUser();
 				if (result.code == 200) {
 					const motherInfo = result.mother && result.mother.length > 0 ? result.mother[0] : {};
+					this.motherInfo = motherInfo
 					this.motherId = motherInfo.id || 0
 				}
 
-				this.salesId = 1; // 销售id TODO 从storage 获取
+				this.salesId = uni.getStorageSync('SCAN_SALES_ID') || 0; // 销售id 从storage 获取
 			},
 			// 提交数据生成合同
 			async submit() {
@@ -187,17 +188,17 @@
 					signerName: this.user.nickName, // 当前登录用户的昵称
 					signerPhone: this.user.phonenumber, // 当前用户的手机号
 				}
-				
+
 				uni.showLoading({
-				    title: '正在生成签署链接...',
-				    mask: true // 防止用户点击穿透
-				  });
+					title: '正在生成签署链接...',
+					mask: true // 防止用户点击穿透
+				});
 
 				try {
 					const res = await api.getSignUrl(params);
-					
+
 					uni.hideLoading();
-					
+
 					if (res.code == 200) {
 						console.log('getSignUrl:', res)
 						if (res.signUrl) {
@@ -210,7 +211,7 @@
 					}
 				} catch (err) {
 					uni.hideLoading();
-					
+
 					console.log("签名失败：", err)
 					uni.showToast({
 						title: "手机号需要实名认证",
@@ -219,41 +220,32 @@
 				}
 			},
 			// 从e签宝回退后，检查是否签字成功
-			checkIfSigned() {
-				// TODO 此处简化为如果去签字了，就认为签字成功了。
-				if (this.isSigning) {
-					this.isSigning = false;
-					console.log('orderId',this.orderId)
-
-					uni.redirectTo({
-					  url: '/pages/sign/success?orderId='+this.orderId
-					});
-	
-				}
-				  return;
-				// TODO 如果有实际订单查询接口后，注释掉上面代码，使用下面的代码
-				
-				/*
-				
+			async checkIfSigned() {
 				try {
 					const orderId = this.orderId;
 
-					const res = await api.getOrderStatus(orderId); // 你需要实现这个 API
-					if (res.code === 200 && res.data.proStatus === 3) { // 假设 3 = 已签署
-						this.isSigning = false;
-						uni.redirectTo({
-							url: '/pages/sign/success'
-						});
-					} else {
-						// 可选：如果未签署，提示用户
-						// uni.showToast({ title: '未完成签署', icon: 'none' });
-						this.isSigning = false;
+					const res = await api.getFdpOrder(orderId);
+					if (res.code == 200 && res.rows.length > 0) {
+						const order = res.rows[0];
+						if (order.proStatus == 1) { // proStatus == 1 已签署
+							this.isSigning = false;
+							uni.redirectTo({
+								url: `/pages/sign/success?orderId=${this.orderId}`
+							});
+						} else {
+							// 可选：如果未签署，提示用户
+							uni.showToast({
+								title: '未完成签署',
+								icon: 'none'
+							});
+							this.isSigning = false;
+						}
 					}
+
 				} catch (err) {
 					console.error('检查签署状态失败:', err);
 					this.isSigning = false;
 				}
-				*/
 			}
 		}
 	};
