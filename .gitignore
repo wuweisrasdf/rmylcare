@@ -1,6 +1,8 @@
-node_modules
 
-unpackage
+/node_modules
+
+/unpackage
+
 
 .vscode
 .vscode-test
