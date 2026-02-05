@@ -246,6 +246,9 @@
 					console.error('检查签署状态失败:', err);
 					this.isSigning = false;
 				}
+			},
+			goPrev() {
+			    uni.navigateBack();
 			}
 		}
 	};

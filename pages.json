@@ -24,6 +24,12 @@
 				"navigationBarTitleText": "扫码解析页"
 			}
 		},
+		{
+			"path": "pages/product/promotion",
+			"style": {
+				"navigationBarTitleText": "首页宣传"
+			}
+		},
 
 		// 签约流程		
 		{
@@ -88,7 +94,9 @@
 		{
 			"path": "pages/order/order",
 			"style": {
-				"navigationBarTitleText": "我的订单"
+				"navigationBarTitleText": "我的订单",
+				// "enablePullDownRefresh": true,
+				"onReachBottomDistance": 50
 			}
 		},
 		{
@@ -97,6 +105,13 @@
 				"navigationBarTitleText": "订单详情"
 			}
 		},
+		{
+			"path": "pages/order/agreement",
+			"style": {
+				"navigationBarTitleText": "查看协议"
+			}
+		},
+
 
 		// 协议
 		{
@@ -112,6 +127,25 @@
 			}
 		},
 
+		// 协议与退款
+		{
+			"path": "pages/refund/status",
+			"style": {
+				"navigationBarTitleText": "退款进度"
+			}
+		},
+		{
+			"path": "pages/refund/cancel-agreement",
+			"style": {
+				"navigationBarTitleText": "解约协议"
+			}
+		},
+		{
+			"path": "pages/refund/progress",
+			"style": {
+				"navigationBarTitleText": "退款处理中"
+			}
+		},
 
 		// 登录
 		{
@@ -136,23 +170,6 @@
 			}
 		}
 
-
-		/*
-
-		// 协议与退款
-		{ "path": "pages/agreement/view", "style": { "navigationBarTitleText": "查看协议" } },
-		{ "path": "pages/refund/cancel-agreement", "style": { "navigationBarTitleText": "解约协议" } },
-		{
-		  "path": "pages/refund/signature",
-		  "style": {
-			"navigationBarTitleText": "解约签名",
-			"pageOrientation": "landscape"
-		  }
-		},
-		{ "path": "pages/refund/status", "style": { "navigationBarTitleText": "退款进度" } },
-
-
-		*/
 	],
 	"globalStyle": {
 		"navigationBarTextStyle": "black",

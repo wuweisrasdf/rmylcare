@@ -24,7 +24,7 @@
 		<view class="card-left">
 		  <image class="card-icon" src="/static/icons/order-query.png" mode="aspectFill"></image>
 		  <view class="card-content">
-			<text class="card-title">订单查询</text>
+			<text class="card-title">订单详情</text>
 			<text class="card-desc">实时查看订单进度</text>
 		  </view>
 		</view>

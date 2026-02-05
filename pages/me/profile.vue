@@ -11,19 +11,19 @@
 	
 	<view class="user-info-container">
 	    <!-- 姓名 -->
-	    <view class="list-item" @click="handleGetUserInfo">
+	    <view class="list-item">
 	      <view class="item-left">
 	        <image class="icon" src="/static/icons/user.png" mode="aspectFill"></image>
 	        <text class="label">姓名</text>
 	      </view>
 	      <view class="item-right">
 	        <text class="value">{{ formData.userName || '未获取' }}</text>
-	        <text class="arrow">></text>
+	      <!--  <text class="arrow">></text> -->
 	      </view>
 	    </view>
 	
 	    <!-- 昵称 -->
-	    <view class="list-item" @click="editNickname">
+	    <view class="list-item" @click="handleGetUserInfo">
 	      <view class="item-left">
 	        <image class="icon" src="/static/icons/nickname.png" mode="aspectFill"></image>
 	        <text class="label">昵称</text>
@@ -211,7 +211,7 @@ export default {
 
 	handleGetUserInfo() {
 	  // 判断是否有已存在的微信姓名
-	  const hasUserName = this.user && this.user.userName;
+	  const hasUserName = this.user && this.user.nickName;
 	
 	  if (!hasUserName) {
 	    // 没有姓名：直接获取，不弹确认框
@@ -221,7 +221,7 @@ export default {
 	    // 已有姓名：弹出确认框，询问是否重新获取
 	    uni.showModal({
 	      title: '提示',
-	      content: '是否获取微信姓名？',
+	      content: '是否获取微信昵称？',
 	      confirmText: '确定',
 	      cancelText: '取消',
 	      success: (res) => {
@@ -257,7 +257,7 @@ export default {
 	      console.log('uni.getUserProfile 成功:', res);
 	      const { nickName, avatarUrl } = res.userInfo;
 	      this.wechatNickname = nickName;
-		  this.formData.userName = this.wechatNickname
+		  this.formData.nickName = this.wechatNickname
 		  this.saveUserInfo({userName: this.wechatNickname});
 	      
 	      uni.showToast({
@@ -281,30 +281,10 @@ export default {
 		const params = {
 			userId: this.user.userId, 
 			userName: options.userName || this.user.userName,
-			//phonenumber: options.phonenumber || this.user.phonenumber,
-			//email: options.email || this.user.email,
-			//"password": "87654321",
+			phonenumber: options.phonenumber || this.user.phonenumber,
+			email: options.email || this.user.email,
+			password: ""
 		};
-		
-		// 修改手机号
-		// if (options.phonenumber) {
-		// 	params.phonenumber = options.phonenumber;
-		// }
-		
-		// 修改邮箱
-		if (options.email) {
-			params.email = options.email;
-		}
-		
-		// // 修改姓名
-		// if (options.userName) {
-		// 	params.userName = options.userName;
-		// }
-		
-		// 修改昵称
-		// if (options.nickName) {
-		// 	params.nickName = options.nickName;
-		// }
 		
 		try {
 			const res = await api.updateUser(params);

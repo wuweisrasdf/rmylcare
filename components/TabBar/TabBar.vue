@@ -57,10 +57,16 @@ export default {
 		// 安全兜底：理论上不会发生
 		uni.pageScrollTo({ scrollTop: 0, duration: 300 });
 	  } else {
-		// 跳转到其他 tab 页面
-		uni.reLaunch({
-		  url: targetPage
-		});
+		if (index != 1) {
+			uni.redirectTo({
+			  url: targetPage
+			});
+		}else{ // 订单保持页面堆栈
+			uni.navigateTo({
+			  url: targetPage
+			});
+		}
+
 	  }
 	}
   }
