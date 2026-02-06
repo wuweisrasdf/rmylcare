@@ -34,6 +34,8 @@
 					</view>
 				</view>
 			</view>
+			
+			<button @click="toSign">测试签约</button>
 		</view>
 
 		<TabBar :current-tab="currentTab" />
@@ -76,6 +78,11 @@
 					path: '/pages/product/detail?productId=123',
 					imageUrl: '/static/share.jpg' // 可选：分享封面图
 				}
+			},
+			toSign(){
+				uni.navigateTo({
+					url: `/pages/index/intro`
+				})
 			}
 		}
 	}

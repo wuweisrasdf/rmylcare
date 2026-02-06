@@ -45,7 +45,7 @@ export const createFdpOrder = params => { return $H.post(`${$C.baseUrl}/system/f
 export const updateFdpOrderStatus = params => { return $H.put(`${$C.baseUrl}/system/fdp`, params) };
 
 // 获取当前用户的冻干粉订单列表（客户端）
-export const getFdpOrderListForUser = (userId) => { return $H.get(`${$C.baseUrl}/system/fdp/list4user?userId=${userId}`) };
+export const getFdpOrderListForUser = (userId, dueDateBegin, dueDateEnd) => { return $H.get(`${$C.baseUrl}/system/fdp/list4user?userId=${userId}&dueDateBegin=${dueDateBegin}&dueDateEnd=${dueDateEnd}`) };
 
 // 获取销售端的冻干粉订单列表（按销售ID查询）
 export const getFdpOrderListForSales = (salesId) => { return $H.get(`${$C.baseUrl}/system/fdp/list4user?salesId=${salesId}`) };
@@ -77,3 +77,9 @@ export const signReturnUrl = `${$C.baseUrl}/system/esign/returnURL1`;
 
 // 下载已签署的文件
 export const downloadSignedFile = (orderId) => { return $H.get(`${$C.baseUrl}/system/esign/downloadSignFile?orderId=${orderId}`) };
+
+// 微信支付
+export const createPayment = params => { return $H.post(`${$C.baseUrl}/system/esign/getwxpay`, params) };
+
+// 支付成功接口
+export const paySuccess = params => { return $H.post(`${$C.baseUrl}/system/payment`, params) };

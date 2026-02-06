@@ -3,7 +3,6 @@
 		"^u-(.*)": "uview-ui/components/u-$1/u-$1.vue"
 	},
 	"pages": [ //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
-
 		// 首页 & 产品
 		{
 			"path": "pages/index/init",
@@ -64,12 +63,7 @@
 				"navigationBarTitleText": "授权书"
 			}
 		},
-		{
-			"path": "pages/sign/confirm-price",
-			"style": {
-				"navigationBarTitleText": "确认费用"
-			}
-		},
+
 		{
 			"path": "pages/sign/signature",
 			"style": {
@@ -84,11 +78,18 @@
 			}
 		},
 		{
+			"path": "pages/sign/confirm-price",
+			"style": {
+				"navigationBarTitleText": "确认费用"
+			}
+		},
+		{
 			"path": "pages/sign/pay-success",
 			"style": {
 				"navigationBarTitleText": "支付成功"
 			}
 		},
+
 
 		// 订单
 		{

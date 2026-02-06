@@ -7,7 +7,7 @@
 
 		<u-sticky offset-top="0" bgColor="#f5f5f5">
 			<view class="detail-top">
-				协议编号：234324343
+				协议编号：{{ info.orderCode }}
 			</view>
 
 			<view class="tab-wrap">
@@ -19,29 +19,30 @@
 			<view class="card-list">
 				<view class="card-list-item">
 					<view class="tag">
-						已签约
+						{{ info.statusName }}
 					</view>
 					<view class="user-info">
 						<view class="avatar-name">
 							<view class="dot"></view>
 							<view class="name">
-								母亲姓名
+								{{ info.motherName }}
 							</view>
 						</view>
 						<template v-if="tabIndex == 0">
-							<view class="">电话号码：<text>12456734876</text></view>
-							<view class="">证件类型：<text>身份证</text></view>
-							<view class="" style="display: flex; align-item: center;">证件号：
-								<text style="padding-right: 20rpx;" v-if="showId">232343343232423987</text>
-								<text style="padding-right: 20rpx;" v-else>232***********987</text>
+							<view class="">母亲信息：<text>{{ info.motherName }}</text></view>
+							<view class="">手机号码：<text> {{ info.phonenumber }}</text></view>
+							<view class="">证件类型：<text>{{ info.idType | getLabelById}}</text></view>
+							<view class="id-cell">证件号：
+								<text class="id-cell-text" v-if="showId">{{ info.idCode }}</text>
+								<text class="id-cell-text" v-else>{{ info.idCode | idCardMask }}</text>
 								<u-icon :name="showId ? 'eye-fill' : 'eye-off'" size="40" color="#bbb"
 									@tap="showId = !showId"></u-icon>
 							</view>
-							<view class="">预产期：<text>2026-03-12</text></view>
-							<view class="">预产医院：<text>北京市朝阳医院</text></view>
+							<view class="">预产期：<text>{{ info.dueDate }}</text></view>
+							<view class="">预产医院：<text>{{ info.hospitalName }}</text></view>
 						</template>
 						<template v-if="tabIndex == 1">
-							<view class="">手机号：<text>12456734876</text></view>
+<!-- 							<view class="">手机号：<text>12456734876</text></view>
 							<view class="">证件类型：<text>身份证</text></view>
 							<view class="" style="display: flex; align-item: center;">证件号：
 								<text style="padding-right: 20rpx;" v-if="showId">232343343232423987</text>
@@ -51,12 +52,13 @@
 							</view>
 							<view class="">电子邮件：<text>222@22.com</text></view>
 							<view class="">收货地址：<text>北京市朝阳医院</text></view>
-							<view class="">协议金额：<text>￥123123.00</text></view>
+							<view class="">协议金额：<text>￥123123.00</text></view> -->
 						</template>
 					</view>
 				</view>
 			</view>
 		</view>
+		
 		<view class="list-wrap order-list">
 			<view class="order-list-title">
 				<view class="dot"></view>
@@ -66,7 +68,7 @@
 			</view>
 			<view class="card-list order-step-wrap">
 				<view class="card-list-item order-step-item">
-					<view class="order-step-info-wrap step-finish">
+					<view class="order-step-info-wrap step-finish" :class="info.proStatus == 2 ? 'step-current' :''">
 						<image src="/static/images/order-step-yes.png" mode=""></image>
 						<view class="order-step-info">
 							<view class="step-line"></view>
@@ -85,8 +87,10 @@
 						</view>
 					</view>
 
-					<view class="order-step-info-wrap step-current">
-						<image src="/static/images/order-step-yes.png" mode=""></image>
+					<view class="order-step-info-wrap " 
+						:class="info.proStatus != 2 ? (info.orderStatus == 11 ? 'step-current' : 'step-finish') :''">
+						<image v-if="info.proStatus != 2" src="/static/images/order-step-yes.png" mode=""></image>
+						<image v-else src="/static/images/order-step-not.png" mode=""></image>
 						<view class="order-step-info">
 							<view class="step-line"></view>
 							<view class="order-step-info-data">
@@ -104,8 +108,9 @@
 						</view>
 					</view>
 
-					<view class="order-step-info-wrap">
-						<image src="/static/images/order-step-not.png" mode=""></image>
+					<view class="order-step-info-wrap" :class="info.orderStatus != 11 ? (info.orderStatus == 1 ? 'step-current' : 'step-finish') : ''">
+						<image v-if="info.orderStatus != 11" src="/static/images/order-step-yes.png" mode=""></image>
+						<image v-else src="/static/images/order-step-not.png" mode=""></image>
 						<view class="order-step-info">
 							<view class="step-line"></view>
 							<view class="order-step-info-data">
@@ -120,8 +125,9 @@
 						</view>
 					</view>
 
-					<view class="order-step-info-wrap">
-						<image src="/static/images/order-step-not.png" mode=""></image>
+					<view class="order-step-info-wrap" :class="[2,3,12,13,14,15,16,17,8,9,10,4,5].includes(info.orderStatus) ? (info.orderStatus == 2 ? 'step-current' : 'step-finish') : ''">
+						<image v-if="[2,3,12,13,14,15,16,17,8,9,10,4,5].includes(info.orderStatus)" src="/static/images/order-step-yes.png" mode=""></image>
+						<image v-else src="/static/images/order-step-not.png" mode=""></image>
 						<view class="order-step-info">
 							<view class="step-line"></view>
 							<view class="order-step-info-data">
@@ -136,8 +142,9 @@
 						</view>
 					</view>
 
-					<view class="order-step-info-wrap">
-						<image src="/static/images/order-step-not.png" mode=""></image>
+					<view class="order-step-info-wrap" :class="[3,12,13,14,15,16,17,8,9,10,4,5].includes(info.orderStatus) ? (info.orderStatus == 3 ? 'step-current' : 'step-finish') : ''">
+						<image v-if="[3,12,13,14,15,16,17,8,9,10,4,5].includes(info.orderStatus)" src="/static/images/order-step-yes.png" mode=""></image>
+						<image v-else src="/static/images/order-step-not.png" mode=""></image>
 						<view class="order-step-info">
 							<view class="step-line"></view>
 							<view class="order-step-info-data">
@@ -152,8 +159,9 @@
 						</view>
 					</view>
 
-					<view class="order-step-info-wrap">
-						<image src="/static/images/order-step-not.png" mode=""></image>
+					<view class="order-step-info-wrap" :class="[12,13,14,15,16,17,8,9,10,4,5].includes(info.orderStatus) ? (info.orderStatus != 4 && info.orderStatus != 5 ? 'step-current' : 'step-finish') : ''">
+						<image v-if="[12,13,14,15,16,17,8,9,10,4,5].includes(info.orderStatus)" src="/static/images/order-step-yes.png" mode=""></image>
+						<image v-else src="/static/images/order-step-not.png" mode=""></image>
 						<view class="order-step-info">
 							<view class="step-line"></view>
 							<view class="order-step-info-data">
@@ -168,8 +176,9 @@
 						</view>
 					</view>
 
-					<view class="order-step-info-wrap">
-						<image src="/static/images/order-step-not.png" mode=""></image>
+					<view class="order-step-info-wrap" :class="[4,5].includes(info.orderStatus) ? (info.orderStatus== 4 ? 'step-current' : 'step-finish') : ''">
+						<image v-if="[4,5].includes(info.orderStatus)" src="/static/images/order-step-yes.png" mode=""></image>
+						<image v-else src="/static/images/order-step-not.png" mode=""></image>
 						<view class="order-step-info">
 							<view class="step-line"></view>
 							<view class="order-step-info-data">
@@ -184,8 +193,9 @@
 						</view>
 					</view>
 
-					<view class="order-step-info-wrap">
-						<image src="/static/images/order-step-not.png" mode=""></image>
+					<view class="order-step-info-wrap" :class="info.orderStatus == 5 ? 'step-current': ''">
+						<image v-if="info.orderStatus == 5" src="/static/images/order-step-yes.png" mode=""></image>
+						<image v-else src="/static/images/order-step-not.png" mode=""></image>
 						<view class="order-step-info no-bottom">
 							<view class="step-line"></view>
 							<view class="order-step-info-data">
@@ -253,6 +263,11 @@
 </template>
 
 <script>
+	import * as api from '@/utils/api.js'
+	import {
+		mapState
+	} from 'vuex'
+
 	export default {
 		computed: {
 			// 计算容器顶部内边距（转为 rpx）
@@ -263,6 +278,79 @@
 				return barHeight;
 			}
 		},
+		filters: {
+			// 身份证号脱敏过滤器
+			idCardMask(value) {
+				if (!value || typeof value !== 'string') {
+					return value || '';
+				}
+
+				// 移除所有空格
+				const idCard = value.replace(/\s/g, '');
+
+				// 根据长度处理
+				if (idCard.length === 15) {
+					// 15位身份证：前6位 + 6个* + 后3位
+					return idCard.substring(0, 6) + '******' + idCard.substring(12);
+				} else if (idCard.length === 18) {
+					// 18位身份证：前6位 + 8个* + 后4位
+					return idCard.substring(0, 6) + '********' + idCard.substring(14);
+				} else {
+					// 其他长度：保留前2位和后2位，中间用*填充
+					const length = idCard.length;
+					if (length <= 4) {
+						return '*'.repeat(length); // 太短直接全部隐藏
+					}
+					const visibleStart = Math.min(2, Math.floor(length / 4));
+					const visibleEnd = Math.min(2, Math.floor(length / 4));
+					const hiddenLength = length - visibleStart - visibleEnd;
+					return (
+						idCard.substring(0, visibleStart) +
+						'*'.repeat(hiddenLength) +
+						idCard.substring(length - visibleEnd)
+					);
+				}
+			},
+			// 根据value获取label
+			getLabelById(value) {
+				if (value === undefined || value === null || value === '') {
+					return '';
+				}
+
+				const options = [{
+						value: '1',
+						label: '身份证'
+					},
+					{
+						value: '2',
+						label: '护照'
+					},
+					{
+						value: '3',
+						label: '永久居留身份证'
+					},
+					{
+						value: '4',
+						label: '台湾来往大陆通行证'
+					},
+					{
+						value: '5',
+						label: '香港来往大陆通行证'
+					},
+					{
+						value: '6',
+						label: '澳门来往大陆通行证'
+					},
+					{
+						value: '10',
+						label: '其它'
+					}
+				];
+
+				const option = options.find(item => String(item.value) === String(value));
+				return option ? option.label : '';
+			}
+		},
 		data() {
 			return {
 				orderId: '',
@@ -270,15 +358,51 @@
 				showId: false,
 				cardListScrollTop: 0,
 				cardList: [],
+				info: {},
+
 			};
 		},
 		onLoad(options) {
 			if (options.orderId) {
 				this.orderId = options.orderId
-				console.log(this.orderId)
+				this.init()
 			}
 		},
 		methods: {
+			async init() {
+				const statuses = [{
+						code: '1',
+						status: '已签约',
+						class: 'signed'
+					},
+					{
+						code: '2',
+						status: '未签约',
+						class: 'unsigned'
+					},
+					{
+						code: '3',
+						status: '已解约',
+						class: 'unbound'
+					}
+				];
+				//（1-已签，2-未签，3-取消，4-终止）
+
+				const res = await api.getFdpOrder(this.orderId);
+				if (res.code == 200) {
+					if (res.rows && res.rows.length > 0) {
+						const row = res.rows[0];
+						this.info = row || {};
+						const matchedStatus = statuses.find(item => item.code === String(this.info
+							.proStatus));
+						
+						//this.info.orderStatus = 4; //TODO 模拟数据
+
+						this.info.statusName = matchedStatus ? matchedStatus.status : '未知状态';
+						this.info.statusClass = matchedStatus ? matchedStatus.class : 'unknown';
+					}
+				}
+			},
 			tabClick(index) {
 				this.tabIndex = index;
 				this.cardListScrollTop = 0;
@@ -296,7 +420,7 @@
 				}
 			},
 			// 查看协议
-			viewAgreement(){
+			viewAgreement() {
 				uni.navigateTo({
 					url: "/pages/order/agreement"
 				})
@@ -363,6 +487,16 @@
 		color: #4A63E4;
 		border: 2px solid #A4AFDE;
 	}
+
+	.id-cell {
+		display: flex;
+		align-item: center;
+
+		.id-cell-text {
+			padding-right: 20rpx;
+		}
+	}
+
 
 	.list-wrap {
 		.card-list {

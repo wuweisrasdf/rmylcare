@@ -118,6 +118,7 @@
 					navbar: '',
 					details: ''
 				},
+				userInfo: {}, // 甲方信息
 				motherInfo: {},
 				motherId: 0, // 产妇id
 				salesId: 0, // 销售id
@@ -147,7 +148,11 @@
 					const motherInfo = result.mother && result.mother.length > 0 ? result.mother[0] : {};
 					this.motherInfo = motherInfo
 					this.motherId = motherInfo.id || 0
+					
+					this.userInfo = result.user ? result.user : {};
 				}
+				
+				console.log('result',result);
 
 				this.salesId = uni.getStorageSync('SCAN_SALES_ID') || 0; // 销售id 从storage 获取
 			},
@@ -174,19 +179,27 @@
 					console.log('pdfcreate:', res)
 					if (res.id) {
 						this.orderId = res.id;
-						this.getSignUrl()
+						this.getSignUrl();
 					}
 				}
 			},
 			// 获取签名URL
 			async getSignUrl() {
+				if (!this.userInfo.nickName || !this.userInfo.phonenumber) {
+					uni.showToast({
+						title: "获取甲方信息失败",
+						icon: 'none'
+					});
+					return;
+				}
+				
 				const orderId = this.orderId;
 				const params = {
 					orderId: orderId,
 					returnURL: api.signReturnUrl,
 					signType: '1', // 签约=1，解约=2
-					signerName: this.user.nickName, // 当前登录用户的昵称
-					signerPhone: this.user.phonenumber, // 当前用户的手机号
+					signerName: this.userInfo.nickName, // 签约甲方的姓名
+					signerPhone: this.userInfo.phonenumber, // 签约甲方的手机号
 				}
 
 				uni.showLoading({

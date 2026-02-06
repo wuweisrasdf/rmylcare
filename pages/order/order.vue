@@ -12,61 +12,75 @@
 			</view>
 
 			<view class="content-container">
-				<view v-for="(item, index) in list" :key="index" class="order-card" @click="showDetail(item.orderId)">
+				<view v-for="(item, index) in list" :key="index" class="order-card" @click="showDetail(item.id)">
 					<!-- 姓名 + 状态标签 -->
 					<view class="header">
-						<text class="name">{{ item.name }}</text>
+						<text class="name">{{ item.motherName }}</text>
 						<view class="status-tag" :class="item.statusClass">
-							{{ item.status }}
+							{{ item.statusName }}
 						</view>
 					</view>
-
-					<!-- 详细信息 -->
+					
 					<view class="info-row">
 						<view class="field">
 							<text class="label">预产期:</text>
 							<text class="value">{{ item.dueDate }}</text>
 						</view>
 						<view class="field">
-							<text class="label">预产医院:</text>
-							<text class="value">{{ item.hospital }}</text>
+							<text class="label">协议号:</text>
+							<text class="value">{{ item.orderCode }}</text>
 						</view>
 					</view>
-					<view class="info-row no-bottom">
-						<view class="field">
-							<text class="label">协议号:</text>
-							<text class="value">{{ item.agreementNo }}</text>
-						</view>
+					<view class="info-row">
 						<view class="field">
 							<text class="label">签约日期:</text>
 							<text class="value">{{ item.signDate }}</text>
 						</view>
+						<!-- 这里可以留空或放其他字段 -->
+						<view class="field"></view>
+					</view>
+					<!-- 新增：预产医院单独一行 -->
+					<view class="hospital-row">
+						<text class="label">预产医院:</text>
+						<text class="hospital-value">{{ item.hospitalName }}</text>
 					</view>
 				</view>
 			</view>
 		</view>
-		<view v-else>
+		<view v-else style="padding-top:50%;">
 			<u-empty text="暂无记录" mode="order" textSize="28" iconSize="90"></u-empty>
+
 		</view>
-		
+
 
 		<view class="no-more" v-if="pageOptions.is_end">没有更多了</view>
 
 
 		<!--   <TabBar :current-tab="currentTab"/> -->
 	</view>
-	
+
 
 </template>
 
 <script>
 	import TabBar from '@/components/TabBar/TabBar.vue';
+	import * as api from '@/utils/api.js'
+	import {
+		mapState
+	} from 'vuex'
 
 	export default {
 		components: {
 			TabBar
 		},
+		filters: {
+
+		},
 		computed: {
+			...mapState({
+				user: state => state.user,
+				token: state => state.token,
+			}),
 			// 计算容器顶部内边距（转为 rpx）
 			containerPaddingTop() {
 				const barHeight = (this.CustomBar || 0) * 2 + 'rpx';
@@ -83,9 +97,6 @@
 		// 滚动到底部加载更多
 		onReachBottom() {
 			console.log("触底了")
-			// if (this.list.length < this.pageOptions.page * this.pageOptions.pageSize) {
-			// 	return this.pageOptions.is_end = true
-			// }
 
 			if (!this.pageOptions.is_end) {
 				this.pageOptions.page++
@@ -120,78 +131,76 @@
 				this.resetPage()
 				this.getList()
 			},
-			showDetail(orderId){
+			showDetail(orderId) {
 				uni.navigateTo({
 					url: "/pages/order/detail?orderId=" + orderId
 				})
 			},
 			getList() {
-				const newData = this.generateMockData(this.pageOptions.page);
-				this.list = [...this.list, ...newData];
-				this.pageOptions.total = 20;
-
-				// 判断是否加载完毕
-				if (this.list.length >= this.pageOptions.total || newData.length < this.pageOptions.pageSize) {
-					this.pageOptions.is_end = true;
-				}
-
-				/*
-				uni.showLoading({
-					title: '数据加载中'
-				})
-				api.getList(this.token, this.pageOptions.page, this.pageOptions.pageSize).then(res => {
-					let data = res.data;
-					this.pageOptions.total = data.total
-					if (data.data && data.data.length > 0) {
-						this.list.push(...data.data);
-					}
-				}).finally(() => {
-					uni.hideLoading();
-				});
-				*/
-			},
-			// 模拟生成分页数据
-			generateMockData(page) {
 				const statuses = [{
+						code: '1',
 						status: '已签约',
 						class: 'signed'
 					},
 					{
+						code: '2',
 						status: '未签约',
 						class: 'unsigned'
 					},
 					{
+						code: '3',
 						status: '已解约',
 						class: 'unbound'
 					}
 				];
-				const names = ['张菲', '李婷', '王芳', '赵敏', '刘洋'];
-				const hospitals = ['朝阳医院', '协和医院', '妇幼保健院', '人民医院'];
+				//（1-已签，2-未签，3-取消，4-终止）
 
-				const list = [];
-				for (let i = 0; i < this.pageOptions.pageSize; i++) {
-					const idx = (page - 1) * this.pageOptions.pageSize + i;
-					list.push({
-						orderId: i + 1,
-						name: names[idx % names.length],
-						status: statuses[idx % statuses.length].status,
-						statusClass: statuses[idx % statuses.length].class,
-						dueDate: `2026-03-${12 + (idx % 5)}`,
-						hospital: hospitals[idx % hospitals.length],
-						agreementNo: `${2934054876 + idx}`,
-						signDate: `2026-03-${10 + (idx % 7)}`
-					});
-				}
-				return list;
+				uni.showLoading({
+					title: '数据加载中'
+				})
+				api.getFdpOrderListForUser(this.user.userId, null, null).then(res => {
+					console.log('res', res);
+					let rows = res.rows;
+					this.pageOptions.total = res.total
+					if (rows && rows.length > 0) {
+						// 遍历rows，添加statusName和statusClass字段
+						const processedRows = rows.map(row => {
+							// 查找匹配的status对象
+							const matchedStatus = statuses.find(item => item.code === String(row
+								.proStatus));
+
+							// 创建新的对象，保持原row的所有属性，添加新字段
+							return {
+								...row,
+								statusName: matchedStatus ? matchedStatus.status : '未知状态',
+								statusClass: matchedStatus ? matchedStatus.class : 'unknown'
+							};
+						});
+
+						// 将处理后的数据添加到list中
+						this.list.push(...processedRows);
+
+						// 判断是否加载完毕
+						if (this.list.length >= this.pageOptions.total || newData.length < this.pageOptions
+							.pageSize) {
+							this.pageOptions.is_end = true;
+						}
+					}
+				}).finally(() => {
+					uni.hideLoading();
+				});
+
 			}
+			
 		}
 	};
 </script>
 
 <style lang="scss" scoped>
-	page{
+	page {
 		background-color: #F5F5F5;
 	}
+
 	.container {
 		background-color: #F5F5F5;
 		padding: 0rpx 26rpx;
@@ -243,7 +252,7 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		margin-bottom: 46rpx;
+		margin-bottom: 30rpx;
 	}
 
 	.name {
@@ -297,46 +306,78 @@
 		background-image: url('/static/images/unbound.png');
 		color: #FF9C00;
 	}
+	
+/* 修改 info-row 样式 */
+.info-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10rpx 20rpx; /* 行间距10，列间距20 */
+    padding-left: 18rpx;
+    margin-bottom: 16rpx; /* 减小底部边距 */
+}
 
-	.info-row {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: 20rpx;
-		padding-left: 18rpx;
-		margin-bottom: 20rpx;
-	}
+.field {
+    display: flex;
+    align-items: center;
+    min-height: 40rpx; /* 减小最小高度 */
+}
 
-	.no-bottom {
-		margin-bottom: 0;
-	}
+.label {
+    font-weight: bold;
+    font-size: 26rpx;
+    color: #969696;
+    min-width: 120rpx;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
 
-	.field {
-		display: flex;
-		align-items: center;
-		min-height: 56rpx;
-	}
+.value {
+    font-weight: bold;
+    font-size: 26rpx;
+    color: #969696;
+    flex: 1;
+    padding-left: 12rpx;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0; /* 重要：允许值区域压缩 */
+}
 
-	.label {
-		font-weight: bold;
-		font-size: 26rpx;
-		color: #969696;
-		min-width: 120rpx;
-		white-space: nowrap;
-	}
+/* 修改预产医院行样式 */
+.hospital-row {
+    display: flex;
+    align-items: center; /* 改为居中对齐，保持与其他行一致 */
+    padding-left: 18rpx;
+    margin-top: 8rpx; /* 减小顶部边距 */
+    min-height: 40rpx;
+    padding-right: 20rpx; /* 右侧增加内边距，防止文字贴边 */
+}
 
-	.value {
-		font-weight: bold;
-		font-size: 26rpx;
-		color: #969696;
-		flex: 1;
-		padding-left: 12rpx;
-		word-break: break-all;
-	}
-	.no-more{
+.hospital-row .label {
+    font-weight: bold;
+    font-size: 26rpx;
+    color: #969696;
+    min-width: 120rpx;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.hospital-value {
+    font-weight: bold;
+    font-size: 26rpx;
+    color: #969696;
+    flex: 1;
+    padding-left: 12rpx;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding-right: 20rpx; /* 右侧留出空间 */
+}
+
+	.no-more {
 		color: #aaaaaa;
 		text-align: center;
 		padding: 40rpx;
 		margin: 40rpx auto;
 	}
-
 </style>

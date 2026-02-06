@@ -165,9 +165,15 @@
 
 				try {
 					// 1. 调用后端接口，获取微信支付参数
-					const res = await api.createPayment(this.orderId);
+					const longId = this.user.wxOpenId.replace(/^"(.*)"$/, '$1');
+					
+					const params = {
+						longId: longId,
+						orderId: this.orderId
+					};
+					const res = await api.createPayment(params);
 
-					if (res.code !== 200 || !res.data) {
+					if (res.code !== 200 || !res.para) {
 						uni.showToast({
 							title: res.msg || '获取支付参数失败',
 							icon: 'none'
@@ -175,7 +181,7 @@
 						return;
 					}
 
-					const payData = res.data;
+					const payData = res.para;
 
 					// 2. 调起微信支付
 					const paymentResult = await uni.requestPayment({
@@ -185,19 +191,13 @@
 						signType: payData.signType || 'MD5',
 						paySign: payData.paySign
 					});
+					console.log('paymentResult',paymentResult); //{errMsg: "requestPayment:ok"}
 
 					// 3. 支付成功
-					uni.showToast({
-						title: '支付成功！',
-						icon: 'success'
+					uni.redirectTo({
+						url: '/pages/sign/pay-success?orderId=' + this.orderId
 					});
-
-					// 跳转到支付成功页
-					setTimeout(() => {
-						uni.redirectTo({
-							url: '/pages/sign/pay-success?orderId=' + this.orderId
-						});
-					}, 1500);
+					return;
 
 				} catch (err) {
 					// 支付失败或用户取消

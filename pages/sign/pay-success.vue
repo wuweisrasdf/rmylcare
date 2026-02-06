@@ -104,7 +104,7 @@
 				};
 			}
 		},
-		onLoad(options) {  //options.orderId = 17
+		onLoad(options) {
 			if (options.orderId) {
 				this.orderId = options.orderId;
 				this.init();

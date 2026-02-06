@@ -95,16 +95,6 @@
 					</u-form-item>
 				</view>
 
-				<!-- 母亲邮箱 -->
-				<view class="form-item">
-					<u-form-item prop="motherEmail" class="custom-form-item">
-						<view slot="label" class="form-label">
-							<text>母亲邮箱</text>
-						</view>
-						<u--input v-model="formData.motherEmail" placeholder="请输入邮箱" border="none" height="80"
-							:custom-style="inputStyle" />
-					</u-form-item>
-				</view>
 			</view>
 
 			<!-- 甲方基本信息 -->
@@ -194,6 +184,18 @@
 							<text class="required-star">*</text>
 						</view>
 						<u--input v-model="formData.userPhone" placeholder="请输入电话号码" border="none" height="80"
+							:custom-style="inputStyle" />
+					</u-form-item>
+				</view>
+				
+				<!-- 母亲邮箱 -->
+				<view class="form-item">
+					<u-form-item prop="userEmail" required class="custom-form-item">
+						<view slot="label" class="form-label">
+							<text>邮箱</text>
+							<text class="required-star">*</text>
+						</view>
+						<u--input v-model="formData.userEmail" placeholder="请输入邮箱" border="none" height="80"
 							:custom-style="inputStyle" />
 					</u-form-item>
 				</view>
@@ -292,6 +294,7 @@
 					userIdType: '1', // 甲方证件类型
 					userIdCode: '',
 					userPhone: '',
+					userEmail: '', // 甲方邮箱
 					address: ''
 				},
 				rules: {
@@ -362,6 +365,12 @@
 						trigger: 'blur'
 					}],
 					motherEmail: [{
+						type: 'email',
+						message: '请输入正确的邮箱地址',
+						trigger: 'blur'
+					}],
+					userEmail: [{
+						required: true,
 						type: 'email',
 						message: '请输入正确的邮箱地址',
 						trigger: 'blur'
@@ -439,6 +448,7 @@
 							userIdType: (userInfo.idType && userInfo.idType !== '0') ? userInfo.idType : '1',
 							userIdCode: userInfo.idCode || '',
 							userPhone: userInfo.phonenumber || '',
+							userEmail: userInfo.email || '',
 							motherRelation: motherInfo.motherRelation || '1'
 						};
 					}
@@ -457,6 +467,7 @@
 					this.formData.userIdType = '1';
 					this.formData.userIdCode = '';
 					this.formData.userPhone = '';
+					this.formData.userEmail = '';
 				}
 			},
 			getLabelById(value, type) {
@@ -550,16 +561,8 @@
 					const res = await api.updateMotherAndUser(params);
 
 					if (res.code == 200) {
-						uni.showToast({
-							title: '保存成功',
-							icon: 'success'
-						});
-						setTimeout(() => {
-							// 授权书页
-							uni.navigateTo({
-								url: "/pages/sign/auth"
-							})
-						}, 1000)
+						// 因为填写甲方信息后，会更新当前用户的信息，所以先获取用户更新后的信息，再跳转
+						this.getUserInfo();
 					}
 				} catch (err) {
 					console.log(err);
@@ -568,6 +571,29 @@
 						icon: 'none'
 					});
 				}
+			},
+			async getUserInfo() {
+				const res = await api.getUserDetail();
+				if (res.code == 200) {
+					const user = res.user;
+					console.log('user', user);
+					this.$store.dispatch('updateUserInfo', {
+						user
+					});
+					
+					uni.showToast({
+						title: '保存成功',
+						icon: 'success'
+					});
+					setTimeout(() => {
+						// 授权书页
+						uni.navigateTo({
+							url: "/pages/sign/auth"
+						})
+					}, 1000)
+					
+				}
+				//console.log("获取用户信息失败")
 			}
 
 		}

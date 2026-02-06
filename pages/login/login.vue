@@ -78,7 +78,19 @@
 					return;
 				}
 
-				//console.log('e.detail',e.detail);
+				let code2 = '';
+				try {
+					const loginRes = await uni.login();
+					code2 = loginRes.code;
+				} catch (err) {
+					console.error('获取登录 code 失败', err);
+					uni.showToast({
+						title: '登录初始化失败',
+						icon: 'none'
+					});
+					return;
+				}
+
 
 				// 2. 准备数据
 				const {
@@ -95,7 +107,8 @@
 					const params = {
 						code,
 						encryptedData,
-						iv
+						iv,
+						code2 // 用于获取 openid
 					};
 					const res = await api.getwxphone(params);
 
@@ -154,9 +167,9 @@
 							});
 						}
 					}, 800); // 短暂延迟，确保 toast 显示完成
-					
+
 				}
-				console.log("获取用户信息失败")
+				//console.log("获取用户信息失败")
 			}
 
 			//-- end

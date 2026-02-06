@@ -22,6 +22,11 @@
 </template>
 
 <script>
+	import * as api from '@/utils/api.js'
+	import {
+		mapState
+	} from 'vuex'
+	
 	export default {
 		computed: {
 			// 计算容器顶部内边距（转为 rpx）
@@ -36,24 +41,32 @@
 			return {
 				title: '产品宣传',
 				promoImage: '',
-				imageUrl1: 'https://nimg.ws.126.net/?url=http%3A%2F%2Fpic-bucket.ws.126.net%2Fphoto%2F0001%2F2025-03-11%2FJQCKPMN900AN0001NOS.jpg&thumbnail=750x2147483647&quality=75&type=webp',
-				imageUrl2: 'https://nimg.ws.126.net/?url=http%3A%2F%2Fpic-bucket.ws.126.net%2Fphoto%2F0001%2F2025-03-08%2FJQ4IS4MV00AN0001NOS.jpg&thumbnail=750x2147483647&quality=75&type=webp',
+				type: 0,
 			}
 		},
 		onLoad(options) {
 			if (options.type) {
-				if (options.type == 1) {
-					this.title = '成人优因'
-					this.promoImage = this.imageUrl1
-				} else {
-					this.title = '细胞囊泡'
-					this.promoImage = this.imageUrl2
-				}
-
+				this.type = options.type;
+				this.init();
 			}
 		},
 		methods: {
-
+			async init() {
+				// 获取产品信息
+				const productId = 1; // 固定值 1
+				const res = await api.getProductById(productId);
+				if (res.code == 200) {
+					const data = res.data || {};
+					
+					if (this.type == 1) {
+						this.title = '成人优因';
+						this.promoImage = data.navbar || '';
+					} else {
+						this.title = '细胞囊泡'
+						this.promoImage = data.details || '';
+					}
+				}
+			}
 		}
 	}
 </script>
