@@ -19,16 +19,16 @@
 			<view class="card-list">
 				<view class="card-list-item">
 					<view class="tag">
-						{{ info.statusName }}
+						{{ info.statusTxt }}
 					</view>
 					<view class="user-info">
-						<view class="avatar-name">
-							<view class="dot"></view>
-							<view class="name">
-								{{ info.motherName }}
-							</view>
-						</view>
 						<template v-if="tabIndex == 0">
+							<view class="avatar-name">
+								<view class="dot"></view>
+								<view class="name">
+									{{ info.motherName }}
+								</view>
+							</view>
 							<view class="">母亲信息：<text>{{ info.motherName }}</text></view>
 							<view class="">手机号码：<text> {{ info.phonenumber }}</text></view>
 							<view class="">证件类型：<text>{{ info.idType | getLabelById}}</text></view>
@@ -42,23 +42,29 @@
 							<view class="">预产医院：<text>{{ info.hospitalName }}</text></view>
 						</template>
 						<template v-if="tabIndex == 1">
-<!-- 							<view class="">手机号：<text>12456734876</text></view>
+							<view class="avatar-name">
+								<view class="dot"></view>
+								<view class="name">
+									甲方姓名
+								</view>
+							</view>
+							<view class="">手机号：<text> 暂无 </text></view>
 							<view class="">证件类型：<text>身份证</text></view>
-							<view class="" style="display: flex; align-item: center;">证件号：
-								<text style="padding-right: 20rpx;" v-if="showId">232343343232423987</text>
-								<text style="padding-right: 20rpx;" v-else>232***********987</text>
+							<view class="id-cell">证件号：
+								<text class="id-cell-text" v-if="showId">暂无</text>
+								<text class="id-cell-text" v-else>暂无</text>
 								<u-icon :name="showId ? 'eye-fill' : 'eye-off'" size="40" color="#bbb"
 									@tap="showId = !showId"></u-icon>
 							</view>
-							<view class="">电子邮件：<text>222@22.com</text></view>
-							<view class="">收货地址：<text>北京市朝阳医院</text></view>
-							<view class="">协议金额：<text>￥123123.00</text></view> -->
+							<view class="">电子邮件：<text>{{ info.email }}</text></view>
+							<view class="">收货地址：<text>{{ info.address }}</text></view>
+							<view class="">协议金额：<text>￥{{ info.priceOut }}</text></view>
 						</template>
 					</view>
 				</view>
 			</view>
 		</view>
-		
+
 		<view class="list-wrap order-list">
 			<view class="order-list-title">
 				<view class="dot"></view>
@@ -66,159 +72,186 @@
 					订单进度
 				</view>
 			</view>
+
 			<view class="card-list order-step-wrap">
 				<view class="card-list-item order-step-item">
-					<view class="order-step-info-wrap step-finish" :class="info.proStatus == 2 ? 'step-current' :''">
-						<image src="/static/images/order-step-yes.png" mode=""></image>
+
+					<!-- 步骤1：未签约 -->
+					<view class="order-step-info-wrap" :class="{
+        'step-finish': isStepFinishedOrCurrent(0),
+        'step-current': isCurrentStep(0)
+      }">
+						<image
+							:src="isStepFinishedOrCurrent(0) ? '/static/images/order-step-yes.png' : '/static/images/order-step-not.png'"
+							mode="" />
 						<view class="order-step-info">
 							<view class="step-line"></view>
 							<view class="order-step-info-data">
-								<view class="step-name">
-									未签约
-								</view>
-								<view class="step-desc">
-									仅录入基本信息，未签字
-								</view>
+								<view class="step-name">未签约</view>
+								<view class="step-desc">仅录入基本信息，未签字</view>
 								<view class="bottom-line"></view>
 							</view>
-							<view class="date">
-								01-12
+							<view v-if="getStepData(0) && getStepData(0).StatusDate" class="date">
+								{{ getStepData(0).StatusDate }}
 							</view>
 						</view>
 					</view>
 
-					<view class="order-step-info-wrap " 
-						:class="info.proStatus != 2 ? (info.orderStatus == 11 ? 'step-current' : 'step-finish') :''">
-						<image v-if="info.proStatus != 2" src="/static/images/order-step-yes.png" mode=""></image>
-						<image v-else src="/static/images/order-step-not.png" mode=""></image>
+					<!-- 步骤2：已签约 -->
+					<view class="order-step-info-wrap" :class="{
+        'step-finish': isStepFinishedOrCurrent(1),
+        'step-current': isCurrentStep(1)
+      }">
+						<image
+							:src="isStepFinishedOrCurrent(1) ? '/static/images/order-step-yes.png' : '/static/images/order-step-not.png'"
+							mode="" />
 						<view class="order-step-info">
 							<view class="step-line"></view>
 							<view class="order-step-info-data">
-								<view class="step-name">
-									已签约
-								</view>
-								<view class="step-desc">
-									您已成功签署协议并完成支付
-								</view>
+								<view class="step-name">已签约</view>
+								<view class="step-desc">您已成功签署协议并完成支付</view>
 								<view class="bottom-line"></view>
 							</view>
-							<view class="date">
-								01-12
+							<view v-if="getStepData(1) && getStepData(1).StatusDate" class="date">
+								{{ getStepData(1).StatusDate }}
 							</view>
 						</view>
 					</view>
 
-					<view class="order-step-info-wrap" :class="info.orderStatus != 11 ? (info.orderStatus == 1 ? 'step-current' : 'step-finish') : ''">
-						<image v-if="info.orderStatus != 11" src="/static/images/order-step-yes.png" mode=""></image>
-						<image v-else src="/static/images/order-step-not.png" mode=""></image>
+					<!-- 步骤3：已付款 -->
+					<view class="order-step-info-wrap" :class="{
+        'step-finish': isStepFinishedOrCurrent(2),
+        'step-current': isCurrentStep(2)
+      }">
+						<image
+							:src="isStepFinishedOrCurrent(2) ? '/static/images/order-step-yes.png' : '/static/images/order-step-not.png'"
+							mode="" />
 						<view class="order-step-info">
 							<view class="step-line"></view>
 							<view class="order-step-info-data">
-								<view class="step-name">
-									已支付
-								</view>
-								<view class="step-desc">
-									您已完成支付
-								</view>
+								<view class="step-name">已付款</view>
+								<view class="step-desc">您已完成支付</view>
 								<view class="bottom-line"></view>
+							</view>
+							<view v-if="getStepData(2) && getStepData(2).StatusDate" class="date">
+								{{ getStepData(2).StatusDate }}
 							</view>
 						</view>
 					</view>
 
-					<view class="order-step-info-wrap" :class="[2,3,12,13,14,15,16,17,8,9,10,4,5].includes(info.orderStatus) ? (info.orderStatus == 2 ? 'step-current' : 'step-finish') : ''">
-						<image v-if="[2,3,12,13,14,15,16,17,8,9,10,4,5].includes(info.orderStatus)" src="/static/images/order-step-yes.png" mode=""></image>
-						<image v-else src="/static/images/order-step-not.png" mode=""></image>
+					<!-- 步骤4：样本接收 -->
+					<view class="order-step-info-wrap" :class="{
+        'step-finish': isStepFinishedOrCurrent(3),
+        'step-current': isCurrentStep(3)
+      }">
+						<image
+							:src="isStepFinishedOrCurrent(3) ? '/static/images/order-step-yes.png' : '/static/images/order-step-not.png'"
+							mode="" />
 						<view class="order-step-info">
 							<view class="step-line"></view>
 							<view class="order-step-info-data">
-								<view class="step-name">
-									样本接收
-								</view>
-								<view class="step-desc">
-									样本已送达我们的处理中心
-								</view>
+								<view class="step-name">样本接收</view>
+								<view class="step-desc">样本已送达我们的处理中心</view>
 								<view class="bottom-line"></view>
+							</view>
+							<view v-if="getStepData(3) && getStepData(3).StatusDate" class="date">
+								{{ getStepData(3).StatusDate }}
 							</view>
 						</view>
 					</view>
 
-					<view class="order-step-info-wrap" :class="[3,12,13,14,15,16,17,8,9,10,4,5].includes(info.orderStatus) ? (info.orderStatus == 3 ? 'step-current' : 'step-finish') : ''">
-						<image v-if="[3,12,13,14,15,16,17,8,9,10,4,5].includes(info.orderStatus)" src="/static/images/order-step-yes.png" mode=""></image>
-						<image v-else src="/static/images/order-step-not.png" mode=""></image>
+					<!-- 步骤5：病毒检测 -->
+					<view class="order-step-info-wrap" :class="{
+        'step-finish': isStepFinishedOrCurrent(4),
+        'step-current': isCurrentStep(4)
+      }">
+						<image
+							:src="isStepFinishedOrCurrent(4) ? '/static/images/order-step-yes.png' : '/static/images/order-step-not.png'"
+							mode="" />
 						<view class="order-step-info">
 							<view class="step-line"></view>
 							<view class="order-step-info-data">
-								<view class="step-name">
-									病毒检测
-								</view>
-								<view class="step-desc">
-									**********************
-								</view>
+								<view class="step-name">病毒检测</view>
+								<view class="step-desc">**********************</view>
 								<view class="bottom-line"></view>
+							</view>
+							<view v-if="getStepData(4) && getStepData(4).StatusDate" class="date">
+								{{ getStepData(4).StatusDate }}
 							</view>
 						</view>
 					</view>
 
-					<view class="order-step-info-wrap" :class="[12,13,14,15,16,17,8,9,10,4,5].includes(info.orderStatus) ? (info.orderStatus != 4 && info.orderStatus != 5 ? 'step-current' : 'step-finish') : ''">
-						<image v-if="[12,13,14,15,16,17,8,9,10,4,5].includes(info.orderStatus)" src="/static/images/order-step-yes.png" mode=""></image>
-						<image v-else src="/static/images/order-step-not.png" mode=""></image>
+					<!-- 步骤6：制备完成 -->
+					<view class="order-step-info-wrap" :class="{
+        'step-finish': isStepFinishedOrCurrent(5),
+        'step-current': isCurrentStep(5)
+      }">
+						<image
+							:src="isStepFinishedOrCurrent(5) ? '/static/images/order-step-yes.png' : '/static/images/order-step-not.png'"
+							mode="" />
 						<view class="order-step-info">
 							<view class="step-line"></view>
 							<view class="order-step-info-data">
-								<view class="step-name">
-									制备完成
-								</view>
-								<view class="step-desc">
-									胎盘已送达我们的处理中心
-								</view>
+								<view class="step-name">制备完成</view>
+								<view class="step-desc">胎盘已送达我们的处理中心</view>
 								<view class="bottom-line"></view>
+							</view>
+							<view v-if="getStepData(5) && getStepData(5).StatusDate" class="date">
+								{{ getStepData(5).StatusDate }}
 							</view>
 						</view>
 					</view>
 
-					<view class="order-step-info-wrap" :class="[4,5].includes(info.orderStatus) ? (info.orderStatus== 4 ? 'step-current' : 'step-finish') : ''">
-						<image v-if="[4,5].includes(info.orderStatus)" src="/static/images/order-step-yes.png" mode=""></image>
-						<image v-else src="/static/images/order-step-not.png" mode=""></image>
+					<!-- 步骤7：已配送 -->
+					<view class="order-step-info-wrap" :class="{
+        'step-finish': isStepFinishedOrCurrent(6),
+        'step-current': isCurrentStep(6)
+      }">
+						<image
+							:src="isStepFinishedOrCurrent(6) ? '/static/images/order-step-yes.png' : '/static/images/order-step-not.png'"
+							mode="" />
 						<view class="order-step-info">
 							<view class="step-line"></view>
 							<view class="order-step-info-data">
-								<view class="step-name">
-									已配送
-								</view>
-								<view class="step-desc">
-									产品已发出，请留意物流信息
-								</view>
+								<view class="step-name">已配送</view>
+								<view class="step-desc">产品已发出，请留意物流信息</view>
 								<view class="bottom-line"></view>
+							</view>
+							<view v-if="getStepData(6) && getStepData(6).StatusDate" class="date">
+								{{ getStepData(6).StatusDate }}
 							</view>
 						</view>
 					</view>
 
-					<view class="order-step-info-wrap" :class="info.orderStatus == 5 ? 'step-current': ''">
-						<image v-if="info.orderStatus == 5" src="/static/images/order-step-yes.png" mode=""></image>
-						<image v-else src="/static/images/order-step-not.png" mode=""></image>
+					<!-- 步骤8：已完成 -->
+					<view class="order-step-info-wrap" :class="{
+        'step-finish': isStepFinishedOrCurrent(7),
+        'step-current': isCurrentStep(7)
+      }">
+						<image
+							:src="isStepFinishedOrCurrent(7) ? '/static/images/order-step-yes.png' : '/static/images/order-step-not.png'"
+							mode="" />
 						<view class="order-step-info no-bottom">
 							<view class="step-line"></view>
 							<view class="order-step-info-data">
-								<view class="step-name">
-									已完成
-								</view>
-								<view class="step-desc">
-									**********************
-								</view>
+								<view class="step-name">已完成</view>
+								<view class="step-desc">**********************</view>
 								<view class="bottom-line"></view>
+							</view>
+							<view v-if="getStepData(7) && getStepData(7).StatusDate" class="date">
+								{{ getStepData(7).StatusDate }}
 							</view>
 						</view>
 					</view>
 
 				</view>
-
 			</view>
-
 		</view>
 
 		<!-- 快速操作 -->
+		<!-- 状态ID 大于1，显示“查看协议”，状态ID == 8，显示解除协议，状态ID==9，显示 退款中。 -->
 		<view class="quick-actions-grid">
-			<view class="action-card view-agreement" @click="viewAgreement">
+			<view class="action-card view-agreement" @click="viewAgreement" v-if="currentStatusId > 1">
 				<view class="card-content">
 					<text class="card-title">查看协议</text>
 					<text class="card-desc">查看已签署的电子协议</text>
@@ -226,16 +259,15 @@
 				<view class="card-arrow"></view>
 			</view>
 
-			<view class="action-card unbind-agreement" @click="unbindAgreement">
+			<view class="action-card unbind-agreement" @click="unbindAgreement" v-if="currentStatusId === 8">
 				<view class="card-content">
 					<text class="card-title">协议解除</text>
 					<text class="card-desc">申请协议解除和退费</text>
-
 				</view>
 				<view class="card-arrow"></view>
 			</view>
 
-			<view class="action-card refund-progress" @click="refundProgress">
+			<view class="action-card refund-progress" @click="refundProgress" v-if="currentStatusId === 9">
 				<view class="card-content">
 					<text class="card-title">退款进度</text>
 					<text class="card-desc">查看已退款的进度</text>
@@ -258,6 +290,16 @@
 
 		</view>
 
+		<!-- 底部按钮 -->
+		<view class="btn-group" v-if="(info.proStatus == 2) || (info.proStatus == 1 && info.orderStatus==11)">
+			<u-button :custom-style="nextBtnStyle" @click="toSign" v-if="info.proStatus == 2">
+				去签字
+			</u-button>
+			<u-button :custom-style="nextBtnStyle" @click="toPay" v-if="info.proStatus == 1 && info.orderStatus==11">
+				去支付
+			</u-button>
+		</view>
+
 	</view>
 
 </template>
@@ -274,8 +316,26 @@
 			containerPaddingTop() {
 				// CustomBar 是 px，uni-app 中 1px = 2rpx
 				const barHeight = (this.CustomBar || 0) * 2 + 'rpx';
-				console.log(barHeight)
+				//console.log(barHeight)
 				return barHeight;
+			},
+			nextBtnStyle() {
+				return {
+					height: '98rpx',
+					borderRadius: '49rpx',
+					backgroundColor: '#4A63E4',
+					color: '#FFFFFF',
+					fontSize: '32rpx',
+					fontWeight: 'bold',
+				};
+			},
+			currentStatusId() {
+			    const progress = this.info?.orderProgress;
+			    if (!Array.isArray(progress) || progress.length === 0) {
+			      return 0; // 默认为未签约
+			    }
+			    const lastStep = progress[progress.length - 1];
+			    return Number(lastStep.Id) || 0;
 			}
 		},
 		filters: {
@@ -392,14 +452,16 @@
 				if (res.code == 200) {
 					if (res.rows && res.rows.length > 0) {
 						const row = res.rows[0];
-						this.info = row || {};
-						const matchedStatus = statuses.find(item => item.code === String(this.info
-							.proStatus));
-						
-						//this.info.orderStatus = 4; //TODO 模拟数据
 
-						this.info.statusName = matchedStatus ? matchedStatus.status : '未知状态';
-						this.info.statusClass = matchedStatus ? matchedStatus.class : 'unknown';
+						if (row.proStatus == 1) {
+							row.statusClass = 'signed';
+						} else if (row.proStatus == 3) {
+							row.statusClass = 'unbound';
+						} else {
+							row.statusClass = 'unsigned';
+						}
+
+						this.info = row || {};
 					}
 				}
 			},
@@ -419,6 +481,16 @@
 					});
 				}
 			},
+			toSign() {
+				uni.navigateTo({
+					url: `/pages/sign/confirm-price?orderId=${this.orderId}&fromOrder=1`
+				})
+			},
+			toPay() {
+				uni.navigateTo({
+					url: `/pages/sign/success?orderId=${this.orderId}`
+				})
+			},
 			// 查看协议
 			viewAgreement() {
 				uni.navigateTo({
@@ -434,8 +506,27 @@
 			// 解除协议
 			unbindAgreement() {
 				uni.navigateTo({
-					url: "/pages/refund/cancel-agreement"
+					url: `/pages/refund/cancel-agreement?orderId=${this.orderId}&orderCode=${encodeURIComponent(this.info.orderCode)}`
 				})
+			},
+			// 安全获取 orderProgress 中第 index 步的数据，若不存在则返回 null
+			getStepData(index) {
+				if (!this.info?.orderProgress || !Array.isArray(this.info.orderProgress)) {
+					return null;
+				}
+				return this.info.orderProgress[index] || null;
+			},
+
+			// 判断当前是否处于某一步（用于 step-current）
+			isCurrentStep(stepIndex) {
+				const len = this.info?.orderProgress?.length || 0;
+				return len === stepIndex + 1; // 因为索引从0开始，步骤1对应index0
+			},
+
+			// 判断某一步是否已完成（包括当前步）
+			isStepFinishedOrCurrent(stepIndex) {
+				const len = this.info?.orderProgress?.length || 0;
+				return len > stepIndex;
 			}
 		}
 	};
@@ -825,5 +916,11 @@
 		.refund-progress {
 			background-image: url('/static/images/refund-progress.png');
 		}
+	}
+
+	.btn-group {
+		display: flex;
+		justify-content: space-between;
+		margin: 70rpx 26rpx 0;
 	}
 </style>

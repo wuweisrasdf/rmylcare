@@ -20,7 +20,7 @@
 							<text class="required-star">*</text>
 						</view>
 						<u--input v-model="formData.motherName" placeholder="请输入母亲姓名" border="none"
-							:custom-style="inputStyle" />
+							:custom-style="inputStyle" @input="handleMotherNameInput" />
 					</u-form-item>
 				</view>
 
@@ -51,7 +51,7 @@
 								<text class="required-star">*</text>
 							</view>
 							<u--input v-model="formData.motherIdCode" placeholder="请输入证件号码" border="none"
-								:custom-style="inputStyle" />
+								:custom-style="inputStyle" @input="handleMotherIdCodeInput" />
 						</u-form-item>
 					</view>
 				</view>
@@ -63,7 +63,7 @@
 							<text>母亲手机号</text>
 						</view>
 						<u--input v-model="formData.motherPhone" placeholder="请输入手机号" border="none" height="80"
-							:custom-style="inputStyle" />
+							:custom-style="inputStyle" @input="handleMotherPhoneInput" />
 					</u-form-item>
 				</view>
 
@@ -74,8 +74,11 @@
 							<text>预产医院</text>
 							<text class="required-star">*</text>
 						</view>
-						<u--input v-model="formData.hospitalName" placeholder="请输入预产医院" border="none" height="80"
-							:custom-style="inputStyle" />
+
+						<view class="date-picker-input" @click="goToHospitalSelect">
+							<text>{{ formData.hospitalName || '请选择预产医院' }}</text>
+							<u-icon name="arrow-right" color="#999" size="36"></u-icon>
+						</view>
 					</u-form-item>
 				</view>
 
@@ -187,8 +190,8 @@
 							:custom-style="inputStyle" />
 					</u-form-item>
 				</view>
-				
-				<!-- 母亲邮箱 -->
+
+				<!-- 邮箱 -->
 				<view class="form-item">
 					<u-form-item prop="userEmail" required class="custom-form-item">
 						<view slot="label" class="form-label">
@@ -236,8 +239,10 @@
 
 <script>
 	import * as api from '@/utils/api.js'
-	import { mapState } from 'vuex'
-	
+	import {
+		mapState
+	} from 'vuex'
+
 	export default {
 		computed: {
 			...mapState({
@@ -288,7 +293,7 @@
 					motherEmail: '', // 产妇邮箱
 					hospitalName: '', // 预产医院
 					dueDate: '', // 预产期  datetime
-					motherRelation: '2', // 甲方与产妇关系 1-本人、2-丈夫
+					motherRelation: '1', // 甲方与产妇关系 1-本人、2-丈夫
 					userId: '', // 甲方ID
 					nickName: '', // 甲方姓名
 					userIdType: '1', // 甲方证件类型
@@ -360,8 +365,13 @@
 						trigger: 'blur'
 					}],
 					motherPhone: [{
-						pattern: /^1[0-9]\d{9}$/,
-						message: '请输入正确的手机号码',
+						validator(rule, value, callback) {
+							if (value && !/^1[0-9]\d{9}$/.test(value)) {
+								callback(new Error('请输入正确的手机号码'));
+							} else {
+								callback();
+							}
+						},
 						trigger: 'blur'
 					}],
 					motherEmail: [{
@@ -408,54 +418,192 @@
 				showPicker: false,
 				currentPickerFor: '',
 				pickerList: [],
-				minDate: new Date('2020-01-01').getTime(), // 预产期最小日期
-				maxDate: new Date('2030-12-31').getTime(), // 预产期最大日期
-				showDatePicker: false
+				minDate: new Date('2025-01-01').getTime(), // 预产期最小日期
+				maxDate: new Date('2035-12-31').getTime(), // 预产期最大日期
+				showDatePicker: false,
+				orderId: 0, // 订单id
+				salesId: 0, // 销售ID
+				productInfo: {
+					id: '',
+					productName: '',
+					price: '',
+					navbar: '',
+					details: ''
+				},
+				orderInfo: {}
 			};
 		},
 		onReady() {
 			// 设置验证规则
 			this.$refs.uForm.setRules(this.rules);
 		},
-		onLoad() {
-			this.loadFormData();
+		onLoad(options) {
+			if (options.orderId) {
+				this.orderId = options.orderId
+			} else {
+				// 新增订单，从storage 获取 销售id
+				this.salesId = uni.getStorageSync('SCAN_SALES_ID') || 0;
+			}
+
+			uni.$on('selectHospital', (hospital) => {
+				this.formData.hospitalName = hospital;
+			});
+
+			this.init();
+
+		},
+		onUnload() {
+			uni.$off('selectHospital'); // 销毁
 		},
 		methods: {
+			async init() {
+				// 获取产品信息
+				const productId = 1; // 固定值 1
+				const res = await api.getProductById(productId);
+				if (res.code == 200) {
+					const data = res.data || {};
+					this.productInfo = {
+						id: data.id != null ? data.id : '',
+						productName: data.productName || '',
+						price: data.price != null ? data.price : '',
+						navbar: data.navbar || '',
+						details: data.details || ''
+					};
+
+					this.loadFormData();
+				}
+			},
+			// 如果是修改未签约的订单，则加载已添加的数据
 			async loadFormData() {
+				this.resetForm();
+
+				// 如果没有 orderId，说明是新建流程，保持空表单
+				if (!this.orderId) return;
+
+
 				try {
-					const res = await api.getMotherAndUser();
-					if (res.code === 200) {
-						const motherInfo = res.mother && res.mother.length > 0 ? res.mother[0] : {};
-						const userInfo = res.user || {};
-						// 手动映射字段到 formData
-						this.formData = {
-							...this.formData,
-
-							// 母亲信息
-							motherId: motherInfo.id || 0,
-							motherName: motherInfo.motherName || '',
-							motherIdType: (motherInfo.idType && motherInfo.idType !== '0') ? motherInfo.idType : '1',
-							motherIdCode: motherInfo.idCode || '',
-							motherPhone: motherInfo.phonenumber || '',
-							motherEmail: motherInfo.email || '',
-							hospitalName: motherInfo.hospitalName || '',
-							dueDate: motherInfo.dueDate || '',
-							address: motherInfo.address || '',
-
-							// 甲方（用户）信息
-							userId: userInfo.userId || '',
-							nickName: userInfo.nickName || '',
-							userIdType: (userInfo.idType && userInfo.idType !== '0') ? userInfo.idType : '1',
-							userIdCode: userInfo.idCode || '',
-							userPhone: userInfo.phonenumber || '',
-							userEmail: userInfo.email || '',
-							motherRelation: motherInfo.motherRelation || '1'
-						};
+					// 1. 通过 orderId 获取订单详情（含 motherId）
+					const orderRes = await api.getFdpOrder(this.orderId);
+					if (orderRes.code !== 200 || !orderRes.rows?.[0]) {
+						uni.showToast({
+							title: '订单信息获取失败',
+							icon: 'none'
+						});
+						return;
 					}
+
+					const order = orderRes.rows[0];
+					const motherId = order.motherId;
+					if (!motherId) {
+						uni.showToast({
+							title: '订单未关联产妇',
+							icon: 'none'
+						});
+						return;
+					}
+
+					// 2. 获取产妇和甲方信息
+					const res = await api.getMotherAndUser();
+					if (res.code !== 200) return;
+
+					// 3. 查找匹配的产妇
+					const motherInfo = Array.isArray(res.mother) ?
+						res.mother.find(m => String(m.id) === String(motherId)) || null :
+						null;
+
+					if (!motherInfo) {
+						uni.showToast({
+							title: '产妇信息不存在',
+							icon: 'none'
+						});
+						return;
+					}
+
+					// 4. 甲方信息
+					const userInfo = res.user || {};
+
+					// 5. 填充表单
+					Object.assign(this.formData, {
+						motherId: motherInfo.id,
+						motherName: motherInfo.motherName || '',
+						motherIdType: motherInfo.idType && motherInfo.idType !== '0' ? motherInfo.idType : '1',
+						motherIdCode: motherInfo.idCode || '',
+						motherPhone: motherInfo.phonenumber || '',
+						motherEmail: motherInfo.email || '',
+						hospitalName: motherInfo.hospitalName || '',
+						dueDate: motherInfo.dueDate || '',
+						address: motherInfo.address || '',
+						motherRelation: motherInfo.motherRelation || '1',
+
+						// 甲方（用户）信息
+						userId: userInfo.userId || '',
+						nickName: userInfo.nickName || '',
+						userIdType: (userInfo.idType && userInfo.idType !== '0') ? userInfo.idType : '1',
+						userIdCode: userInfo.idCode || '',
+						userPhone: userInfo.phonenumber || '',
+						userEmail: userInfo.email || '',
+					});
+
 				} catch (err) {
 					console.error('加载表单数据失败:', err);
 				}
 			},
+			// 重置表单
+			resetForm() {
+				this.formData = {
+					motherId: 0,
+					motherName: '',
+					motherIdType: '1',
+					motherIdCode: '',
+					motherPhone: '',
+					motherEmail: '',
+					hospitalName: '',
+					dueDate: '',
+					address: '',
+					motherRelation: '1',
+					userId: '',
+					nickName: '',
+					userIdType: '1',
+					userIdCode: '',
+					userPhone: '',
+					userEmail: ''
+				};
+			},
+			// 母亲姓名输入时同步
+			handleMotherNameInput(val) {
+				if (this.formData.motherRelation === '1') {
+					this.formData.nickName = val;
+				}
+			},
+
+			// 母亲证件类型变化时同步（注意：picker 是点击选择，不是 input）
+			handleMotherIdTypeChange(val) {
+				if (this.formData.motherRelation === '1') {
+					this.formData.userIdType = val;
+				}
+			},
+
+			// 母亲证件号码输入时同步
+			handleMotherIdCodeInput(val) {
+				if (this.formData.motherRelation === '1') {
+					this.formData.userIdCode = val;
+				}
+			},
+
+			// 母亲手机号输入时同步
+			handleMotherPhoneInput(val) {
+				if (this.formData.motherRelation === '1') {
+					this.formData.userPhone = val;
+				}
+			},
+
+			// 母亲邮箱输入时同步（如果你有母亲邮箱字段）
+			handleMotherEmailInput(val) {
+				if (this.formData.motherRelation === '1') {
+					this.formData.userEmail = val;
+				}
+			},
+
 			handleRelationChange(value) {
 				if (value === '1') { // 如果选择的是本人
 					this.formData.nickName = this.formData.motherName;
@@ -484,6 +632,10 @@
 				const selectedValue = this.idTypeOptions[index].value;
 				if (this.currentPickerFor === 'mother') {
 					this.formData.motherIdType = selectedValue;
+
+					if (this.formData.motherRelation === '1') {
+						this.formData.userIdType = selectedValue;
+					}
 				} else {
 					this.formData.userIdType = selectedValue;
 				}
@@ -510,90 +662,185 @@
 					icon: 'none'
 				});
 			},
+			goToHospitalSelect() {
+				uni.navigateTo({
+					url: '/pages/sign/hospital-select'
+				});
+			},
 			goPrev() {
 				uni.navigateBack();
 			},
-			submitForm() {
-				// 统一验证整个表单
-				this.$refs.uForm.validate().then(res => {
-					// 手动校验证件号长度（仅当证件类型为身份证时）
-					let errorMsg = '';
+			// 身份证合法性校验（18位）
+			isValidIdCard(idCard) {
+				if (!idCard || idCard.length !== 18) return false;
 
-					// 母亲证件号校验
-					if (this.formData.motherIdType === '1') {
-						if (!this.formData.motherIdCode || this.formData.motherIdCode.length !== 18) {
-							errorMsg = '母亲身份证号码必须为18位';
-						}
-					}
+				const code = idCard.toUpperCase(); // 兼容小写 x
+				const body = code.substring(0, 17);
+				const checkBit = code.charAt(17);
 
-					// 甲方证件号校验
-					if (!errorMsg && this.formData.userIdType === '1') {
-						if (!this.formData.userIdCode || this.formData.userIdCode.length !== 18) {
-							errorMsg = '甲方身份证号码必须为18位';
-						}
-					}
+				// 检查前17位是否全为数字
+				if (!/^\d{17}$/.test(body)) return false;
 
-					if (errorMsg) {
-						uni.showToast({
-							title: errorMsg,
-							icon: 'none'
-						});
-						return;
-					}
+				// 加权因子
+				const weights = [7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2];
+				// 校验码映射表
+				const checkCodes = ['1', '0', 'X', '9', '8', '7', '6', '5', '4', '3', '2'];
 
+				let sum = 0;
+				for (let i = 0; i < 17; i++) {
+					sum += parseInt(body.charAt(i), 10) * weights[i];
+				}
 
-					this._submit();
-				}).catch(errors => {
+				const mod = sum % 11;
+				const expectedCheckBit = checkCodes[mod];
+
+				return checkBit === expectedCheckBit;
+			},
+			async submitForm() {
+				// 表单验证
+				try {
+					await this.$refs.uForm.validate();
+				} catch (errors) {
 					uni.showToast({
 						title: '请填写完整信息',
 						icon: 'none'
 					});
+					return;
+				}
+
+				// 身份证校验
+				let errorMsg = '';
+				if (this.formData.motherIdType === '1' && !this.isValidIdCard(this.formData.motherIdCode)) {
+					errorMsg = '母亲身份证号码格式不正确';
+				}
+				if (!errorMsg && this.formData.userIdType === '1' && !this.isValidIdCard(this.formData.userIdCode)) {
+					errorMsg = '甲方身份证号码格式不正确';
+				}
+				if (errorMsg) {
+					uni.showToast({
+						title: errorMsg,
+						icon: 'none'
+					});
+					return;
+				}
+
+				// 显示 loading，覆盖整个提交+创建订单+跳转流程
+				uni.showLoading({
+					title: '保存中...',
+					mask: true
 				});
 
-			},
-			async _submit() {
-				this.formData.userId = this.user?.userId || ""
-				console.log('提交数据:', this.formData);
-
-				const params = this.formData;
-
 				try {
-					const res = await api.updateMotherAndUser(params);
+					// 1. 保存母亲和用户信息
+					const motherId = await this.saveMotherAndUser();
+					if (!motherId) return; // 错误已在内部处理并 hideLoading
 
-					if (res.code == 200) {
-						// 因为填写甲方信息后，会更新当前用户的信息，所以先获取用户更新后的信息，再跳转
-						this.getUserInfo();
+					// 2. 如果是新订单，创建 PDF 订单
+					if (!this.orderId) {
+						const newOrderId = await this.createPdfOrder(motherId);
+						if (!newOrderId) return;
+						this.orderId = newOrderId;
 					}
+
+					// 3. 获取最新用户信息并跳转
+					await this.finalizeAndNavigate();
+
 				} catch (err) {
-					console.log(err);
+					console.error('整体提交流程异常:', err);
+					uni.hideLoading();
 					uni.showToast({
-						title: '提交失败',
+						title: '操作失败，请重试',
 						icon: 'none'
 					});
 				}
 			},
-			async getUserInfo() {
-				const res = await api.getUserDetail();
-				if (res.code == 200) {
-					const user = res.user;
-					console.log('user', user);
-					this.$store.dispatch('updateUserInfo', {
-						user
-					});
-					
+			// 仅保存数据，返回 motherId 或 null
+			async saveMotherAndUser() {
+				this.formData.userId = this.user?.userId || "";
+				try {
+					const res = await api.updateMotherAndUser(this.formData);
+					if (res.code === 200 && res.motherId) {
+						this.formData.motherId = res.motherId;
+						return res.motherId;
+					} else {
+						uni.hideLoading();
+						uni.showToast({
+							title: res.msg || '保存信息失败',
+							icon: 'none'
+						});
+						return null;
+					}
+				} catch (err) {
+					uni.hideLoading();
 					uni.showToast({
-						title: '保存成功',
-						icon: 'success'
+						title: '网络错误，请重试',
+						icon: 'none'
 					});
-					setTimeout(() => {
-						// 授权书页
-						uni.navigateTo({
-							url: "/pages/sign/auth"
-						})
-					}, 1000)
-					
+					return null;
 				}
-				//console.log("获取用户信息失败")
+			},
+			async createPdfOrder(motherId) {
+				const now = new Date();
+				const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+
+				const params = {
+					motherId: motherId, // 母亲id
+					orderStatus: 11, // 订单状态 11-未交费
+					priceOut: this.productInfo.price, // 费用
+					proCode: "", // 订单编号
+					proStatus: 2, // 协议状态 2-未签
+					recordStatus: 1, // 记录状态 1-有效
+					signDate: today,
+					userId: this.user.userId, // 当前用户id
+					salesId: this.salesId // 销售id
+				};
+
+				try {
+					const res = await api.createFdpOrder(params);
+					if (res.code === 200 && res.id) {
+						return res.id;
+					} else {
+						uni.hideLoading();
+						uni.showToast({
+							title: res.msg || '创建订单失败',
+							icon: 'none'
+						});
+						return null;
+					}
+				} catch (err) {
+					uni.hideLoading();
+					uni.showToast({
+						title: '创建订单时网络错误',
+						icon: 'none'
+					});
+					return null;
+				}
+			},
+			// 最终获取用户信息并跳转
+			async finalizeAndNavigate() {
+				try {
+					const res = await api.getUserDetail();
+					if (res.code === 200) {
+						this.$store.dispatch('updateUserInfo', {
+							user: res.user
+						});
+					}
+				} catch (err) {
+					console.warn('获取用户详情失败，但不影响跳转');
+				}
+			
+				// 所有操作完成，隐藏 loading 并跳转
+				uni.hideLoading();
+				uni.showToast({
+					title: '保存成功',
+					icon: 'success'
+				});
+			
+				setTimeout(() => {
+					uni.navigateTo({
+						url: `/pages/sign/auth?orderId=${this.orderId}`
+					});
+				}, 1000);
 			}
 
 		}

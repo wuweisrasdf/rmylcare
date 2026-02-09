@@ -3,62 +3,17 @@
 		<view class="content-container">
 			<view class="top">
 				<image src="/static/icons/sign-success.png" mode="widthFix"></image>
-				<text class="title">支付成功！</text>
-			</view>
-
-			<view class="info">
-				<view class="item">
-					<text class="label">甲方名称</text>
-					<text class="value">{{ info.userName }}</text>
-				</view>
-
-				<view class="item">
-					<text class="label">产品名称</text>
-					<text class="value">{{ info.productName }}</text>
-				</view>
-
-				<view class="item">
-					<text class="label">签约金额</text>
-					<text class="value">￥{{ info.price }}</text>
-				</view>
-
-				<view class="item">
-					<text class="label">协议号</text>
-					<text class="value">{{ info.orderCode }}</text>
-				</view>
-
-				<view class="item">
-					<text class="label">支付时间</text>
-					<text class="value">{{ info.payDate }}</text>
-				</view>
-			</view>
-
-			<view class="desc">
-				<view class="desc-head">
-					<view class="desc-icon"></view>
-					<text class="desc-title">后续步骤</text>
-				</view>
-				<view class="desc-content">
-					<view class="content-item">
-						<view class="list-icon"></view>
-						<text class="text">您可以随时查看业务进度</text>
-					</view>
-					<view class="content-item">
-						<view class="list-icon"></view>
-						<text class="text">胎盘接受后将实时接收更新状态送</text>
-					</view>
-					<view class="content-item">
-						<view class="list-icon"></view>
-						<text class="text">重要通知将通过微信服务通知推送</text>
-					</view>
-				</view>
-
+				<text class="title">解约成功！</text>
 			</view>
 
 		</view>
 
 		<!-- 按钮组容器 -->
 		<view class="btn-group">
+			<u-button :custom-style="primaryBtnStyle" @click="goHome">
+				返回首页
+			</u-button>
+			
 			<u-button :custom-style="secondaryBtnStyle" @click="viewOrder">
 				查看订单
 			</u-button>
@@ -71,7 +26,7 @@
 	import {
 		mapState
 	} from 'vuex'
-	
+
 	export default {
 		computed: {
 			...mapState({
@@ -113,43 +68,30 @@
 		data() {
 			return {
 				orderId: '',
+				paying: false, // 支付防重复点击
 				info: {
 					userName: '', // 甲方姓名
 					productName: '', // 产品名称
 					price: 0, // 签约金额
 					orderCode: '', // 协议号
-					payDate: '', // 支付时间
+					signDate: '', // 签约时间
 				}
 			};
 		},
 		methods: {
 			async init() {
-				this.info.userName = this.user.nickName;
 				
-				// 获取产品信息
-				const productId = 1; // 固定值 1
-				const res = await api.getProductById(productId);
-				if (res.code == 200) {
-					const data = res.data || {};
-					this.info.productName = data.productName || '';
-				}
-				
-				// 获取合同信息
-				const result = await api.getFdpOrder(this.orderId);
-				if (result.code == 200 && result.rows.length > 0) {
-					const order = result.rows[0];
-					
-					this.info.price = order.priceOut;
-					this.info.orderCode = order.orderCode; // 协议号
-					this.info.payDate = order.payDate || ''; // 支付时间
-				}
-			
+
+			},
+			goHome(){
+				uni.redirectTo({
+					url: `/pages/index/index`
+				});
 			},
 			// 查看订单
 			viewOrder() {
 				uni.redirectTo({
 					url: `/pages/order/order`
-					//url: `/pages/order/detail?orderId=${this.orderId}`
 				});
 			}
 		}
@@ -191,36 +133,6 @@
 		}
 	}
 
-	.info {
-		background: #F6F7FC;
-		border-radius: 40rpx;
-		padding: 0 60rpx;
-		box-sizing: border-box;
-		padding-top: 50rpx;
-
-		.item {
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
-			padding-bottom: 50rpx;
-
-			.label {
-				font-weight: 500;
-				font-size: 28rpx;
-				color: #B0B0B0;
-			}
-
-			.value {
-				font-weight: 500;
-				font-size: 28rpx;
-				color: #151515;
-				flex: 1;
-				text-align: right;
-			}
-		}
-
-	}
-
 	.desc {
 		margin: 116rpx 26rpx;
 
@@ -243,22 +155,25 @@
 				color: #2C2C2C;
 			}
 		}
-		
-		.desc-content{
-			margin-top:52rpx;
-			.content-item{
+
+		.desc-content {
+			margin-top: 52rpx;
+
+			.content-item {
 				display: flex;
 				flex-direction: row;
 				align-items: center;
 				margin-bottom: 20rpx;
-				.list-icon{
+
+				.list-icon {
 					width: 12rpx;
 					height: 12rpx;
 					background: #4A63E4;
 					border-radius: 50%;
 					margin-right: 18rpx;
 				}
-				.text{
+
+				.text {
 					font-weight: bold;
 					font-size: 26rpx;
 					color: #5B5B5B;
@@ -272,6 +187,6 @@
 		display: flex;
 		flex-direction: column;
 		gap: 22rpx;
-		margin-bottom: 130rpx;
+		margin-top: 130rpx;
 	}
 </style>

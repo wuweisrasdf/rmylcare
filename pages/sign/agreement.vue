@@ -112,10 +112,19 @@
             return {
                 showLoading: true,
                 countdown: 10,
-                timer: null
+                timer: null,
+				orderId: 0
             };
         },
-        onLoad() {
+        onLoad(options) {
+			if (options.orderId) {
+				this.orderId = options.orderId;
+			}else{
+				uni.showToast({
+					title: "获取订单失败",
+					icon: 'none'
+				});
+			}
             this.startCountdown();
         },
         onUnload() {
@@ -143,7 +152,7 @@
             nextPage() {
                 if (this.countdown > 0) return; // 安全兜底
                 uni.navigateTo({
-                    url: '/pages/sign/confirm-price'
+                    url: `/pages/sign/confirm-price?orderId=${this.orderId}`
                 });
             }
         }

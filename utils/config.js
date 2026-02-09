@@ -1,4 +1,4 @@
 export default {
-	baseUrl:" https://dhmapi-test.rmylcare.com",
-	imgUrl:"https://xxx/",
+	baseUrl:"https://dhmapi-test.rmylcare.com",
+	imgUrl:"https://dhmapi-test.rmylcare.com",
 }

@@ -83,3 +83,6 @@ export const createPayment = params => { return $H.post(`${$C.baseUrl}/system/es
 
 // 支付成功接口
 export const paySuccess = params => { return $H.post(`${$C.baseUrl}/system/payment`, params) };
+
+// 获取医院列表
+export const getHospitalList = () => { return $H.get(`${$C.baseUrl}/system/fdp/getHospital`) };

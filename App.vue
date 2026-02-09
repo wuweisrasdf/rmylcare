@@ -49,6 +49,7 @@
 					// 白名单：这些页面允许未登录访问
 					const whiteList = [
 						'pages/login/login',
+						'pages/index/index',
 						'pages/index/scan'
 					];
 

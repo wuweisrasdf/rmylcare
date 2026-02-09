@@ -33,7 +33,7 @@
 		<!-- 底部按钮 -->
 		<view class="btn-group">
 			<u-button :custom-style="prevBtnStyle" @click="goPrev">
-				上一步
+				{{ fromOrder == 0 ? '上一步' : '修改'}}
 			</u-button>
 			<u-button :custom-style="nextBtnStyle" @click="submit">
 				确认价格，去签字
@@ -81,33 +81,48 @@
 				};
 			}
 		},
-		onLoad() {
-			this.init();
-		},
-		onShow() {
-			// 如果刚从签署页返回，检查订单是否已签署
-			if (this.isSigning) {
-				// 增加一个提示框，避免直接跳转，会影响性能
-				uni.showModal({
-					title: '签署完成确认',
-					content: '您已完成电子签署？',
-					confirmText: '已完成',
-					cancelText: '取消',
-					success: (res) => {
-						if (res.confirm) {
-							// 用户点击“确认”
-							this.checkIfSigned();
-						} else if (res.cancel) {
-							// 用户点击“取消”，可选：重置状态或不做处理
-							this.isSigning = false;
-						}
-					},
-					fail: (err) => {
-						console.error('弹窗失败:', err);
-						this.isSigning = false;
-					}
+		onLoad(options) {
+			if (options.fromOrder) {
+				this.fromOrder = options.fromOrder;
+			}
+			
+			if (options.orderId) {
+				this.orderId = options.orderId;
+				
+				this.init();
+			}else{
+				uni.showToast({
+					title: "获取订单失败",
+					icon: 'none'
 				});
 			}
+			
+		},
+		onShow() {
+			// 改在签名页通过 @message 监听签字
+			// 如果刚从签署页返回，检查订单是否已签署
+			// if (this.isSigning) {
+			// 	// 增加一个提示框，避免直接跳转，会影响性能
+			// 	uni.showModal({
+			// 		title: '签署完成确认',
+			// 		content: '您已完成电子签署？',
+			// 		confirmText: '已完成',
+			// 		cancelText: '取消',
+			// 		success: (res) => {
+			// 			if (res.confirm) {
+			// 				// 用户点击“确认”
+			// 				this.checkIfSigned();
+			// 			} else if (res.cancel) {
+			// 				// 用户点击“取消”，可选：重置状态或不做处理
+			// 				this.isSigning = false;
+			// 			}
+			// 		},
+			// 		fail: (err) => {
+			// 			console.error('弹窗失败:', err);
+			// 			this.isSigning = false;
+			// 		}
+			// 	});
+			// }
 		},
 		data() {
 			return {
@@ -123,65 +138,65 @@
 				motherId: 0, // 产妇id
 				salesId: 0, // 销售id
 				orderId: '', // 订单id
+				orderInfo: {},
 				isSigning: false, // 标记是否刚从签署页返回
+				fromOrder: 0, // 从订单详情过来的
 			};
 		},
 		methods: {
 			async init() {
-				// 获取产品信息
-				const productId = 1; // 固定值 1
-				const res = await api.getProductById(productId);
-				if (res.code == 200) {
-					const data = res.data || {};
+				// 1. 获取产品信息（固定 productId = 1）
+				const productId = 1;
+				const productRes = await api.getProductById(productId);
+				if (productRes.code === 200) {
+					const data = productRes.data || {};
 					this.productInfo = {
-						id: data.id != null ? data.id : '',
+						id: data.id ?? '',
 						productName: data.productName || '',
-						price: data.price != null ? data.price : '',
+						price: data.price ?? '',
 						navbar: data.navbar || '',
 						details: data.details || ''
 					};
 				}
-
-				// 读取产妇和甲方信息
-				const result = await api.getMotherAndUser();
-				if (result.code == 200) {
-					const motherInfo = result.mother && result.mother.length > 0 ? result.mother[0] : {};
-					this.motherInfo = motherInfo
-					this.motherId = motherInfo.id || 0
-					
-					this.userInfo = result.user ? result.user : {};
+				
+				// 2. 通过 orderId 获取订单，拿到 motherId
+				let motherId = null;
+				const orderRes = await api.getFdpOrder(this.orderId);
+				if (orderRes.code === 200 && orderRes.rows?.[0]) {
+					const order = orderRes.rows[0];
+					this.orderInfo = order;
+					motherId = order.motherId;
+					if (!motherId) {
+						uni.showToast({ title: '订单未关联产妇', icon: 'none' });
+						return;
+					}
+				} else {
+					uni.showToast({ title: '订单信息获取失败', icon: 'none' });
+					return;
 				}
 				
-				console.log('result',result);
-
-				this.salesId = uni.getStorageSync('SCAN_SALES_ID') || 0; // 销售id 从storage 获取
+				// 3. 获取产妇和甲方信息
+				const result = await api.getMotherAndUser();
+				if (result.code !== 200) {
+					uni.showToast({ title: '母亲和甲方加载失败', icon: 'none' });
+					return;
+				}
+				
+				// 4. 根据 motherId 精确查找产妇
+				let motherInfo = {};
+				if (Array.isArray(result.mother)) {
+					motherInfo = result.mother.find(m => String(m.id) === String(motherId)) || {};
+				}
+				this.motherInfo = motherInfo;
+				this.motherId = motherInfo.id || 0;
+			
+				// 5. 设置甲方（用户）信息
+				this.userInfo = result.user || {};
 			},
 			// 提交数据生成合同
 			async submit() {
-				const now = new Date();
-				const today =
-					`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-
-				const params = {
-					motherId: this.motherId, // 母亲id
-					orderStatus: 11, // 订单状态 11-未交费
-					priceOut: this.productInfo.price, // 费用
-					proCode: "", // 订单编号
-					proStatus: 2, // 协议状态 2-未签
-					recordStatus: 1, // 记录状态 1-有效
-					signDate: today,
-					userId: this.user.userId, // 当前用户id
-					salesId: this.salesId // 销售id
-				};
-
-				const res = await api.createFdpOrder(params);
-				if (res.code == 200) {
-					console.log('pdfcreate:', res)
-					if (res.id) {
-						this.orderId = res.id;
-						this.getSignUrl();
-					}
-				}
+				this.getSignUrl();
+				
 			},
 			// 获取签名URL
 			async getSignUrl() {
@@ -192,11 +207,12 @@
 					});
 					return;
 				}
-				
+
 				const orderId = this.orderId;
 				const params = {
 					orderId: orderId,
 					returnURL: api.signReturnUrl,
+					//returnURL: 'wechat://back', // 固定值wechat://back，用户签署完成后自动跳转回开发者的微信小程序
 					signType: '1', // 签约=1，解约=2
 					signerName: this.userInfo.nickName, // 签约甲方的姓名
 					signerPhone: this.userInfo.phonenumber, // 签约甲方的手机号
@@ -217,7 +233,7 @@
 						if (res.signUrl) {
 							this.isSigning = true; // 标记即将进入签署流程
 							uni.navigateTo({
-								url: `/pages/sign/signature?signUrl=${encodeURIComponent(res.signUrl)}`
+								url: `/pages/sign/signature?signUrl=${encodeURIComponent(res.signUrl)}&orderId=${this.orderId}&type=1`
 							});
 							return;
 						}
@@ -227,7 +243,7 @@
 
 					console.log("签名失败：", err)
 					uni.showToast({
-						title: "手机号需要实名认证",
+						title: "甲方签名或手机号错误",
 						icon: 'none'
 					});
 				}
@@ -240,19 +256,24 @@
 					const res = await api.getFdpOrder(orderId);
 					if (res.code == 200 && res.rows.length > 0) {
 						const order = res.rows[0];
+						
+						this.isSigning = false;
+						
 						if (order.proStatus == 1) { // proStatus == 1 已签署
+
 							this.isSigning = false;
 							uni.redirectTo({
 								url: `/pages/sign/success?orderId=${this.orderId}`
 							});
 						} else {
-							// 可选：如果未签署，提示用户
+							// 如果未签署，提示用户
 							uni.showToast({
 								title: '未完成签署',
 								icon: 'none'
 							});
 							this.isSigning = false;
 						}
+						
 					}
 
 				} catch (err) {
@@ -261,7 +282,10 @@
 				}
 			},
 			goPrev() {
-			    uni.navigateBack();
+				// 返回产妇和甲方填写页
+				uni.navigateTo({
+					url: `/pages/sign/form?orderId=${this.orderId}`
+				})
 			}
 		}
 	};

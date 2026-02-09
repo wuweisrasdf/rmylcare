@@ -1,7 +1,6 @@
 <template>
   <view class="container">
-    <web-view :src="decodedSignUrl" style="width: 100vw; height: 100vh;" />
-    <view class="tip">签署完成后请返回</view>
+    <web-view :src="decodedSignUrl" style="width: 100vw; height: 100vh;" @message="handleGetMessage" />
   </view>
 </template>
 
@@ -9,15 +8,56 @@
 export default {
   data() {
     return {
+	  type: 1,
+	  orderId: '',
       decodedSignUrl: ''
     };
   },
   onLoad(options) {
+	if (options.orderId) {
+	  this.orderId = options.orderId
+	}else {
+      uni.showToast({ title: '无效订单', icon: 'none' });
+	  setTimeout(() => uni.navigateBack(), 1500);
+	  return;
+	}
+	
+	if (options.type) {
+	  this.type = options.type;
+	}
+	
     if (options.signUrl) {
       this.decodedSignUrl = decodeURIComponent(options.signUrl);
     } else {
       uni.showToast({ title: '无效链接', icon: 'none' });
       setTimeout(() => uni.navigateBack(), 1500);
+    }
+  },
+  methods: {
+    handleGetMessage(e) {
+      console.log('收到 web-view 消息:', e);
+
+      // 安全判断：确保 data 存在且为非空数组
+      if (!e.detail || !Array.isArray(e.detail.data) || e.detail.data.length === 0) {
+        return;
+      }
+
+      const message = e.detail.data[0];
+
+      // 判断是否为 e签宝的成功回调（根据实际字段调整）
+      if (message && message.result === 'success') {
+		if (this.type == 1) {
+			uni.navigateTo({ // 签约成功
+			  url: `/pages/sign/success?orderId=${this.orderId}`
+			});
+		}
+        if (this.type == 2) {
+			uni.navigateTo({ // 解约成功
+			  url: `/pages/refund/cancel-success?orderId=${this.orderId}`
+			});
+		} 
+
+      }
     }
   }
 };

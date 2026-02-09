@@ -35,7 +35,7 @@
 				</view>
 			</view>
 			
-			<button @click="toSign">测试签约</button>
+			<button @click="toSign" style="margin-top: 30rpx;">测试签约</button>
 		</view>
 
 		<TabBar :current-tab="currentTab" />
@@ -80,6 +80,7 @@
 				}
 			},
 			toSign(){
+				uni.setStorageSync('SCAN_SALES_ID', 1); // 模拟销售
 				uni.navigateTo({
 					url: `/pages/index/intro`
 				})

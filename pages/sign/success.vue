@@ -192,11 +192,23 @@
 						paySign: payData.paySign
 					});
 					console.log('paymentResult',paymentResult); //{errMsg: "requestPayment:ok"}
-
-					// 3. 支付成功
-					uni.redirectTo({
-						url: '/pages/sign/pay-success?orderId=' + this.orderId
+					
+					uni.showModal({
+					    title: '支付提示',
+					    content: '您已完成支付？',
+					    showCancel: false, // 不显示“取消”按钮（更符合流程）
+					    confirmText: '已完成',
+					    success: (res) => {
+					      if (res.confirm) {
+							// 3. 支付成功
+							uni.redirectTo({
+								url: '/pages/sign/pay-success?orderId=' + this.orderId
+							});
+					      }
+					    },
 					});
+
+
 					return;
 
 				} catch (err) {
@@ -221,8 +233,9 @@
 			},
 			// 查看订单
 			viewOrder() {
-				uni.navigateTo({
-					url: `/pages/order/detail?orderId=${this.orderId}`
+				uni.redirectTo({
+					url: `/pages/order/order`
+					//url: `/pages/order/detail?orderId=${this.orderId}`
 				});
 			}
 		}

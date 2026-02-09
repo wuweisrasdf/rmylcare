@@ -44,6 +44,8 @@ function handleError(result, options) {
 	// 对外隐藏服务器错误
 	if (code == 500) {
 		title = '服务器开小差了';
+	}else if (code == 401) {
+		title = '登录已过期，重新登录';
 	}
     uni.showToast({ title: title, icon: 'none', duration: 3000 });
   }

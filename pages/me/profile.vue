@@ -14,7 +14,7 @@
 	    <view class="list-item">
 	      <view class="item-left">
 	        <image class="icon" src="/static/icons/user.png" mode="aspectFill"></image>
-	        <text class="label">姓名</text>
+	        <text class="label">编号</text>
 	      </view>
 	      <view class="item-right">
 	        <text class="value">{{ formData.userName || '未获取' }}</text>
@@ -26,7 +26,7 @@
 	    <view class="list-item" @click="handleGetUserInfo">
 	      <view class="item-left">
 	        <image class="icon" src="/static/icons/nickname.png" mode="aspectFill"></image>
-	        <text class="label">昵称</text>
+	        <text class="label">姓名</text>
 	      </view>
 	      <view class="item-right">
 	        <text class="value">{{ formData.nickName || '未设置' }}</text>
@@ -221,7 +221,7 @@ export default {
 	    // 已有姓名：弹出确认框，询问是否重新获取
 	    uni.showModal({
 	      title: '提示',
-	      content: '是否获取微信昵称？',
+	      content: '是否获取微信姓名？',
 	      confirmText: '确定',
 	      cancelText: '取消',
 	      success: (res) => {

@@ -1,26 +1,27 @@
 <template>
 
 	<view class="container" :style="{ paddingTop: containerPaddingTop }">
-		<u-navbar :fixed="true" :autoBack="true" title="订单列表" leftIconSize="36" leftIconColor="#2C2C2C"
-			:titleStyle="{ fontWeight: 'bold', fontSize: '36rpx', color: '#2C2C2C' }">
+		<u-navbar :fixed="true" :autoBack="false" title="订单列表" leftIconSize="36" leftIconColor="#2C2C2C"
+			@leftClick="goHome" :titleStyle="{ fontWeight: 'bold', fontSize: '36rpx', color: '#2C2C2C' }">
 		</u-navbar>
 
-		<view v-if="list.length > 0">
-			<view class="tab-switch">
-				<view class="tab-item active">进行中</view>
-				<view class="tab-item">已完成</view>
-			</view>
+		<view class="tab-switch">
+			<view class="tab-item" :class="{ active: currentTab === 'inProgress' }" @click="switchTab('inProgress')">进行中</view>
+			<view class="tab-item" :class="{ active: currentTab === 'completed' }" @click="switchTab('completed')">已完成</view>
+		</view>
 
+		<view v-if="filteredList.length > 0">
 			<view class="content-container">
-				<view v-for="(item, index) in list" :key="index" class="order-card" @click="showDetail(item.id)">
+				<view v-for="(item, index) in filteredList" :key="index" class="order-card"
+					@click="showDetail(item.id)">
 					<!-- 姓名 + 状态标签 -->
 					<view class="header">
 						<text class="name">{{ item.motherName }}</text>
 						<view class="status-tag" :class="item.statusClass">
-							{{ item.statusName }}
+							{{ item.statusTxt }}
 						</view>
 					</view>
-					
+
 					<view class="info-row">
 						<view class="field">
 							<text class="label">预产期:</text>
@@ -53,7 +54,7 @@
 		</view>
 
 
-		<view class="no-more" v-if="pageOptions.is_end">没有更多了</view>
+		<!-- <view class="no-more" v-if="pageOptions.is_end">没有更多了</view> -->
 
 
 		<!--   <TabBar :current-tab="currentTab"/> -->
@@ -85,6 +86,14 @@
 			containerPaddingTop() {
 				const barHeight = (this.CustomBar || 0) * 2 + 'rpx';
 				return barHeight;
+			},
+			// 根据 currentTab 过滤订单列表
+			filteredList() {
+				if (this.currentTab === 'inProgress') {
+					return this.list.filter(item => ![7, 9, 10].includes(item.orderStatus));
+				} else {
+					return this.list.filter(item => [7, 9, 10].includes(item.orderStatus));
+				}
 			}
 		},
 		// 下拉刷新
@@ -108,7 +117,7 @@
 		},
 		data() {
 			return {
-				currentTab: 1,
+				currentTab: 'inProgress',
 				pageOptions: {
 					page: 1, // 当前页
 					total: 0, // 总条数
@@ -119,6 +128,14 @@
 			};
 		},
 		methods: {
+			goHome() {
+				uni.redirectTo({
+					url: '/pages/index/index'
+				})
+			},
+			switchTab(tab) {
+				this.currentTab = tab;
+			},
 			// 重置分页数据
 			resetPage() {
 				this.pageOptions.page = 1
@@ -137,24 +154,6 @@
 				})
 			},
 			getList() {
-				const statuses = [{
-						code: '1',
-						status: '已签约',
-						class: 'signed'
-					},
-					{
-						code: '2',
-						status: '未签约',
-						class: 'unsigned'
-					},
-					{
-						code: '3',
-						status: '已解约',
-						class: 'unbound'
-					}
-				];
-				//（1-已签，2-未签，3-取消，4-终止）
-
 				uni.showLoading({
 					title: '数据加载中'
 				})
@@ -163,21 +162,22 @@
 					let rows = res.rows;
 					this.pageOptions.total = res.total
 					if (rows && rows.length > 0) {
-						// 遍历rows，添加statusName和statusClass字段
+
 						const processedRows = rows.map(row => {
-							// 查找匹配的status对象
-							const matchedStatus = statuses.find(item => item.code === String(row
-								.proStatus));
+							if (row.proStatus == 1) {
+								row.statusClass = 'signed';
+							} else if (row.proStatus == 3) {
+								row.statusClass = 'unbound';
+							} else {
+								row.statusClass = 'unsigned';
+							}
 
 							// 创建新的对象，保持原row的所有属性，添加新字段
 							return {
-								...row,
-								statusName: matchedStatus ? matchedStatus.status : '未知状态',
-								statusClass: matchedStatus ? matchedStatus.class : 'unknown'
+								...row
 							};
 						});
 
-						// 将处理后的数据添加到list中
 						this.list.push(...processedRows);
 
 						// 判断是否加载完毕
@@ -191,7 +191,7 @@
 				});
 
 			}
-			
+
 		}
 	};
 </script>
@@ -306,73 +306,81 @@
 		background-image: url('/static/images/unbound.png');
 		color: #FF9C00;
 	}
-	
-/* 修改 info-row 样式 */
-.info-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10rpx 20rpx; /* 行间距10，列间距20 */
-    padding-left: 18rpx;
-    margin-bottom: 16rpx; /* 减小底部边距 */
-}
 
-.field {
-    display: flex;
-    align-items: center;
-    min-height: 40rpx; /* 减小最小高度 */
-}
+	/* 修改 info-row 样式 */
+	.info-row {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 10rpx 20rpx;
+		/* 行间距10，列间距20 */
+		padding-left: 18rpx;
+		margin-bottom: 16rpx;
+		/* 减小底部边距 */
+	}
 
-.label {
-    font-weight: bold;
-    font-size: 26rpx;
-    color: #969696;
-    min-width: 120rpx;
-    white-space: nowrap;
-    flex-shrink: 0;
-}
+	.field {
+		display: flex;
+		align-items: center;
+		min-height: 40rpx;
+		/* 减小最小高度 */
+	}
 
-.value {
-    font-weight: bold;
-    font-size: 26rpx;
-    color: #969696;
-    flex: 1;
-    padding-left: 12rpx;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    min-width: 0; /* 重要：允许值区域压缩 */
-}
+	.label {
+		font-weight: bold;
+		font-size: 26rpx;
+		color: #969696;
+		min-width: 120rpx;
+		white-space: nowrap;
+		flex-shrink: 0;
+	}
 
-/* 修改预产医院行样式 */
-.hospital-row {
-    display: flex;
-    align-items: center; /* 改为居中对齐，保持与其他行一致 */
-    padding-left: 18rpx;
-    margin-top: 8rpx; /* 减小顶部边距 */
-    min-height: 40rpx;
-    padding-right: 20rpx; /* 右侧增加内边距，防止文字贴边 */
-}
+	.value {
+		font-weight: bold;
+		font-size: 26rpx;
+		color: #969696;
+		flex: 1;
+		padding-left: 12rpx;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		min-width: 0;
+		/* 重要：允许值区域压缩 */
+	}
 
-.hospital-row .label {
-    font-weight: bold;
-    font-size: 26rpx;
-    color: #969696;
-    min-width: 120rpx;
-    white-space: nowrap;
-    flex-shrink: 0;
-}
+	/* 修改预产医院行样式 */
+	.hospital-row {
+		display: flex;
+		align-items: center;
+		/* 改为居中对齐，保持与其他行一致 */
+		padding-left: 18rpx;
+		margin-top: 8rpx;
+		/* 减小顶部边距 */
+		min-height: 40rpx;
+		padding-right: 20rpx;
+		/* 右侧增加内边距，防止文字贴边 */
+	}
 
-.hospital-value {
-    font-weight: bold;
-    font-size: 26rpx;
-    color: #969696;
-    flex: 1;
-    padding-left: 12rpx;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    padding-right: 20rpx; /* 右侧留出空间 */
-}
+	.hospital-row .label {
+		font-weight: bold;
+		font-size: 26rpx;
+		color: #969696;
+		min-width: 120rpx;
+		white-space: nowrap;
+		flex-shrink: 0;
+	}
+
+	.hospital-value {
+		font-weight: bold;
+		font-size: 26rpx;
+		color: #969696;
+		flex: 1;
+		padding-left: 12rpx;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		padding-right: 20rpx;
+		/* 右侧留出空间 */
+	}
 
 	.no-more {
 		color: #aaaaaa;
