@@ -7,30 +7,28 @@
 		<view class="content-container">
 			<view class="info">
 				<view class="item">
+					<text class="label">甲方名称</text>
+					<text class="value">{{ info.userName }}</text>
+				</view>
+				
+				<view class="item">
+					<text class="label">产品名称</text>
+					<text class="value">{{ info.productName }}</text>
+				</view>
+				
+				<view class="item">
+					<text class="label">签约金额</text>
+					<text class="value">￥{{ info.price }}</text>
+				</view>
+				<view class="item">
 					<text class="label">协议编号：</text>
-					<text class="value">{{ orderCode }}</text>
+					<text class="value">{{ info.orderCode }}</text>
 				</view>
 
 
 			</view>
 		</view>
 
-		<!-- 		<view class="content">
-			<view class="content-head">
-				<view class="content-head-icon"></view>
-				<text class="content-head-title">请仔细阅读协议内容，确认无误后进行签署</text>
-			</view>
-			<scroll-view class="content-container" scroll-y="true">
-				<view class="auth-content">
-					<text class="title">人民医疗胎盘冻干粉储存服务解除协议</text>
-					<text class="paragraph">
-						欢迎您使用本平台提供的孕产服务。请您仔细阅读以下条款，特别是免除或者限制责任的条款、法律适用和争议解决条款。
-						当您勾选“已阅读并同意”时，即表示您已充分理解并接受本协议全部内容。
-					</text>
-				</view>
-			</scroll-view>
-
-		</view> -->
 
 
 		<view class="btn-group">
@@ -68,10 +66,7 @@
 				return {
 					height: '98rpx',
 					borderRadius: '49rpx',
-					backgroundImage: 'url(/static/images/sign-btn.png)',
-					backgroundSize: 'auto',
-					backgroundRepeat: 'no-repeat',
-					backgroundPosition: 'center',
+					backgroundColor: '#4A63E4',
 					color: '#FFFFFF',
 					fontWeight: 'bold',
 					fontSize: '32rpx',
@@ -109,10 +104,16 @@
 		data() {
 			return {
 				orderId: '', // 订单id
-				orderCode: '', // 协议号
 				isSigning: false, // 标记是否刚从签署页返回
 				orderInfo: {},
 				userInfo: {}, // 甲方信息
+				info: {
+					userName: '', // 甲方姓名
+					productName: '', // 产品名称
+					price: 0, // 签约金额
+					orderCode: '', // 协议号
+					signDate: '', // 签约时间
+				}
 			};
 		},
 		methods: {
@@ -128,6 +129,32 @@
 				}
 
 				this.userInfo = result.user || {};
+				
+				this.info.userName = this.user.nickName; // 客户端当前用户就是甲方
+				
+				// 获取产品信息
+				const productId = 1; // 固定值 1
+				const res = await api.getProductById(productId);
+				if (res.code == 200) {
+					const data = res.data || {};
+					this.info.productName = data.productName || '';
+				}
+				
+				// 2. 获取订单信息
+				const orderRes = await api.getFdpOrder(this.orderId);
+				if (orderRes.code !== 200) {
+					uni.showToast({
+						title: '订单信息加载失败',
+						icon: 'none'
+					});
+					return;
+				}
+				
+				const row = (Array.isArray(orderRes.rows) && orderRes.rows.length > 0) ? orderRes.rows[0] : {};
+				this.orderInfo = row;
+				this.info.price = row.priceOut;
+				this.info.orderCode = row.orderCode; // 协议号
+				this.info.signDate = row.signDate;
 			},
 			goPrev() {
 				uni.navigateBack();
@@ -150,7 +177,8 @@
 				const orderId = this.orderId;
 				const params = {
 					orderId: orderId,
-					returnURL: api.signReturnUrl,
+					//returnURL: api.signReturnUrl,
+					returnURL: '',
 					signType: '2', // 签约=1，解约=2
 					signerName: this.userInfo.nickName, // 签约甲方的姓名
 					signerPhone: this.userInfo.phonenumber, // 签约甲方的手机号
@@ -187,7 +215,23 @@
 				}
 			},
 			// 去签字
-			toSign() {
+			async toSign() {
+				
+				let refundParams = {
+					orderId: this.orderId,
+					price: this.info.price,
+					status: 0
+				}
+				const refundRes = await api.createRefund(refundParams);
+				if (refundRes.code != 200) {
+					uni.showToast({
+						title: "生成解约协议失败",
+						icon: 'none'
+					});
+					
+					return;
+				}
+				
 				this.isSigning = true;
 				this.getSignUrl();
 
@@ -210,7 +254,6 @@
 	
 	.content-container {
 		flex: 1;
-		margin-top: 74rpx;
 		padding: 40rpx 30rpx;
 		box-sizing: border-box;
 	}
@@ -226,7 +269,7 @@
 			display: flex;
 			justify-content: space-between;
 			align-items: center;
-			//margin-bottom: 40rpx;
+			margin-bottom: 50rpx;
 
 			.label {
 				font-weight: 500;
@@ -241,6 +284,10 @@
 				flex: 1;
 				text-align: right;
 			}
+		}
+		
+		.item:last-child {
+		    margin-bottom: 0;
 		}
 
 		.divider {

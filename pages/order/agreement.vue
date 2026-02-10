@@ -5,52 +5,68 @@
 		</u-navbar>
 
 		<view class="content-container">
-			<view class="info" @click="viewPdf">
-				<view class="item">
-					<text class="title">人民医疗胎盘冻干粉储存服务协议</text>
-					<text class="sign-btn">签约协议</text>
+			<!-- 协议列表 -->
+			<view class="protocol-list">
+				<!-- 签约协议 -->
+				<view class="protocol-card" v-if="signUrl" @click="viewPdf(1)">
+					<view class="protocol-header">
+						<view class="protocol-icon signed">
+							<u-icon name="file-text-fill" size="40" color="#fff"></u-icon>
+						</view>
+						<view class="protocol-info">
+							<view class="protocol-title">签约协议</view>
+							<view class="protocol-desc">查看您签署的正式协议</view>
+						</view>
+					</view>
+					<view class="protocol-status">
+						<view class="status-tag signed-tag">已签署</view>
+						<u-icon name="arrow-right" size="28" color="#999"></u-icon>
+					</view>
 				</view>
-				<view class="item">
-					<text class="label">协议版本</text>
-					<text class="value">V1.0 </text>
-				</view>
-				<view class="bottom-line"></view>
 
-				<view class="item">
-					<text class="label">发布日期</text>
-					<text class="value">2026-02-13</text>
+				<!-- 解约协议 -->
+				<view class="protocol-card" v-if="unsignUrl" @click="viewPdf(2)">
+					<view class="protocol-header">
+						<view class="protocol-icon unsign">
+							<u-icon name="close-circle-fill" size="40" color="#fff"></u-icon>
+						</view>
+						<view class="protocol-info">
+							<view class="protocol-title">解约协议</view>
+							<view class="protocol-desc">查看解约相关协议文件</view>
+						</view>
+					</view>
+					<view class="protocol-status">
+						<view class="status-tag unsign-tag">已解约</view>
+						<u-icon name="arrow-right" size="28" color="#999"></u-icon>
+					</view>
+				</view>
+
+				<!-- 空状态 -->
+				<view class="empty-state" v-if="!signUrl && !unsignUrl">
+					<u-empty text="暂无协议文件" mode="file" iconSize="120"></u-empty>
 				</view>
 			</view>
-			
-			<view class="info">
-				<view class="item">
-					<text class="title">人民医疗胎盘冻干粉储存服务协议</text>
-					<text class="refund-btn">解约协议</text>
+
+			<!-- 协议说明 -->
+			<view class="protocol-tips">
+				<view class="tips-header">
+					<u-icon name="info-circle-fill" size="32" color="#4A63E4"></u-icon>
+					<text class="tips-title">温馨提示</text>
 				</view>
-				<view class="item">
-					<text class="label">协议版本</text>
-					<text class="value">V1.0 </text>
-				</view>
-				<view class="bottom-line"></view>
-			
-				<view class="item">
-					<text class="label">发布日期</text>
-					<text class="value">2026-02-13</text>
+				<view class="tips-content">
+					<text>• 点击上方卡片可查看协议详情</text>
+					<text>• 建议在WiFi环境下查看，协议文件可能较大</text>
+					<text>• 如需下载保存，请在预览页面操作</text>
 				</view>
 			</view>
-			
-<!-- 			<view class="pdf-container">
-				<web-view :src="pdfUrl" />
-			</view> -->
-			
 		</view>
 
-			<view class="btn-group">
-				<u-button :custom-style="primaryBtnStyle" @click="goHome">
-					返回首页
-				</u-button>
-			</view>
-
+		<!-- 底部按钮 - 恢复原样 -->
+		<view class="btn-group">
+			<u-button :custom-style="primaryBtnStyle" @click="goHome">
+				返回首页
+			</u-button>
+		</view>
 	</view>
 </template>
 
@@ -79,83 +95,108 @@
 					fontSize: '32rpx',
 					color: '#FFFFFF'
 				};
-			},
-			secondaryBtnStyle() {
-				return {
-					height: '98rpx',
-					borderRadius: '49rpx',
-					border: '2px solid rgba(142,142,142,0.5)',
-					backgroundColor: 'transparent', // 透明背景
-					fontWeight: 'bold',
-					fontSize: '32rpx',
-					color: '#3D3D3D'
-				};
 			}
 		},
-		onLoad(options) { //options.orderId = 17;
+		onLoad(options) {
 			if (options.orderId) {
 				this.orderId = options.orderId;
-				//this.init();
+				this.init();
 			}
-			
-			// todo 测试
-			//this.previewPdf();
 		},
 		data() {
 			return {
-				orderId: '', // 订单id
-				//pdfUrl: 'https://esignoss.esign.cn/7439098939/ec005696-779a-4c8a-8a40-e001bdaf54eb/%E7%94%B5%E5%AD%90%E5%90%88%E5%90%8C.pdf?Expires=1770265515&OSSAccessKeyId=LTAI4G23YViiKnxTC28ygQzF&Signature=9mvxpitB83xJ5wD44wqw3tAEa8g%3D',
-				pdfUrl: '',
+				orderId: '',
+				signUrl: '',
+				unsignUrl: '',
+				loading: false
 			};
 		},
 		methods: {
 			async init() {
-
-			},
-			async viewPdf(){
-				let orderId = this.orderId;
-				orderId = 17; // TODO 模拟 orderId
-				const res = await api.downloadSignedFile(orderId);
-				if (res.code == 200) {
-					this.pdfUrl = res.downloadUrl;
-					this.previewPdf();
+				this.loading = true;
+				try {
+					const res = await api.downloadSignedFile(this.orderId);
+					if (res.code == 200) {
+						if (res.downloadUrl1) {
+							this.signUrl = res.downloadUrl1;
+						}
+						if (res.downloadUrl2) {
+							this.unsignUrl = res.downloadUrl2;
+						}
+						
+						// 如果没有协议
+						if (!this.signUrl && !this.unsignUrl) {
+							uni.showToast({
+								title: '当前订单暂无协议',
+								icon: 'none'
+							});
+						}
+					} else {
+						uni.showToast({
+							title: res.msg || '加载失败',
+							icon: 'none'
+						});
+					}
+				} catch (error) {
+					console.error('加载协议失败:', error);
+					uni.showToast({
+						title: '网络错误',
+						icon: 'none'
+					});
+				} finally {
+					this.loading = false;
 				}
 			},
-			async previewPdf() {
-			      try {
-			        // 1. 下载文件到本地临时路径
-			        const res = await uni.downloadFile({
-			          url: this.pdfUrl
-			        });
 			
-			        if (res.statusCode === 200) {
-			          // 2. 打开文档（小程序会自动调用内置 PDF 阅读器）
-			          uni.openDocument({
-			            filePath: res.tempFilePath,
-			            fileType: 'pdf',
-			            success: () => {
-			              console.log('PDF 打开成功');
-			            },
-			            fail: (err) => {
-			              console.error('打开 PDF 失败', err);
-			              uni.showToast({ title: '无法打开协议', icon: 'none' });
-			            }
-			          });
-			        } else {
-			          uni.showToast({ title: '协议加载失败', icon: 'none' });
-			        }
-			      } catch (err) {
-			        console.error('下载 PDF 出错', err);
-			        uni.showToast({ title: '网络错误', icon: 'none' });
-			      }
-			    },
-			goPrev() {
-				uni.navigateBack();
+			async viewPdf(type) {
+				let pdfUrl = type == 1 ? this.signUrl : this.unsignUrl;
+				if (!pdfUrl) return;
+
+				uni.showLoading({
+					title: '加载协议中...'
+				});
+
+				try {
+					const res = await uni.downloadFile({
+						url: pdfUrl
+					});
+
+					if (res.statusCode === 200) {
+						uni.openDocument({
+							filePath: res.tempFilePath,
+							fileType: 'pdf',
+							success: () => {
+								console.log('PDF打开成功');
+							},
+							fail: (err) => {
+								console.error('打开PDF失败', err);
+								uni.showToast({
+									title: '无法打开协议文件',
+									icon: 'none'
+								});
+							}
+						});
+					} else {
+						uni.showToast({
+							title: '协议加载失败',
+							icon: 'none'
+						});
+					}
+				} catch (err) {
+					console.error('下载PDF出错', err);
+					uni.showToast({
+						title: '网络错误',
+						icon: 'none'
+					});
+				} finally {
+					uni.hideLoading();
+				}
 			},
+			
 			goHome() {
 				uni.redirectTo({
 					url: "/pages/index/index"
-				})
+				});
 			}
 		}
 	};
@@ -163,121 +204,175 @@
 
 <style lang="scss" scoped>
 	.container {
-		background-color: #ffffff;
-		padding: 0 26rpx;
+		background-color: #F5F7FA;
 		min-height: 100vh;
-		box-sizing: border-box;
-		position: relative;
 		display: flex;
 		flex-direction: column;
 	}
 
 	.content-container {
-		flex-grow: 1;
-		padding-top: 76rpx;
+		flex: 1;
+		padding: 30rpx;
+		padding-bottom: 160rpx;
+	}
+
+	.protocol-list {
 		display: flex;
 		flex-direction: column;
+		gap: 30rpx;
+	}
 
-		.info {
-			background: #F6F7FC;
-			border-radius: 40rpx;
-			box-sizing: border-box;
-			margin-bottom: 50rpx;
-
-			.item {
-				display: flex;
-				justify-content: space-between;
-				align-items: center;
-				padding: 30rpx;
-				
-				.title{
-					font-weight: 800;
-					font-size: 32rpx;
-					color: #151515;
-				}
-
-				.label {
-					font-weight: 500;
-					font-size: 28rpx;
-					color: #727272;
-				}
-
-				.value {
-					font-weight: 500;
-					font-size: 28rpx;
-					color: #000000;
-					flex: 1;
-					text-align: right;
-				}
-
-				.price {
-					font-weight: 800;
-					font-size: 48rpx;
-					color: #4A63E2;
-					line-height: 1.2;
-				}
-			}
-
-			.item:first-child {
-
-				padding-bottom: 0;
-			}
-
-
-
-			.bottom-line {
-				width: 100%;
-				height: 2rpx;
-				background: #161421;
-				opacity: 0.1;
-			}
-
+	.protocol-card {
+		background: #FFFFFF;
+		border-radius: 24rpx;
+		padding: 32rpx;
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		box-shadow: 0 6rpx 20rpx rgba(0, 0, 0, 0.04);
+		transition: all 0.3s ease;
+		
+		&:active {
+			transform: translateY(-4rpx);
+			box-shadow: 0 10rpx 30rpx rgba(0, 0, 0, 0.08);
 		}
-	
 	}
 
-	.sign-btn {
-		background-image: url('/static/images/refund-btn.png');
-		background-size: 100% 100%;
-		font-weight: 500;
-		font-size: 26rpx;
-		color: #FFFFFF;
-		width: 162rpx;
-		height: 54rpx;
-		text-align: center;
-		line-height: 54rpx;
-	}
-	
-	.refund-btn {
-		background-color: red;
-		border-radius: 25rpx;
-		font-weight: 500;
-		font-size: 26rpx;
-		color: #FFFFFF;
-		width: 162rpx;
-		height: 54rpx;
-		text-align: center;
-		line-height: 54rpx;
+	.protocol-header {
+		display: flex;
+		align-items: center;
+		flex: 1;
 	}
 
+	.protocol-icon {
+		width: 80rpx;
+		height: 80rpx;
+		border-radius: 20rpx;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		margin-right: 24rpx;
+		
+		&.signed {
+			background: linear-gradient(135deg, #4A63E4, #6B8EFF);
+		}
+		
+		&.unsign {
+			background: linear-gradient(135deg, #FF6B6B, #FF8E8E);
+		}
+	}
+
+	.protocol-info {
+		flex: 1;
+	}
+
+	.protocol-title {
+		font-size: 32rpx;
+		font-weight: bold;
+		color: #2C2C2C;
+		margin-bottom: 8rpx;
+	}
+
+	.protocol-desc {
+		font-size: 26rpx;
+		color: #999999;
+	}
+
+	.protocol-status {
+		display: flex;
+		align-items: center;
+		gap: 16rpx;
+	}
+
+	.status-tag {
+		padding: 8rpx 20rpx;
+		border-radius: 20rpx;
+		font-size: 24rpx;
+		font-weight: bold;
+		
+		&.signed-tag {
+			background: rgba(74, 99, 228, 0.1);
+			color: #4A63E4;
+		}
+		
+		&.unsign-tag {
+			background: rgba(255, 107, 107, 0.1);
+			color: #FF6B6B;
+		}
+	}
+
+	.empty-state {
+		padding: 80rpx 0;
+	}
+
+	.protocol-tips {
+		margin-top: 50rpx;
+		background: #FFFFFF;
+		border-radius: 20rpx;
+		padding: 30rpx;
+		box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.04);
+	}
+
+	.tips-header {
+		display: flex;
+		align-items: center;
+		margin-bottom: 24rpx;
+		
+		.tips-title {
+			font-size: 30rpx;
+			font-weight: bold;
+			color: #2C2C2C;
+			margin-left: 12rpx;
+		}
+	}
+
+	.tips-content {
+		display: flex;
+		flex-direction: column;
+		gap: 16rpx;
+		
+		text {
+			font-size: 26rpx;
+			color: #666666;
+			line-height: 1.6;
+			position: relative;
+			padding-left: 20rpx;
+			
+			&::before {
+				content: '';
+				position: absolute;
+				left: 0;
+				top: 50%;
+				transform: translateY(-50%);
+				width: 8rpx;
+				height: 8rpx;
+				background: #4A63E4;
+				border-radius: 50%;
+			}
+		}
+	}
+
+	/* 底部按钮样式 - 恢复原样 */
 	.btn-group {
 		display: flex;
 		flex-direction: column;
 		gap: 22rpx;
 		width: 100%;
 		margin: 50rpx auto 120rpx;
+		padding: 0 26rpx;
+		box-sizing: border-box;
 	}
-	
-	.pdf-container {
-	  flex: 1;
-	  margin-top: 50rpx;
-	  width: 100%;
-	  height: 0; /* 防止 web-view 塌陷 */
-	  background-color: #f9f9f9;
-	
-	//   ::v-deep(web-view) {
-	//     width: 100%;
-	//     height: 100%;
-	//   }
+
+	.loading-container {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		height: 200rpx;
+		
+		.loading-text {
+			margin-left: 20rpx;
+			font-size: 28rpx;
+			color: #666;
+		}
 	}
 </style>

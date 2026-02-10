@@ -6,8 +6,10 @@
 		</u-navbar>
 
 		<view class="tab-switch">
-			<view class="tab-item" :class="{ active: currentTab === 'inProgress' }" @click="switchTab('inProgress')">进行中</view>
-			<view class="tab-item" :class="{ active: currentTab === 'completed' }" @click="switchTab('completed')">已完成</view>
+			<view class="tab-item" :class="{ active: currentTab === 'inProgress' }" @click="switchTab('inProgress')">进行中
+			</view>
+			<view class="tab-item" :class="{ active: currentTab === 'completed' }" @click="switchTab('completed')">已完成
+			</view>
 		</view>
 
 		<view v-if="filteredList.length > 0">
@@ -153,23 +155,34 @@
 					url: "/pages/order/detail?orderId=" + orderId
 				})
 			},
-			getList() {
+			async getList() {
 				uni.showLoading({
 					title: '数据加载中'
 				})
-				api.getFdpOrderListForUser(this.user.userId, null, null).then(res => {
-					console.log('res', res);
-					let rows = res.rows;
-					this.pageOptions.total = res.total
-					if (rows && rows.length > 0) {
 
+				try {
+					const res = await api.getFdpOrderListForUser(this.user.userId, null, null);
+					if (res.code !== 200) {
+						uni.hideLoading();
+						uni.showToast({
+							title: res.msg || '请求失败',
+							icon: 'none'
+						});
+						return;
+					}
+
+					let rows = res.rows;
+					this.pageOptions.total = res.total;
+
+					if (rows && rows.length > 0) {
 						const processedRows = rows.map(row => {
-							if (row.proStatus == 1) {
-								row.statusClass = 'signed';
-							} else if (row.proStatus == 3) {
+							
+							if (row.proStatus == 2) {
+								row.statusClass = 'unsigned';
+							}else if (row.proStatus == 3) {
 								row.statusClass = 'unbound';
 							} else {
-								row.statusClass = 'unsigned';
+								row.statusClass = 'signed';
 							}
 
 							// 创建新的对象，保持原row的所有属性，添加新字段
@@ -181,15 +194,21 @@
 						this.list.push(...processedRows);
 
 						// 判断是否加载完毕
-						if (this.list.length >= this.pageOptions.total || newData.length < this.pageOptions
-							.pageSize) {
+						if (this.list.length >= this.pageOptions.total || processedRows.length < this.pageOptions.pageSize) {
 							this.pageOptions.is_end = true;
 						}
 					}
-				}).finally(() => {
+				} catch (error) {
+					console.error('请求出错:', error);
 					uni.hideLoading();
-				});
 
+					uni.showToast({
+						title: '网络错误，请重试',
+						icon: 'none'
+					});
+				}finally{
+					uni.hideLoading();
+				}
 			}
 
 		}

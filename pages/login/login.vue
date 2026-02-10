@@ -9,10 +9,11 @@
 
 		<!-- 一键登录按钮 -->
 		<view class="login-btn-section" :style="{paddingBottom: isRedirecting ? '134rpx' : '78rpx'}">
-			<button class="login-btn" open-type="getPhoneNumber" @getphonenumber="onGetPhoneNumber">
+			<button class="login-btn" open-type="getPhoneNumber" @getphonenumber="onGetPhoneNumber"
+				:disabled="!isAgreed">
 				一键登录
 			</button>
-
+			
 			<view v-if="isRedirecting" class="redirect-text">
 				<u-loading-icon size="28"></u-loading-icon>
 				<text class="loading-text">{{loadingText}}</text>
@@ -21,17 +22,24 @@
 
 		<!-- 协议提示 -->
 		<view class="agreement-container">
-			<text class="agreement-text">登录即表示同意</text>
 			<view class="link-section">
+				<u-checkbox-group v-model="agreeList" @change="toggleAgree">
+					<u-checkbox name="agree" shape="square" active-color="#4A63E2" size="32" iconSize="24"
+						labelSize="28" label="我已阅读并同意" />
+				</u-checkbox-group>
 				<navigator url="/pages/agreement/agreement" class="link-item">
-					<text class="link-text">用户协议</text>
+					<text class="link-text">《用户协议》</text>
 				</navigator>
 				<text class="separator">·</text>
 				<navigator url="/pages/agreement/privacy" class="link-item">
-					<text class="link-text">隐私政策</text>
+					<text class="link-text">《隐私政策》</text>
 				</navigator>
 			</view>
+
+			<text class="agreement-text" @click="goHome">返回首页</text>
 		</view>
+
+
 
 		<!-- 底部说明 -->
 		<text class="footer-text">
@@ -47,29 +55,56 @@
 		mapGetters
 	} from 'vuex';
 
+	import privacyAgreenPop from '@/components/privacyAgreenPop/privacyAgreenPop.vue';
+
 	export default {
+		components: {
+			privacyAgreenPop
+		},
 		computed: {
-			...mapGetters(['isLogined'])
+			...mapGetters(['isLogined']),
+			// 新增：判断是否已同意协议
+			isAgreed() {
+				return this.agreeList.includes('agree');
+			}
 		},
 		data() {
 			return {
 				logoUrl: '/static/logo.png', // 替换为你的 logo 路径
 				isRedirecting: false,
 				loadingText: "正在登录中...",
+				privacyWxPopShow: false,
+				agreeList: [], // 存放被选中的 name 值
 			};
 		},
 		onLoad() {
 			// 是否登录
 			if (this.isLogined) {
-				uni.reLaunch({
+				uni.redirectTo({
 					url: '/pages/index/index' // 替换为你的首页路径
 				});
 				return;
 			}
 		},
 		methods: {
+			goHome() {
+				uni.redirectTo({
+					url: '/pages/index/index'
+				})
+			},
+			toggleAgree(e) {
+				console.log('e', e)
+			},
 			// 获取手机号授权
 			async onGetPhoneNumber(e) {
+				if (!this.isAgreed) {
+					uni.showToast({
+						title: '请先同意用户协议和隐私政策',
+						icon: 'none'
+					});
+					return;
+				}
+
 				if (e.detail.errMsg !== "getPhoneNumber:ok") {
 					uni.showToast({
 						title: '授权失败',
@@ -243,6 +278,12 @@
 		font-size: 36rpx;
 		border: none;
 		outline: none;
+
+	}
+	
+	wx-button[disabled]:not([type]), wx-button[disabled][type=default] {
+	    background-color: #A4AFEB;
+		color: #ffffff;
 	}
 
 	.loading-text {
@@ -263,27 +304,32 @@
 		font-size: 28rpx;
 		color: #878787;
 		font-weight: bold;
-		margin-bottom: 10rpx;
+		margin-top: 50rpx;
 	}
 
 	.link-section {
 		display: flex;
-		align-items: center;
-		/* 垂直居中 */
-		justify-content: center;
-		/* 水平居中（可选） */
-		gap: 10rpx;
-		/* 推荐：替代 margin，更简洁 */
+		align-items: center; // 垂直居中对齐
+		//gap: 10rpx; // 元素之间的间距
+		flex-wrap: nowrap; // 防止换行
+	}
+
+	.u-checkbox {
+		margin-right: 10rpx;
+		/* 给复选框右侧添加一些间距 */
 	}
 
 	.link-item {
 		text-decoration: none;
+		display: flex;
+		align-items: center; // 垂直居中对齐链接文本
 	}
 
 	.link-text {
 		font-size: 28rpx;
 		color: #4A63E2;
 		font-weight: bold;
+		line-height: 1.2; // 调整行高以匹配其他文本
 	}
 
 	.separator {

@@ -102,23 +102,6 @@ export default {
         const res = await getHospitalList();
         if (res.code === 200 && Array.isArray(res.hospitalList)) {
           this.allHospitals = res.hospitalList
-		  
-		  //TODO 因为接口返回是空，提供以下测试数据
-		  // if (this.allHospitals.length == 0) {
-			 //  this.allHospitals = ["北京明德医院",
-			 //      "北京大学首钢医院",
-			 //      "北京和睦家中西医结合医院",
-			 //      "北京市海淀区妇幼保健院",
-			 //      "首都医科大学附属北京佑安医院",
-			 //      "北京市海淀医院（北京大学第三医院海淀院区）",
-			 //      "北京市垂杨柳医院",
-			 //      "四季青医院",
-			 //      "北京积水潭医院（新龙泽院区）",
-			 //      "北京嘉禾妇儿医院",
-			 //      "北京通用航天医院",
-			 //  "北京万柳美中宜和妇儿医院"];
-		  // }
-
         } else {
           uni.showToast({ title: '医院列表为空', icon: 'none' });
         }

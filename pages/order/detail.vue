@@ -30,11 +30,11 @@
 								</view>
 							</view>
 							<view class="">母亲信息：<text>{{ info.motherName }}</text></view>
-							<view class="">手机号码：<text> {{ info.phonenumber }}</text></view>
-							<view class="">证件类型：<text>{{ info.idType | getLabelById}}</text></view>
+							<view class="">手机号码：<text> {{ info.motherPhonenumber }}</text></view>
+							<view class="">证件类型：<text>{{ info.motherIdType | getLabelById}}</text></view>
 							<view class="id-cell">证件号：
-								<text class="id-cell-text" v-if="showId">{{ info.idCode }}</text>
-								<text class="id-cell-text" v-else>{{ info.idCode | idCardMask }}</text>
+								<text class="id-cell-text" v-if="showId">{{ info.motherIdCode }}</text>
+								<text class="id-cell-text" v-else>{{ info.motherIdCode | idCardMask }}</text>
 								<u-icon :name="showId ? 'eye-fill' : 'eye-off'" size="40" color="#bbb"
 									@tap="showId = !showId"></u-icon>
 							</view>
@@ -45,14 +45,14 @@
 							<view class="avatar-name">
 								<view class="dot"></view>
 								<view class="name">
-									甲方姓名
+									{{ user.nickName }}
 								</view>
 							</view>
-							<view class="">手机号：<text> 暂无 </text></view>
-							<view class="">证件类型：<text>身份证</text></view>
+							<view class="">手机号：<text> {{ user.phonenumber }} </text></view>
+							<view class="">证件类型：<text>{{ info.idType | getLabelById}}</text></view>
 							<view class="id-cell">证件号：
-								<text class="id-cell-text" v-if="showId">暂无</text>
-								<text class="id-cell-text" v-else>暂无</text>
+								<text class="id-cell-text" v-if="showId">{{ info.idCode }}</text>
+								<text class="id-cell-text" v-else>{{ info.idCode | idCardMask  }}</text>
 								<u-icon :name="showId ? 'eye-fill' : 'eye-off'" size="40" color="#bbb"
 									@tap="showId = !showId"></u-icon>
 							</view>
@@ -72,178 +72,70 @@
 					订单进度
 				</view>
 			</view>
-
 			<view class="card-list order-step-wrap">
 				<view class="card-list-item order-step-item">
-
-					<!-- 步骤1：未签约 -->
-					<view class="order-step-info-wrap" :class="{
-        'step-finish': isStepFinishedOrCurrent(0),
-        'step-current': isCurrentStep(0)
-      }">
-						<image
-							:src="isStepFinishedOrCurrent(0) ? '/static/images/order-step-yes.png' : '/static/images/order-step-not.png'"
-							mode="" />
-						<view class="order-step-info">
-							<view class="step-line"></view>
-							<view class="order-step-info-data">
-								<view class="step-name">未签约</view>
-								<view class="step-desc">仅录入基本信息，未签字</view>
-								<view class="bottom-line"></view>
+					<view class="order-step-info-wrap-for" v-for="(item, index) in progressData" :key="index">
+						<template v-if="currentProgressIndex > index">
+							<view class="order-step-info-wrap step-finish">
+								<image src="/static/images/order-step-yes.png" mode=""></image>
+								<view class="order-step-info">
+									<view class="step-line"></view>
+									<view class="order-step-info-data">
+										<view class="step-name">
+											{{item.OrderName}}
+										</view>
+										<view class="step-desc">
+											{{item.Desc}}
+										</view>
+									</view>
+									<view class="bottom-line"></view>
+									<view class="date">
+										{{item.StatusDate || ''}}
+									</view>
+								</view>
 							</view>
-							<view v-if="getStepData(0) && getStepData(0).StatusDate" class="date">
-								{{ getStepData(0).StatusDate }}
+						</template>
+						<template v-else-if="currentProgressIndex == index">
+							<view class="order-step-info-wrap step-current">
+								<image src="/static/images/order-step-yes.png" mode=""></image>
+								<view class="order-step-info">
+									<view class="step-line"></view>
+									<view class="order-step-info-data">
+										<view class="step-name">
+											{{item.OrderName}}
+										</view>
+										<view class="step-desc">
+											{{item.Desc}}
+										</view>
+									</view>
+									<view class="bottom-line"></view>
+									<view class="date">
+										{{item.StatusDate || '' || ''}}
+									</view>
+								</view>
 							</view>
-						</view>
+						</template>
+						<template v-else>
+							<view class="order-step-info-wrap">
+								<image src="/static/images/order-step-not.png" mode=""></image>
+								<view class="order-step-info">
+									<view class="step-line"></view>
+									<view class="order-step-info-data">
+										<view class="step-name">
+											{{item.OrderName}}
+										</view>
+										<view class="step-desc">
+											{{item.Desc}}
+										</view>
+									</view>
+									<view class="bottom-line"></view>
+									<view class="date">
+										{{item.StatusDate || ''}}
+									</view>
+								</view>
+							</view>
+						</template>
 					</view>
-
-					<!-- 步骤2：已签约 -->
-					<view class="order-step-info-wrap" :class="{
-        'step-finish': isStepFinishedOrCurrent(1),
-        'step-current': isCurrentStep(1)
-      }">
-						<image
-							:src="isStepFinishedOrCurrent(1) ? '/static/images/order-step-yes.png' : '/static/images/order-step-not.png'"
-							mode="" />
-						<view class="order-step-info">
-							<view class="step-line"></view>
-							<view class="order-step-info-data">
-								<view class="step-name">已签约</view>
-								<view class="step-desc">您已成功签署协议并完成支付</view>
-								<view class="bottom-line"></view>
-							</view>
-							<view v-if="getStepData(1) && getStepData(1).StatusDate" class="date">
-								{{ getStepData(1).StatusDate }}
-							</view>
-						</view>
-					</view>
-
-					<!-- 步骤3：已付款 -->
-					<view class="order-step-info-wrap" :class="{
-        'step-finish': isStepFinishedOrCurrent(2),
-        'step-current': isCurrentStep(2)
-      }">
-						<image
-							:src="isStepFinishedOrCurrent(2) ? '/static/images/order-step-yes.png' : '/static/images/order-step-not.png'"
-							mode="" />
-						<view class="order-step-info">
-							<view class="step-line"></view>
-							<view class="order-step-info-data">
-								<view class="step-name">已付款</view>
-								<view class="step-desc">您已完成支付</view>
-								<view class="bottom-line"></view>
-							</view>
-							<view v-if="getStepData(2) && getStepData(2).StatusDate" class="date">
-								{{ getStepData(2).StatusDate }}
-							</view>
-						</view>
-					</view>
-
-					<!-- 步骤4：样本接收 -->
-					<view class="order-step-info-wrap" :class="{
-        'step-finish': isStepFinishedOrCurrent(3),
-        'step-current': isCurrentStep(3)
-      }">
-						<image
-							:src="isStepFinishedOrCurrent(3) ? '/static/images/order-step-yes.png' : '/static/images/order-step-not.png'"
-							mode="" />
-						<view class="order-step-info">
-							<view class="step-line"></view>
-							<view class="order-step-info-data">
-								<view class="step-name">样本接收</view>
-								<view class="step-desc">样本已送达我们的处理中心</view>
-								<view class="bottom-line"></view>
-							</view>
-							<view v-if="getStepData(3) && getStepData(3).StatusDate" class="date">
-								{{ getStepData(3).StatusDate }}
-							</view>
-						</view>
-					</view>
-
-					<!-- 步骤5：病毒检测 -->
-					<view class="order-step-info-wrap" :class="{
-        'step-finish': isStepFinishedOrCurrent(4),
-        'step-current': isCurrentStep(4)
-      }">
-						<image
-							:src="isStepFinishedOrCurrent(4) ? '/static/images/order-step-yes.png' : '/static/images/order-step-not.png'"
-							mode="" />
-						<view class="order-step-info">
-							<view class="step-line"></view>
-							<view class="order-step-info-data">
-								<view class="step-name">病毒检测</view>
-								<view class="step-desc">**********************</view>
-								<view class="bottom-line"></view>
-							</view>
-							<view v-if="getStepData(4) && getStepData(4).StatusDate" class="date">
-								{{ getStepData(4).StatusDate }}
-							</view>
-						</view>
-					</view>
-
-					<!-- 步骤6：制备完成 -->
-					<view class="order-step-info-wrap" :class="{
-        'step-finish': isStepFinishedOrCurrent(5),
-        'step-current': isCurrentStep(5)
-      }">
-						<image
-							:src="isStepFinishedOrCurrent(5) ? '/static/images/order-step-yes.png' : '/static/images/order-step-not.png'"
-							mode="" />
-						<view class="order-step-info">
-							<view class="step-line"></view>
-							<view class="order-step-info-data">
-								<view class="step-name">制备完成</view>
-								<view class="step-desc">胎盘已送达我们的处理中心</view>
-								<view class="bottom-line"></view>
-							</view>
-							<view v-if="getStepData(5) && getStepData(5).StatusDate" class="date">
-								{{ getStepData(5).StatusDate }}
-							</view>
-						</view>
-					</view>
-
-					<!-- 步骤7：已配送 -->
-					<view class="order-step-info-wrap" :class="{
-        'step-finish': isStepFinishedOrCurrent(6),
-        'step-current': isCurrentStep(6)
-      }">
-						<image
-							:src="isStepFinishedOrCurrent(6) ? '/static/images/order-step-yes.png' : '/static/images/order-step-not.png'"
-							mode="" />
-						<view class="order-step-info">
-							<view class="step-line"></view>
-							<view class="order-step-info-data">
-								<view class="step-name">已配送</view>
-								<view class="step-desc">产品已发出，请留意物流信息</view>
-								<view class="bottom-line"></view>
-							</view>
-							<view v-if="getStepData(6) && getStepData(6).StatusDate" class="date">
-								{{ getStepData(6).StatusDate }}
-							</view>
-						</view>
-					</view>
-
-					<!-- 步骤8：已完成 -->
-					<view class="order-step-info-wrap" :class="{
-        'step-finish': isStepFinishedOrCurrent(7),
-        'step-current': isCurrentStep(7)
-      }">
-						<image
-							:src="isStepFinishedOrCurrent(7) ? '/static/images/order-step-yes.png' : '/static/images/order-step-not.png'"
-							mode="" />
-						<view class="order-step-info no-bottom">
-							<view class="step-line"></view>
-							<view class="order-step-info-data">
-								<view class="step-name">已完成</view>
-								<view class="step-desc">**********************</view>
-								<view class="bottom-line"></view>
-							</view>
-							<view v-if="getStepData(7) && getStepData(7).StatusDate" class="date">
-								{{ getStepData(7).StatusDate }}
-							</view>
-						</view>
-					</view>
-
 				</view>
 			</view>
 		</view>
@@ -260,6 +152,7 @@
 			</view>
 
 			<view class="action-card unbind-agreement" @click="unbindAgreement" v-if="currentStatusId === 8">
+			<!-- <view class="action-card unbind-agreement" @click="unbindAgreement"> -->
 				<view class="card-content">
 					<text class="card-title">协议解除</text>
 					<text class="card-desc">申请协议解除和退费</text>
@@ -312,6 +205,10 @@
 
 	export default {
 		computed: {
+			...mapState({
+				user: state => state.user,
+				token: state => state.token,
+			}),
 			// 计算容器顶部内边距（转为 rpx）
 			containerPaddingTop() {
 				// CustomBar 是 px，uni-app 中 1px = 2rpx
@@ -330,12 +227,18 @@
 				};
 			},
 			currentStatusId() {
-			    const progress = this.info?.orderProgress;
-			    if (!Array.isArray(progress) || progress.length === 0) {
-			      return 0; // 默认为未签约
-			    }
-			    const lastStep = progress[progress.length - 1];
-			    return Number(lastStep.Id) || 0;
+				const progress = this.info?.orderProgress;
+				if (!Array.isArray(progress) || progress.length === 0) {
+					return 0; // 默认为未签约
+				}
+				const lastStep = progress[progress.length - 1]; console.log('lastStep',lastStep);
+				let stepid = 0
+				if (lastStep.id) {
+					stepid = Number(lastStep.id) 
+				}else if (lastStep.Id) {
+					stepid = Number(lastStep.Id) 
+				}
+				return  stepid;
 			}
 		},
 		filters: {
@@ -419,7 +322,40 @@
 				cardListScrollTop: 0,
 				cardList: [],
 				info: {},
-
+				currentProgressIndex: 0,
+				progressData: [{
+						OrderName: '未签约',
+						Desc: '仅录入基本信息，未签字',
+					},
+					{
+						OrderName: '已签约',
+						Desc: '签约已完成',
+					},
+					{
+						OrderName: '已付款',
+						Desc: '支付已完成',
+					},
+					{
+						OrderName: '样本接收',
+						Desc: '样本已送达处理中心',
+					},
+					{
+						OrderName: '病毒检测',
+						Desc: '病毒检测已完成',
+					},
+					{
+						OrderName: '制备完成',
+						Desc: '产品已制备完成',
+					},
+					{
+						OrderName: '配送',
+						Desc: '产品已发出，请关注物流',
+					},
+					{
+						OrderName: '已完成',
+						Desc: '产品已签收',
+					},
+				], // 1-已签约、2-已付款、3-样本接收、4-病毒检测、5-制备完成、6-配送、7-已完成、8-申请解除、9-协议解除、10-已退款
 			};
 		},
 		onLoad(options) {
@@ -462,6 +398,11 @@
 						}
 
 						this.info = row || {};
+
+						if (this.info.orderProgress) {
+							this.progressData = this.mergeStatuses(this.progressData, this.info.orderProgress);
+						}
+						this.setProgress();
 					}
 				}
 			},
@@ -494,39 +435,60 @@
 			// 查看协议
 			viewAgreement() {
 				uni.navigateTo({
-					url: "/pages/order/agreement"
+					url: `/pages/order/agreement?orderId=${this.orderId}`
 				})
 			},
 			// 退款进度
 			refundProgress() {
 				uni.navigateTo({
-					url: "/pages/refund/status"
+					url: `/pages/refund/status?orderId=${this.orderId}`
 				})
 			},
 			// 解除协议
 			unbindAgreement() {
 				uni.navigateTo({
-					url: `/pages/refund/cancel-agreement?orderId=${this.orderId}&orderCode=${encodeURIComponent(this.info.orderCode)}`
+					url: `/pages/refund/cancel-agreement?orderId=${this.orderId}`
 				})
 			},
-			// 安全获取 orderProgress 中第 index 步的数据，若不存在则返回 null
-			getStepData(index) {
-				if (!this.info?.orderProgress || !Array.isArray(this.info.orderProgress)) {
-					return null;
-				}
-				return this.info.orderProgress[index] || null;
+			mergeStatuses(a, b) {
+			  // 将 b 转为 Map，key 是 OrderName
+			  const bMap = new Map(b.map(item => [item.OrderName, item]));
+			
+			  // 遍历 a，对每个项：
+			  // - 如果 b 中有同名 OrderName，则合并字段
+			  // - 否则保留原样
+			  return a.map(aItem => {
+			    const bItem = bMap.get(aItem.OrderName);
+			    if (bItem) {
+			      // 合并：保留 aItem 所有字段，用 bItem 的字段覆盖或补充
+			      return { ...aItem, ...bItem };
+			    }
+			    return aItem;
+			  });
 			},
-
-			// 判断当前是否处于某一步（用于 step-current）
-			isCurrentStep(stepIndex) {
-				const len = this.info?.orderProgress?.length || 0;
-				return len === stepIndex + 1; // 因为索引从0开始，步骤1对应index0
+			setProgress() {
+			  console.log('setProgress', this.progressData)
+			  this.progressData.forEach((item, index) => {
+			    if (this.info.statusTxt == item.OrderName) {
+			      this.currentProgressIndex = index;
+			      if (this.currentProgressIndex < index) {
+			        item.isFinishStep;
+			      }
+			      if (this.currentProgressIndex > index) {
+			        item.isCurrentStep;
+			      }
+			    }
+			  });
 			},
-
-			// 判断某一步是否已完成（包括当前步）
-			isStepFinishedOrCurrent(stepIndex) {
-				const len = this.info?.orderProgress?.length || 0;
-				return len > stepIndex;
+			currentStepStatus(index) {
+			  let result = '';
+			  if (this.currentProgressIndex < index) {
+			    result = 'step-finish';
+			  }
+			  if (this.currentProgressIndex == index) {
+			    result = 'step-current';
+			  }
+			  return result;
 			}
 		}
 	};
@@ -685,117 +647,6 @@
 		}
 	}
 
-	.order-step-wrap {
-		.order-step-item {
-			position: relative;
-			padding: 62rpx 56rpx;
-
-			image {
-				width: 52rpx;
-				height: 52rpx;
-				border-radius: 100%;
-				position: absolute;
-				z-index: 3;
-				left: 56rpx;
-			}
-		}
-
-		.order-step-info-wrap {
-			&:last-child {
-				.step-line {
-					display: none;
-				}
-			}
-		}
-
-		.order-step-info {
-			padding-left: 56rpx;
-			display: flex;
-			// align-items: center;
-			justify-content: space-between;
-			position: relative;
-			padding-bottom: 76rpx;
-
-			.date {
-				font-weight: bold;
-				font-size: 22rpx;
-				color: #656565;
-			}
-
-			.step-line {
-				position: absolute;
-				width: 14rpx;
-				background-color: #E8E8E8;
-				height: calc(100% - 46rpx);
-				left: 21rpx;
-				top: 50rpx;
-			}
-
-			.order-step-info-data {
-				font-weight: bold;
-				font-size: 28rpx;
-				color: #B6B6B6;
-				margin-left: 56rpx;
-				margin-top: -8rpx;
-				position: relative;
-
-				.step-name {
-					font-size: 32rpx;
-					color: #505050;
-					padding-bottom: 20rpx;
-				}
-
-				.bottom-line {
-					position: absolute;
-					background: linear-gradient(90deg, transparent, rgba(74, 99, 228, 0.5) 50%, transparent 100%);
-					height: 2rpx;
-					left: -70rpx;
-					right: -160rpx;
-					bottom: -30rpx;
-					display: none;
-				}
-			}
-
-
-		}
-
-		.no-bottom {
-			padding-bottom: 0;
-		}
-
-
-
-		.step-finish {
-			.step-name {
-				color: #4A63E4 !important;
-			}
-
-			.step-line {
-				background-color: #4A63E4;
-			}
-		}
-
-		.step-current {
-			.step-name {
-				color: #4A63E4 !important;
-			}
-
-			.step-line {
-				background-color: #4A63E4;
-				background: linear-gradient(180deg, rgba(74, 99, 228, 1) 0%, rgba(74, 99, 228, 1) 0%, rgba(232, 232, 232, 1) 45%, rgba(232, 232, 232, 1) 100%);
-			}
-
-			.step-desc {
-				color: #98A1CF;
-			}
-
-			.bottom-line {
-				display: block !important;
-			}
-		}
-	}
-
-
 	.desc {
 		margin: 70rpx 26rpx 0;
 
@@ -845,7 +696,6 @@
 		}
 
 	}
-
 
 	.quick-actions-grid {
 		display: grid;
@@ -922,5 +772,110 @@
 		display: flex;
 		justify-content: space-between;
 		margin: 70rpx 26rpx 0;
+	}
+
+
+	.order-step-wrap {
+		.order-step-item {
+			position: relative;
+			padding: 62rpx 56rpx 0;
+
+			image {
+				width: 52rpx;
+				height: 52rpx;
+				border-radius: 100%;
+				position: absolute;
+				z-index: 3;
+				left: 56rpx;
+			}
+		}
+
+		.order-step-info-wrap-for {
+			&:last-child {
+				.step-line {
+					display: none;
+				}
+			}
+		}
+
+		.order-step-info {
+			padding-left: 56rpx;
+			display: flex;
+			// align-items: center;
+			justify-content: space-between;
+			position: relative;
+			padding-bottom: 76rpx;
+
+			.date {
+				font-weight: bold;
+				font-size: 22rpx;
+				color: #656565;
+				position: absolute;
+				right: 0;
+			}
+
+			.step-line {
+				position: absolute;
+				width: 14rpx;
+				background-color: #E8E8E8;
+				height: calc(100% - 46rpx);
+				left: 21rpx;
+				top: 50rpx;
+			}
+
+			.order-step-info-data {
+				font-weight: bold;
+				font-size: 28rpx;
+				color: #B6B6B6;
+				margin-left: 56rpx;
+				margin-top: -8rpx;
+				position: relative;
+
+				.step-name {
+					font-size: 32rpx;
+					color: #505050;
+					padding-bottom: 20rpx;
+				}
+			}
+
+			.bottom-line {
+				position: absolute;
+				background: linear-gradient(90deg, transparent, rgba(74, 99, 228, 0.5) 50%, transparent 100%);
+				height: 2rpx;
+				left: 40rpx;
+				right: -40rpx;
+				bottom: 40rpx;
+				display: none;
+			}
+		}
+
+		.step-finish {
+			.step-name {
+				color: #4A63E4 !important;
+			}
+
+			.step-line {
+				background-color: #4A63E4;
+			}
+		}
+
+		.step-current {
+			.step-name {
+				color: #4A63E4 !important;
+			}
+
+			.step-line {
+				background-color: #4A63E4;
+				background: linear-gradient(180deg, rgba(74, 99, 228, 1) 0%, rgba(74, 99, 228, 1) 0%, rgba(232, 232, 232, 1) 45%, rgba(232, 232, 232, 1) 100%);
+			}
+
+			.step-desc {
+				color: #98A1CF;
+			}
+
+			.bottom-line {
+				display: block !important;
+			}
+		}
 	}
 </style>

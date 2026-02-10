@@ -35,7 +35,7 @@
 				</view>
 			</view>
 			
-			<button @click="toSign" style="margin-top: 30rpx;">测试签约</button>
+			<button @click="toSign" style="margin-top: 50rpx;">开始签约</button>
 		</view>
 
 		<TabBar :current-tab="currentTab" />
@@ -44,12 +44,18 @@
 
 <script>
 	import TabBar from '@/components/TabBar/TabBar.vue';
+	
+	import {
+		mapGetters
+	} from 'vuex';
 
 	export default {
 		components: {
 			TabBar
 		},
 		computed: {
+			...mapGetters(['isLogined']),
+			
 			// 计算容器顶部内边距（转为 rpx）
 			containerPaddingTop() {
 				// CustomBar 是 px，uni-app 中 1px = 2rpx
@@ -80,6 +86,13 @@
 				}
 			},
 			toSign(){
+				if (!this.isLogined) {
+					uni.redirectTo({
+						url: `/pages/login/login`
+					})
+					return;
+				}
+				
 				uni.setStorageSync('SCAN_SALES_ID', 1); // 模拟销售
 				uni.navigateTo({
 					url: `/pages/index/intro`

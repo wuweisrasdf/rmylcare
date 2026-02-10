@@ -39,10 +39,7 @@
 				return {
 					height: '98rpx',
 					borderRadius: '49rpx',
-					backgroundImage: 'url(/static/images/primary-btn.png)',
-					backgroundSize: 'auto',
-					backgroundRepeat: 'no-repeat',
-					backgroundPosition: 'center',
+					backgroundColor: '#4A63E4',
 					color: '#FFFFFF',
 					fontWeight: 'bold',
 					fontSize: '32rpx',
@@ -75,13 +72,22 @@
 				const res = await api.getProductById(productId);
 				if (res.code == 200) {
 					const data = res.data || {};
+					
+					let navbarArray;
+					try {
+					  navbarArray = JSON.parse(data.navbar);
+					} catch (e) {
+					  console.error('navbar 字段不是合法的 JSON 字符串', e);
+					  navbarArray = []; // 容错处理
+					}
+					//console.log(navbarArray);
 
 					if (this.type == 1) {
 						this.title = '成人优因';
-						this.promoImage = data.navbar || '';
+						this.promoImage = navbarArray[0] && navbarArray[0].bar  || '';
 					} else {
 						this.title = '细胞囊泡'
-						this.promoImage = data.details || '';
+						this.promoImage = navbarArray[1] && navbarArray[1].dtl  || '';
 					}
 				}
 			},

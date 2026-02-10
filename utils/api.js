@@ -61,7 +61,7 @@ export const getProductById = (id) => { return $H.get(`${$C.baseUrl}/system/prod
 
 // ========== 退款相关 ==========
 
-// 新增退款单
+// 生成解约协议
 export const createRefund = params => { return $H.post(`${$C.baseUrl}/system/return`, params) };
 
 // 修改退款单状态

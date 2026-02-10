@@ -152,7 +152,7 @@ export default new Vuex.Store({
 
 			const user = options.user
 			const token = uni.getStorageSync('token') // 从本地缓存中获取token
-			const role = '' // TODO 从user中获取role
+			const role = '' //从user中获取role
 
 			commit('SET_AUTH', {
 				user,

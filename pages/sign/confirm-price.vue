@@ -232,7 +232,7 @@
 						console.log('getSignUrl:', res)
 						if (res.signUrl) {
 							this.isSigning = true; // 标记即将进入签署流程
-							uni.navigateTo({
+							uni.redirectTo({
 								url: `/pages/sign/signature?signUrl=${encodeURIComponent(res.signUrl)}&orderId=${this.orderId}&type=1`
 							});
 							return;

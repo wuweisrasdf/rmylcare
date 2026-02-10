@@ -27,7 +27,7 @@
 					// #endif
 				}
 			});
-
+			
 			//this.$store.dispatch('initUser'); // 初始化登录状态
 			this.init();
 		},
@@ -43,21 +43,24 @@
 				if (!isLoggedIn) {
 					const pages = getCurrentPages();
 					const currentRoute = pages.length > 0 ?
-						pages[pages.length - 1].route :
-						'';
+						pages[pages.length - 1].route : '';
+
+					console.log('currentRoute', currentRoute)
 
 					// 白名单：这些页面允许未登录访问
 					const whiteList = [
 						'pages/login/login',
 						'pages/index/index',
-						'pages/index/scan'
+						'pages/index/scan',
+						'pages/agreement/agreement', // 用户协议页
+						'pages/agreement/privacy' // 隐私政策页
 					];
 
-					if (!whiteList.includes(currentRoute)) {
-						uni.redirectTo({
-							url: '/pages/login/login'
-						});
-					}
+					// if (!whiteList.includes(currentRoute)) {
+					// 	uni.redirectTo({
+					// 		url: '/pages/login/login'
+					// 	});
+					// }
 				}
 			}
 		}

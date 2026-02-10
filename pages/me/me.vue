@@ -10,7 +10,7 @@
 	</u-navbar>
 	
     <!-- 头像区域 -->
-    <view class="avatar-container" @click="changeAvatar">
+    <view class="avatar-container" >
 		  <view v-if="!userAvatar" class="default-avatar" :style="{ width: '168rpx', height: '168rpx' }">
 			  <text class="avatar-text">头像</text>
 		  </view>
@@ -145,7 +145,7 @@
 					  // 立即更新本地预览
 					  const localAvatar = tempFilePath;
 					  console.log('【已选头像】本地路径:', tempFilePath);
-					  // TODO: 调用上传接口，成功后 dispatch updateUserInfo
+					  // 调用上传接口，成功后 dispatch updateUserInfo
 					},
 					fail: (err) => {
 					  console.error('选择头像失败', err);

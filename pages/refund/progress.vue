@@ -72,10 +72,7 @@
 				return {
 					height: '98rpx',
 					borderRadius: '49rpx',
-					backgroundImage: 'url(/static/images/primary-btn.png)',
-					backgroundSize: 'auto',
-					backgroundRepeat: 'no-repeat',
-					backgroundPosition: 'center',
+					backgroundColor: '#4A63E4',
 					color: '#FFFFFF',
 					fontWeight: 'bold',
 					fontSize: '32rpx',
