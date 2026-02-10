@@ -1,6 +1,7 @@
 package com.healthcare.web.controller.system;
 
 import java.lang.reflect.Type;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -28,9 +29,11 @@ import com.healthcare.common.annotation.Log;
 import com.healthcare.common.config.orderSystemConfig;
 import com.healthcare.common.core.controller.BaseController;
 import com.healthcare.common.core.domain.AjaxResult;
+import com.healthcare.common.core.domain.entity.SysUser;
 import com.healthcare.common.enums.BusinessType;
 import com.healthcare.system.domain.HmOrderFdp;
 import com.healthcare.system.service.IHmOrderFdpService;
+import com.healthcare.system.service.ISysUserService;
 
 import io.swagger.annotations.ApiOperation;
 
@@ -58,6 +61,9 @@ public class HmOrderFdpController extends BaseController
     
     @Autowired
 	private orderSystemConfig orderSystemConfig;
+    
+    @Autowired
+    private ISysUserService userService;
 
     /**
      * 查询冻干粉订单列表
@@ -104,7 +110,8 @@ public class HmOrderFdpController extends BaseController
         		tmpObj.setStatusTxt("未签约");
         	else if(tmpObj.getProStatus() == 1)
         		tmpObj.setStatusTxt("已签约");
-        	else if(tmpObj.getOrderStatus() == 1)
+        	
+        	if(tmpObj.getOrderStatus() == 1)
         		tmpObj.setStatusTxt("已付款");
         	
         	if(tmpObj.getSyncFlag() == 1) {
@@ -113,6 +120,73 @@ public class HmOrderFdpController extends BaseController
         	}
             // 直接修改当前元素的值
             list.set(i,  tmpObj);
+        }
+        
+        //如果是订单详情
+        if(hmOrderFdp.getId() != null) {
+        	SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        	HmOrderFdp tmpObj = list.get(0);
+        	List<Map<String, String>> progressList = new ArrayList<Map<String, String>>();
+        	if(tmpObj.getSyncFlag() == 1) {
+        		OrderSystemUtils orderSystemUtils = new OrderSystemUtils();
+                orderSystemUtils.redisCache = redisCache;
+                JSONArray progress = orderSystemUtils.getOrderDetail(orderSystemConfig, tmpObj.getOrderCode());
+                //"OrderProgress":[{"Id":"1","OrderName":"已签约","Status":"1","StatusDate":"2026-02-09","Desc":"签约已完成"},{"Id":"2","OrderName":"已付款","Status":"1","StatusDate":"2026-02-09","Desc":"支付已完成"},{"Id":"3","OrderName":"样本接收","Status":"1","StatusDate":"2026-02-09","Desc":"样本已送达处理中心"},{"Id":"4","OrderName":"病毒检测","Status":"0","StatusDate":"","Desc":"病毒检测已完成"},{"Id":"5","OrderName":"制备完成","Status":"0","StatusDate":"","Desc":"产品已制备完成"},{"Id":"6","OrderName":"配送","Status":"0","StatusDate":"","Desc":"产品已发出，请关注物流"},{"Id":"7","OrderName":"已完成","Status":"0","StatusDate":"","Desc":"产品已签收"}]
+                Map<String, String> progObj1 = new HashMap<String, String>();
+                progObj1.put("Id", "0");
+                progObj1.put("OrderName", "未签约");
+                progObj1.put("StatusDate", sdf.format(tmpObj.getCreateTime()));
+                progressList.add(progObj1);
+            	for (int i = 0; i < progress.size(); i++) {
+            		Map<String, String> progObj = new HashMap<String, String>();
+            	    String jsonString = progress.getString(i);
+            	    jsonString = jsonString.replace("[", "");
+            	    jsonString = jsonString.replace("]", "");
+            	    JSONObject jsonObject = JSON.parseObject(jsonString);
+            	    if(jsonObject.getString("Status").equals("0"))
+            	    	break;
+            	    progObj.put("Id", jsonObject.getString("Id"));
+                    progObj.put("OrderName", jsonObject.getString("OrderName"));
+                    progObj.put("StatusDate", jsonObject.getString("StatusDate"));
+                    progressList.add(progObj);
+            	}
+        	}
+        	else {
+        		
+        		Map<String, String> progInfo = new HashMap<String, String>();
+        		progInfo.put("id", "0");
+        		progInfo.put("OrderName", "未签约");
+        		progInfo.put("StatusDate", sdf.format(tmpObj.getCreateTime()));
+        		progressList.add(progInfo);
+        		
+        		if(tmpObj.getSignDate() != null) {
+        			Map<String, String> progInfo1 = new HashMap<String, String>();
+            		progInfo1.put("id", "1");
+            		progInfo1.put("OrderName", "已签约");
+            		progInfo1.put("StatusDate", sdf.format(tmpObj.getSignDate()));
+            		progressList.add(progInfo1);
+            		
+            		if(tmpObj.getPayDate() != null) {
+            			Map<String, String> progInfo2 = new HashMap<String, String>();
+                		progInfo2.put("id", "2");
+                		progInfo2.put("OrderName", "已付款");
+                		progInfo2.put("StatusDate", sdf.format(tmpObj.getPayDate()));
+                		progressList.add(progInfo2);
+            		}
+        		}
+        	}
+        	tmpObj.setOrderProgress(progressList);
+        	
+        	//详情页面又加入了甲方手机号、证件类型、证件号
+        	Long userId = tmpObj.getUserId();
+        	SysUser userObj = userService.selectUserById(userId);
+        	tmpObj.setMotherIdType(tmpObj.getIdType());
+        	tmpObj.setMotherIdCode(tmpObj.getIdCode());
+        	tmpObj.setMotherPhonenumber(tmpObj.getPhonenumber());
+        	tmpObj.setIdType(userObj.getIdType());
+        	tmpObj.setIdCode(userObj.getIdCode());
+        	tmpObj.setPhonenumber(userObj.getPhonenumber());
+        	list.set(0,  tmpObj);
         }
         
         return getDataTable(list );
