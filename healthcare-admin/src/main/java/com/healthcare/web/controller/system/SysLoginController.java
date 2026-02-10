@@ -163,6 +163,9 @@ public class SysLoginController
         Set<String> roles = permissionService.getRolePermission(user);
         // 权限集合
         Set<String> permissions = permissionService.getMenuPermission(user);
+        //如果通过editMotherUser修改了user，需要重新取user
+        Long userId = user.getUserId();
+        user = userService.selectUserById(userId);
         AjaxResult ajax = AjaxResult.success();
         ajax.put("user", user);
         ajax.put("roles", roles);
