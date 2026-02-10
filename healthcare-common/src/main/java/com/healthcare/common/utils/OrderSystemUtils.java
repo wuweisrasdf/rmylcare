@@ -1,6 +1,5 @@
 package com.healthcare.common.utils;
 
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -10,8 +9,6 @@ import java.util.concurrent.TimeUnit;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
-import com.google.common.reflect.TypeToken;
-import com.google.gson.Gson;
 import com.healthcare.common.config.orderSystemConfig;
 import com.healthcare.common.core.redis.RedisCache;
 import com.healthcare.common.utils.http.HttpUtils;
@@ -58,6 +55,24 @@ public class OrderSystemUtils {
 		String result = HttpUtils.sendPost(url, sendPara.toString());
 		
 		return result;
+	}
+	
+	public JSONArray getOrderDetail(orderSystemConfig orderSystemConfig, String orderCode) throws Exception {
+		String interfaceName = "GetProtocolInfoV1";
+		String para = "{\"ProCode\":\"" + orderCode + "\"}";;
+		
+		String result = send2OrderSystem(orderSystemConfig, interfaceName, para);
+		JSONObject returnObj = JSON.parseObject(result);
+		if(returnObj == null) {
+			throw new Exception("获取订单列表失败！");
+		}
+		String dataStr = returnObj.get("data").toString();
+		JSONObject dataObj = JSON.parseObject(returnObj.get("data").toString());
+		String progressStr = dataObj.getString("OrderProgress");
+		JSONArray jsonArray = JSONArray.parse(progressStr);
+
+		
+    	return jsonArray;
 	}
 
 	public List<OSOrder> getOrderList(orderSystemConfig orderSystemConfig, List<String> orderCodeList) throws Exception {
