@@ -224,11 +224,11 @@ public class WxEsignController extends BaseController
 		SysUser userObj = userService.selectUserById(userId);
 		
 		if(this.signType.equals("1")) {
-			this.contractFile = replacePDF(this.contractFile1,userObj.getNickName(), orderObj);
+			this.contractFile = replacePDF(this.contractFile1,userObj, orderObj);
 			this.returnURL = this.returnURL1;
 		}
 		else if(this.signType.equals("2")){
-			this.contractFile = replacePDF(this.contractFile2,userObj.getNickName(), orderObj);
+			this.contractFile = replacePDF(this.contractFile2,userObj, orderObj);
 			this.returnURL = this.returnURL2;
 		}
 		else {
@@ -249,7 +249,6 @@ public class WxEsignController extends BaseController
                 "    \"fileName\": \"" + bean.getFileName() + "\",\n" +
                 "    \"fileSize\": " + bean.getFileSize() + ",\n" +
                 "    \"convertToPDF\": false,\n" +
-                "    \"redirectUrl\": \"wechat://back\",\n" +
                 "    \"contentType\": \"" + EsignHeaderConstant.CONTENTTYPE_STREAM.VALUE() + "\"\n" +
                 "}";
 
@@ -361,16 +360,12 @@ public class WxEsignController extends BaseController
 	        	
 	        	//处理签署成功后
 	        	System.out.println("--------------签署成功--------------");
-	        	long timestamp = System.currentTimeMillis();
 	        	//修改合同状态
 	        	HmOrderFdp order = new HmOrderFdp();
 	        	order.setId(orderId);
 	        	order.setProCode(signFlowId);
 	        	order.setProStatus(1);
-	        	order.setSignDate(System.currentTimeMillis());
-	        	
-	        	
-
+	        	order.setSignDate(DateUtils.getNowDate());
 
 				hmOrderFdpService.updateHmOrderFdp(order);
 	        }
@@ -408,24 +403,30 @@ public class WxEsignController extends BaseController
 	        	String signFlowId = returnObj.get("signFlowId");
 	        	String customBizNum = returnObj.get("customBizNum");
 	        	String idStr = customBizNum.substring(8);
-	        	Long returnOrderId = Long.parseLong(idStr);
+	        	Long orderId = Long.parseLong(idStr);
 	        	
 	        	//处理签署成功后
 	        	System.out.println("--------------签署成功--------------");
 	        	
 	        	//修改解约协议状态 为 2
-	        	HmOrderFdpReturn returnOrder = hmOrderFdpReturnService.selectHmOrderFdpReturnById(returnOrderId);
-	        	returnOrder.setProCode(signFlowId);
-	        	returnOrder.setStatus(2);
-	        	returnOrder.setSignDate(System.currentTimeMillis());
-	        	hmOrderFdpReturnService.updateHmOrderFdpReturn(returnOrder);
+				HmOrderFdpReturn orderCond = new HmOrderFdpReturn();
+				orderCond.setOrderId(orderId);
+				List<HmOrderFdpReturn> returnOrderList = hmOrderFdpReturnService.selectHmOrderFdpReturnList(orderCond );
+				if(returnOrderList.size() > 0) {
+					HmOrderFdpReturn returnOrder = returnOrderList.get(0);
+					returnOrder.setProCode(signFlowId);
+		        	returnOrder.setStatus(2);
+		        	returnOrder.setSignDate(DateUtils.getNowDate());
+		        	hmOrderFdpReturnService.updateHmOrderFdpReturn(returnOrder);
 
-	        	//修改解约协议状态 为 4
-	        	Long oId = returnOrder.getOrderId();
-	        	HmOrderFdp orderObj = new HmOrderFdp();
-	        	orderObj.setId(oId);
-	        	orderObj.setProStatus(4);
-	        	hmOrderFdpService.updateHmOrderFdp(orderObj);
+		        	//修改解约协议状态 为 4
+		        	Long oId = returnOrder.getOrderId();
+		        	HmOrderFdp orderObj = new HmOrderFdp();
+		        	orderObj.setId(oId);
+		        	orderObj.setProStatus(4);
+		        	hmOrderFdpService.updateHmOrderFdp(orderObj);
+				}
+	        	
 	        }
 	        System.out.println("--------------结束读取请求--------------");
     	}
@@ -448,7 +449,7 @@ public class WxEsignController extends BaseController
     	String signFlowId = orderObj.getProCode();
     	Integer status = orderObj.getProStatus();
     	
-    	if(signFlowId.length() < 32 || status != 1) {
+    	if(signFlowId.length() < 32 ) {
     		return ajax.error("协议未签署或协议编号错误");
     	}
     	
@@ -459,7 +460,26 @@ public class WxEsignController extends BaseController
         JsonObject fileObj = files.get(0).getAsJsonObject();
         String downloadUrl = fileObj.get("downloadUrl").getAsString();
         
-        ajax.put("downloadUrl", downloadUrl.toString());
+        ajax.put("downloadUrl1", downloadUrl.toString());
+        
+        
+        HmOrderFdpReturn cond = new HmOrderFdpReturn();
+        cond.setOrderId(orderId);
+		List<HmOrderFdpReturn> returnList = hmOrderFdpReturnService.selectHmOrderFdpReturnList(cond);
+		if(returnList.size() > 0) {
+			HmOrderFdpReturn returnObj = returnList.get(0);
+			signFlowId = returnObj.getProCode();
+			if(!(signFlowId.length() <32)) //已签
+			{
+				fileDownloadUrl = fileDownloadUrl(signFlowId);
+		        fileDownloadUrlJsonObject = gson.fromJson(fileDownloadUrl.getBody(),JsonObject.class);
+		        fileDownloadUrlArray = fileDownloadUrlJsonObject.getAsJsonObject("data");
+		        files = fileDownloadUrlArray.getAsJsonArray("files");
+		        fileObj = files.get(0).getAsJsonObject();
+		        downloadUrl = fileObj.get("downloadUrl").getAsString();
+		        ajax.put("downloadUrl2", downloadUrl.toString());
+			}
+		}
         return ajax;
     }
     
@@ -759,7 +779,7 @@ public class WxEsignController extends BaseController
     }
 	
 	/**
-     * 获取微信token
+     * 设置微信token
      * @throws Exception 
      */
 	@ApiOperation("设置微信token")
@@ -768,6 +788,34 @@ public class WxEsignController extends BaseController
     {
 		AjaxResult ajax = AjaxResult.success();
 		redisCache.setCacheObject("WXTOKEN", accessToken, 60, TimeUnit.MINUTES);
+        return ajax;
+    }
+	
+	/**
+     * 获取订单系统token
+     * @throws Exception 
+     */
+	@ApiOperation("获取订单系统token")
+	@PostMapping("/getordersystemtoken")
+    public AjaxResult getOrderSystemToken() throws Exception
+    {
+		AjaxResult ajax = AjaxResult.success();
+		String accessToken = redisCache.getCacheObject("ORDERTOKEN");
+		ajax.put("accessToken", accessToken);
+
+        return ajax;
+    }
+	
+	/**
+     * 设置订单系统token
+     * @throws Exception 
+     */
+	@ApiOperation("设置订单系统token")
+	@PostMapping("/setordersystemtoken")
+    public AjaxResult setOrderSystemToken(@RequestBody String accessToken) throws Exception
+    {
+		AjaxResult ajax = AjaxResult.success();
+		redisCache.setCacheObject("ORDERTOKEN", accessToken, 50, TimeUnit.MINUTES);
         return ajax;
     }
 	
@@ -859,7 +907,7 @@ public class WxEsignController extends BaseController
 	         HmOrderFdp orderObj = new HmOrderFdp();
 	         orderObj.setId(orderId);
 	         orderObj.setOrderStatus(1);
-	         orderObj.setPayDate(System.currentTimeMillis());
+	         orderObj.setPayDate(DateUtils.getNowDate());
 	         hmOrderFdpService.updateHmOrderFdp(orderObj);
 		
 	         return "<xml><return_code><![CDATA[SUCCESS]]></return_code></xml>";
@@ -873,7 +921,7 @@ public class WxEsignController extends BaseController
     /*
      * 替换PDF中甲方姓名，电话
      */
-    private String replacePDF(String srcFile, String nickName, HmOrderFdp orderObj) throws IOException {
+    private String replacePDF(String srcFile, SysUser userObj, HmOrderFdp orderObj) throws IOException {
 
     	String uuid = IdUtils.simpleUUID();
     	String destFileName = RuoYiConfig.getUploadPath() + "/" + uuid + ".pdf";
@@ -885,11 +933,11 @@ public class WxEsignController extends BaseController
     	if(this.signType.equals("1")) {
 			PDPage page = document.getPage(2); // 获取第3页
 			PDPageContentStream contentStream = new PDPageContentStream(document, page, PDPageContentStream.AppendMode.APPEND, true, true); // 使用APPEND模式以避免清除现有内容
-			changeTxt(contentStream , font, 180, 675, nickName);
-			changeTxt(contentStream , font, 200, 645, orderObj.getIdCode());
+			changeTxt(contentStream , font, 180, 675, userObj.getNickName());
+			changeTxt(contentStream , font, 200, 645, userObj.getIdCode());
 			changeTxt(contentStream , font, 120, 620, orderObj.getAddress());
-			changeTxt(contentStream , font, 150, 595, orderObj.getPhonenumber());
-			changeTxt(contentStream , font, 350, 595, orderObj.getEmail());
+			changeTxt(contentStream , font, 150, 595, userObj.getPhonenumber());
+			changeTxt(contentStream , font, 350, 595, userObj.getEmail());
 			changeTxt(contentStream , font, 150, 565, DateUtils.dateTime(orderObj.getDueDate()));
 			changeTxt(contentStream , font, 350, 565, orderObj.getHospitalName());
 			contentStream.close(); // 关闭内容流以保存更改
@@ -904,8 +952,8 @@ public class WxEsignController extends BaseController
     	else if(this.signType.equals("2")) {
     		PDPage page = document.getPage(0); // 获取第1页
 			PDPageContentStream contentStream = new PDPageContentStream(document, page, PDPageContentStream.AppendMode.APPEND, true, true); // 使用APPEND模式以避免清除现有内容
-			changeTxt(contentStream , font, 150, 650, nickName);
-			changeTxt(contentStream , font, 350, 650, orderObj.getIdCode());
+			changeTxt(contentStream , font, 150, 650, userObj.getNickName());
+			changeTxt(contentStream , font, 350, 650, userObj.getIdCode());
 			changeTxt(contentStream , font, 350, 620, orderObj.getOrderCode());
 			contentStream.close(); // 关闭内容流以保存更改
     	}
