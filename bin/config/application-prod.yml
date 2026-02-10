@@ -7,7 +7,7 @@ ruoyi:
   # 版权年份
   copyrightYear: 2024
   # 文件路径 示例（ Windows配置D:/ruoyi/uploadPath，Linux配置 /home/ruoyi/uploadPath）
-  profile: /data/docker-nginx/html/dhm.rmylcare.com
+  profile: /data/docker-nginx/html/dhm.rmylcare.com/uploadPath
   # 获取ip地址开关
   addressEnabled: false
   # 验证码类型 math 数字计算 char 字符验证
@@ -41,9 +41,9 @@ rabbitMQ:
   
 # 电子签配置
 esign:
-  appId: 7439098939 
-  appSecret: 33e38adaa1c2f9cd842c034e80ed58e9
-  host: https://smlopenapi.esign.cn
+  appId: 5112046949 
+  appSecret: 66b415e9e6fbeea2008278a2e3ee6ea5
+  host: https://openapi.esign.cn
   returnUrl1: https://dhmapi.rmylcare.com/system/esign/returnURL1
   returnUrl2: https://dhmapi.rmylcare.com/system/esign/returnURL2
   contractFile1: /contract1.pdf
