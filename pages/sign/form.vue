@@ -354,7 +354,7 @@
 							trigger: 'blur'
 						},
 						{
-							pattern: /^1[0-9]\d{9}$/,
+							pattern: /^1[3-9]\d{9}$/,
 							message: '请输入正确的手机号码',
 							trigger: 'blur'
 						}
@@ -366,7 +366,7 @@
 					}],
 					motherPhone: [{
 						validator(rule, value, callback) {
-							if (value && !/^1[0-9]\d{9}$/.test(value)) {
+							if (value && !/^1[3-9]\d{9}$/.test(value)) {
 								callback(new Error('请输入正确的手机号码'));
 							} else {
 								callback();
@@ -672,29 +672,100 @@
 			},
 			// 身份证合法性校验（18位）
 			isValidIdCard(idCard) {
-				if (!idCard || idCard.length !== 18) return false;
-
-				const code = idCard.toUpperCase(); // 兼容小写 x
-				const body = code.substring(0, 17);
-				const checkBit = code.charAt(17);
-
-				// 检查前17位是否全为数字
-				if (!/^\d{17}$/.test(body)) return false;
-
-				// 加权因子
-				const weights = [7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2];
-				// 校验码映射表
-				const checkCodes = ['1', '0', 'X', '9', '8', '7', '6', '5', '4', '3', '2'];
-
-				let sum = 0;
-				for (let i = 0; i < 17; i++) {
-					sum += parseInt(body.charAt(i), 10) * weights[i];
-				}
-
-				const mod = sum % 11;
-				const expectedCheckBit = checkCodes[mod];
-
-				return checkBit === expectedCheckBit;
+				// 转换为大写
+				    const cardId = String(idCard).toUpperCase();
+				    
+				    // 正则验证基本格式
+				    const regx = /(^\d{15}$)|(^\d{17}([0-9]|X)$)/;
+				    if (!regx.test(cardId)) {
+				        return false;
+				    }
+				    
+				    // 分割数组
+				    let arr_split = [];
+				    
+				    if (cardId.length === 18) {
+				        // 检查18位
+				        // 校验位按照ISO 7064:1983.MOD 11-2的规定生成，X可以认为是数字10。
+				        const arr_int = [7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2];
+				        const arr_ch = ['1', '0', 'X', '9', '8', '7', '6', '5', '4', '3', '2'];
+				        let sign = 0;
+				        
+				        for (let i = 0; i < 17; i++) {
+				            const b = parseInt(cardId[i], 10);
+				            const w = arr_int[i];
+				            sign += b * w;
+				        }
+				        
+				        const n = sign % 11;
+				        const val_num = arr_ch[n];
+				        
+				        // 校验码验证
+				        if (val_num !== cardId.substr(17, 1)) {
+				            return false;
+				        } else {
+				            return true;
+				        }
+				        
+				    } else if (cardId.length === 15) {
+				        // 检查15位
+				        const regx15 = /^(\d{6})+(\d{2})+(\d{2})+(\d{2})+(\d{3})$/;
+				        const match = cardId.match(regx15);
+				        
+				        if (!match) {
+				            return false;
+				        }
+				        
+				        // 检查生日日期是否正确
+				        const dtm_birth = '19' + match[2] + '-' + match[3] + '-' + match[4];
+				        const birthDate = new Date(dtm_birth);
+				        
+				        // 验证日期有效性（模仿PHP的strtotime行为）
+				        if (this.isValidDate(birthDate, dtm_birth)) {
+				            return true;
+				        } else {
+				            return false;
+				        }
+				    }
+				    
+				    return false;
+			},
+			/**
+			 * 辅助函数：验证日期是否有效（模仿PHP的strtotime行为）
+			 */
+			isValidDate(date, dateString) {
+			    // 检查日期对象是否有效
+			    if (Object.prototype.toString.call(date) !== '[object Date]' || isNaN(date.getTime())) {
+			        return false;
+			    }
+			    
+			    // 验证日期格式是否匹配
+			    const parts = dateString.split('-');
+			    if (parts.length !== 3) return false;
+			    
+			    const year = parseInt(parts[0], 10);
+			    const month = parseInt(parts[1], 10);
+			    const day = parseInt(parts[2], 10);
+			    
+			    // 检查日期是否与输入一致
+			    if (date.getFullYear() !== year || 
+			        (date.getMonth() + 1) !== month || 
+			        date.getDate() !== day) {
+			        return false;
+			    }
+			    
+			    // 检查月份和日期的合理性
+			    if (month < 1 || month > 12 || day < 1 || day > 31) {
+			        return false;
+			    }
+			    
+			    // 检查特定月份的天数
+			    const daysInMonth = new Date(year, month, 0).getDate();
+			    if (day > daysInMonth) {
+			        return false;
+			    }
+			    
+			    return true;
 			},
 			async submitForm() {
 				// 表单验证

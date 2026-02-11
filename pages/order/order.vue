@@ -42,7 +42,7 @@
 						<!-- 这里可以留空或放其他字段 -->
 						<view class="field"></view>
 					</view>
-					<!-- 新增：预产医院单独一行 -->
+
 					<view class="hospital-row">
 						<text class="label">预产医院:</text>
 						<text class="hospital-value">{{ item.hospitalName }}</text>
@@ -92,9 +92,9 @@
 			// 根据 currentTab 过滤订单列表
 			filteredList() {
 				if (this.currentTab === 'inProgress') {
-					return this.list.filter(item => ![7, 9, 10].includes(item.orderStatus));
+					return this.list.filter(item => !['已完成','协议解除', '已退款'].includes(item.statusTxt));
 				} else {
-					return this.list.filter(item => [7, 9, 10].includes(item.orderStatus));
+					return this.list.filter(item => ['已完成','协议解除', '已退款'].includes(item.statusTxt));
 				}
 			}
 		},
@@ -161,7 +161,7 @@
 				})
 
 				try {
-					const res = await api.getFdpOrderListForUser(this.user.userId, null, null);
+					const res = await api.getFdpOrderListForUser(this.user.userId,null,null);
 					if (res.code !== 200) {
 						uni.hideLoading();
 						uni.showToast({

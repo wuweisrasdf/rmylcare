@@ -8,23 +8,23 @@
 			<view class="info">
 				<view class="item">
 					<text class="label">退款金额</text>
-					<text class="refund-btn">退款中</text>
+					<!-- <text class="refund-btn">退款中</text> -->
 				</view>
 				<view class="item">
-					<text class="label price">￥18000.00</text>
+					<text class="label price">￥{{ orderReturn.AmountReceived || 0 }}</text>
 					<text class="value"> </text>
 				</view>
 				<view class="bottom-line"></view>
 
 				<view class="item">
 					<text class="label">退款订单</text>
-					<text class="value">df242534674</text>
+					<text class="value">{{ orderReturn.ProCode || '' }}</text>
 				</view>
 				<view class="bottom-line"></view>
 
 				<view class="item">
 					<text class="label">申请时间</text>
-					<text class="value">2026-02-12 14:00</text>
+					<text class="value">{{ orderReturn.StatusDate || '' }}</text>
 				</view>
 				<view class="bottom-line"></view>
 
@@ -38,7 +38,7 @@
 
 		<view class="btn-group">
 			<u-button :custom-style="primaryBtnStyle" @click="viewOrder">
-				返回订单查询
+				查看订单
 			</u-button>
 			<u-button :custom-style="secondaryBtnStyle" @click="goHome">
 				返回首页
@@ -99,10 +99,28 @@
 		data() {
 			return {
 				orderId: '', // 订单id
+				orderReturn: {}
 			};
 		},
 		methods: {
-			async init() {},
+			async init() {
+				const res = await api.getRefundStatus({orderId: this.orderId});
+				if (res.code !== 200) {
+					uni.showToast({
+						title: '信息加载失败',
+						icon: 'none'
+					});
+					return;
+				}
+				
+				this.orderReturn = res.orderReturn || {};
+
+				/*
+				退款单号 = 协议号 ProCode
+				退款金额 = 实际收款 AmountReceived
+				申请时间 = 协议解除时间 StatusDate
+				*/
+			},
 			viewOrder() {
 				uni.redirectTo({
 					url: "/pages/order/order"
@@ -200,7 +218,7 @@
 
 
 	.desc {
-		padding:70rpx 30rpx;
+		padding: 70rpx 30rpx;
 		text-align: left;
 
 		.text {

@@ -5,8 +5,19 @@
 		</u-navbar>
 
 		<view class="content-container">
+			<!-- 加载中状态 -->
+			  <u-loading-page 
+			    v-if="loading" 
+			    loadingText="协议查询中..." 
+			    :loading="true"
+			    iconSize="48"
+				fontSize="32"
+			    color="#4A63E4"
+			    style="height: 100%;"
+			  />
+			
 			<!-- 协议列表 -->
-			<view class="protocol-list">
+			<view v-else class="protocol-list">
 				<!-- 签约协议 -->
 				<view class="protocol-card" v-if="signUrl" @click="viewPdf(1)">
 					<view class="protocol-header">
@@ -48,7 +59,7 @@
 			</view>
 
 			<!-- 协议说明 -->
-			<view class="protocol-tips">
+			<view v-if="!loading" class="protocol-tips">
 				<view class="tips-header">
 					<u-icon name="info-circle-fill" size="32" color="#4A63E4"></u-icon>
 					<text class="tips-title">温馨提示</text>

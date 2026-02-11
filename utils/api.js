@@ -45,7 +45,7 @@ export const createFdpOrder = params => { return $H.post(`${$C.baseUrl}/system/f
 export const updateFdpOrderStatus = params => { return $H.put(`${$C.baseUrl}/system/fdp`, params) };
 
 // 获取当前用户的冻干粉订单列表（客户端）
-export const getFdpOrderListForUser = (userId, dueDateBegin, dueDateEnd) => { return $H.get(`${$C.baseUrl}/system/fdp/list4user?userId=${userId}&dueDateBegin=${dueDateBegin}&dueDateEnd=${dueDateEnd}`) };
+export const getFdpOrderListForUser = (userId, dueDateBegin, dueDateEnd) => { return $H.get(`${$C.baseUrl}/system/fdp/list4user?userId=${userId}`) };
 
 // 获取销售端的冻干粉订单列表（按销售ID查询）
 export const getFdpOrderListForSales = (salesId) => { return $H.get(`${$C.baseUrl}/system/fdp/list4user?salesId=${salesId}`) };
@@ -66,6 +66,9 @@ export const createRefund = params => { return $H.post(`${$C.baseUrl}/system/ret
 
 // 修改退款单状态
 export const updateRefundStatus = params => { return $H.put(`${$C.baseUrl}/system/return`, params) };
+
+// 查询退款状态
+export const getRefundStatus = params => { return $H.post(`${$C.baseUrl}/system/return/list4order`, params) };
 
 // ========== 电子签名相关 ==========
 

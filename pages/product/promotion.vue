@@ -56,7 +56,7 @@
 				title: '产品宣传',
 				promoImage: '',
 				type: 0,
-				servicePhone: '13800138000', // 客服电话
+				servicePhone: '010-85795849', // 客服电话
 			}
 		},
 		onLoad(options) {

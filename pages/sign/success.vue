@@ -45,7 +45,7 @@
 					</view>
 					<view class="content-item">
 						<view class="list-icon"></view>
-						<text class="text">胎盘接受后将实时接收更新状态送</text>
+						<text class="text">胎盘接收后将实时更新状态</text>
 					</view>
 					<view class="content-item">
 						<view class="list-icon"></view>
@@ -128,8 +128,14 @@
 		},
 		methods: {
 			async init() {
-				this.info.userName = this.user.nickName;
-				
+				if (!this.user.wxOpenId) {
+					uni.showToast({
+						title: '缺少openID，请联系管理员',
+						icon: 'none'
+					});
+					return;
+				}
+
 				// 获取产品信息
 				const productId = 1; // 固定值 1
 				const res = await api.getProductById(productId);
@@ -146,6 +152,7 @@
 					this.info.price = order.priceOut;
 					this.info.orderCode = order.orderCode; // 协议号
 					this.info.signDate = order.signDate;
+					this.info.userName = order.userName;
 				}
 
 			},

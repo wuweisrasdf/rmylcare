@@ -45,10 +45,10 @@
 							<view class="avatar-name">
 								<view class="dot"></view>
 								<view class="name">
-									{{ user.nickName }}
+									{{ info.userName || '' }}
 								</view>
 							</view>
-							<view class="">手机号：<text> {{ user.phonenumber }} </text></view>
+							<view class="">手机号：<text> {{ info.phonenumber }} </text></view>
 							<view class="">证件类型：<text>{{ info.idType | getLabelById}}</text></view>
 							<view class="id-cell">证件号：
 								<text class="id-cell-text" v-if="showId">{{ info.idCode }}</text>
@@ -56,7 +56,7 @@
 								<u-icon :name="showId ? 'eye-fill' : 'eye-off'" size="40" color="#bbb"
 									@tap="showId = !showId"></u-icon>
 							</view>
-							<view class="">电子邮件：<text>{{ info.email }}</text></view>
+							<view class="">电子邮件：<text>{{ info.userEmail || '' }}</text></view>
 							<view class="">收货地址：<text>{{ info.address }}</text></view>
 							<view class="">协议金额：<text>￥{{ info.priceOut }}</text></view>
 						</template>
@@ -141,9 +141,10 @@
 		</view>
 
 		<!-- 快速操作 -->
-		<!-- 状态ID 大于1，显示“查看协议”，状态ID == 8，显示解除协议，状态ID==9，显示 退款中。 -->
+		<!-- 1-已签约、2-已付款、3-样本接收、4-病毒检测、5-制备完成、6-配送、7-已完成、8-申请解除、9-协议解除、10-已退款 -->
+		<!-- 状态ID 大于1，显示“查看协议”，状态ID >= 8，显示解除协议，状态ID >=9，显示 退款中。 -->
 		<view class="quick-actions-grid">
-			<view class="action-card view-agreement" @click="viewAgreement" v-if="currentStatusId > 1">
+			<view class="action-card view-agreement" @click="viewAgreement" v-if="currentStatusId >= 1">
 				<view class="card-content">
 					<text class="card-title">查看协议</text>
 					<text class="card-desc">查看已签署的电子协议</text>
@@ -151,8 +152,8 @@
 				<view class="card-arrow"></view>
 			</view>
 
-			<view class="action-card unbind-agreement" @click="unbindAgreement" v-if="currentStatusId === 8">
-			<!-- <view class="action-card unbind-agreement" @click="unbindAgreement"> -->
+			<view class="action-card unbind-agreement" @click="unbindAgreement" v-if="currentStatusId >= 8">
+				<!-- <view class="action-card unbind-agreement" @click="unbindAgreement"> -->
 				<view class="card-content">
 					<text class="card-title">协议解除</text>
 					<text class="card-desc">申请协议解除和退费</text>
@@ -160,7 +161,7 @@
 				<view class="card-arrow"></view>
 			</view>
 
-			<view class="action-card refund-progress" @click="refundProgress" v-if="currentStatusId === 9">
+			<view class="action-card refund-progress" @click="refundProgress" v-if="currentStatusId >= 9 && info.priceOut > 0">
 				<view class="card-content">
 					<text class="card-title">退款进度</text>
 					<text class="card-desc">查看已退款的进度</text>
@@ -177,7 +178,7 @@
 			<view class="desc-content">
 				<view class="content-item">
 					<view class="list-icon"></view>
-					<text class="text">业务进度会随时并更，如有问题请联系客服。</text>
+					<text class="text">业务进度会随时变更，如有问题请联系客服。</text>
 				</view>
 			</view>
 
@@ -231,14 +232,15 @@
 				if (!Array.isArray(progress) || progress.length === 0) {
 					return 0; // 默认为未签约
 				}
-				const lastStep = progress[progress.length - 1]; console.log('lastStep',lastStep);
+				const lastStep = progress[progress.length - 1];
+				console.log('lastStep', lastStep);
 				let stepid = 0
 				if (lastStep.id) {
-					stepid = Number(lastStep.id) 
-				}else if (lastStep.Id) {
-					stepid = Number(lastStep.Id) 
+					stepid = Number(lastStep.id)
+				} else if (lastStep.Id) {
+					stepid = Number(lastStep.Id)
 				}
-				return  stepid;
+				return stepid;
 			}
 		},
 		filters: {
@@ -251,28 +253,33 @@
 				// 移除所有空格
 				const idCard = value.replace(/\s/g, '');
 
-				// 根据长度处理
-				if (idCard.length === 15) {
-					// 15位身份证：前6位 + 6个* + 后3位
-					return idCard.substring(0, 6) + '******' + idCard.substring(12);
-				} else if (idCard.length === 18) {
-					// 18位身份证：前6位 + 8个* + 后4位
-					return idCard.substring(0, 6) + '********' + idCard.substring(14);
-				} else {
-					// 其他长度：保留前2位和后2位，中间用*填充
-					const length = idCard.length;
-					if (length <= 4) {
-						return '*'.repeat(length); // 太短直接全部隐藏
-					}
-					const visibleStart = Math.min(2, Math.floor(length / 4));
-					const visibleEnd = Math.min(2, Math.floor(length / 4));
-					const hiddenLength = length - visibleStart - visibleEnd;
-					return (
-						idCard.substring(0, visibleStart) +
-						'*'.repeat(hiddenLength) +
-						idCard.substring(length - visibleEnd)
-					);
-				}
+				const length = idCard.length;
+				
+				// 返回相同长度的星号
+				return '*'.repeat(length);
+
+				// // 根据长度处理
+				// if (idCard.length === 15) {
+				// 	// 15位身份证：前6位 + 6个* + 后3位
+				// 	return idCard.substring(0, 6) + '******' + idCard.substring(12);
+				// } else if (idCard.length === 18) {
+				// 	// 18位身份证：前6位 + 8个* + 后4位
+				// 	return idCard.substring(0, 6) + '********' + idCard.substring(14);
+				// } else {
+				// 	// 其他长度：保留前2位和后2位，中间用*填充
+				// 	const length = idCard.length;
+				// 	if (length <= 4) {
+				// 		return '*'.repeat(length); // 太短直接全部隐藏
+				// 	}
+				// 	const visibleStart = Math.min(2, Math.floor(length / 4));
+				// 	const visibleEnd = Math.min(2, Math.floor(length / 4));
+				// 	const hiddenLength = length - visibleStart - visibleEnd;
+				// 	return (
+				// 		idCard.substring(0, visibleStart) +
+				// 		'*'.repeat(hiddenLength) +
+				// 		idCard.substring(length - visibleEnd)
+				// 	);
+				// }
 			},
 			// 根据value获取label
 			getLabelById(value) {
@@ -356,6 +363,19 @@
 						Desc: '产品已签收',
 					},
 				], // 1-已签约、2-已付款、3-样本接收、4-病毒检测、5-制备完成、6-配送、7-已完成、8-申请解除、9-协议解除、10-已退款
+				progressDataJiechu: [{
+						OrderName: '申请解除',
+						Desc: '已申请解除协议',
+					},
+					{
+						OrderName: '协议解除',
+						Desc: '协议已解除',
+					},
+					{
+						OrderName: '已退款',
+						Desc: '退款已到账',
+					},
+				],
 			};
 		},
 		onLoad(options) {
@@ -400,7 +420,14 @@
 						this.info = row || {};
 
 						if (this.info.orderProgress) {
-							this.progressData = this.mergeStatuses(this.progressData, this.info.orderProgress);
+							const exists = this.progressData.some(item => item.OrderName == this.info.statusTxt);
+
+
+							//this.progressData = this.mergeStatuses(this.progressData, this.info.orderProgress);
+
+							this.progressData = exists ? this.mergeStatuses(this.progressData, this.info
+								.orderProgress) : this.mergeStatusesJiechu(this.info.orderProgress, this
+									.progressDataJiechu, this.progressData);
 						}
 						this.setProgress();
 					}
@@ -423,12 +450,12 @@
 				}
 			},
 			toSign() {
-				uni.navigateTo({
+				uni.redirectTo({
 					url: `/pages/sign/confirm-price?orderId=${this.orderId}&fromOrder=1`
 				})
 			},
 			toPay() {
-				uni.navigateTo({
+				uni.redirectTo({
 					url: `/pages/sign/success?orderId=${this.orderId}`
 				})
 			},
@@ -451,44 +478,90 @@
 				})
 			},
 			mergeStatuses(a, b) {
-			  // 将 b 转为 Map，key 是 OrderName
-			  const bMap = new Map(b.map(item => [item.OrderName, item]));
-			
-			  // 遍历 a，对每个项：
-			  // - 如果 b 中有同名 OrderName，则合并字段
-			  // - 否则保留原样
-			  return a.map(aItem => {
-			    const bItem = bMap.get(aItem.OrderName);
-			    if (bItem) {
-			      // 合并：保留 aItem 所有字段，用 bItem 的字段覆盖或补充
-			      return { ...aItem, ...bItem };
-			    }
-			    return aItem;
-			  });
+				// 将 b 转为 Map，key 是 OrderName
+				const bMap = new Map(b.map(item => [item.OrderName, item]));
+
+				// 遍历 a，对每个项：
+				// - 如果 b 中有同名 OrderName，则合并字段
+				// - 否则保留原样
+				return a.map(aItem => {
+					const bItem = bMap.get(aItem.OrderName);
+					if (bItem) {
+						// 合并：保留 aItem 所有字段，用 bItem 的字段覆盖或补充
+						return {
+							...aItem,
+							...bItem
+						};
+					}
+					return aItem;
+				});
+			},
+			mergeStatusesJiechu(orderProgress, progressDataJiechu, progressData) {
+				const jiechuMap = new Map(progressDataJiechu.map(i => [i.OrderName, i.Desc]));
+				const mainDescMap = new Map(progressData.map(i => [i.OrderName, i.Desc]));
+				const orderNames = new Set(orderProgress.map(i => i.OrderName));
+
+				const result = orderProgress.map(item => {
+					let desc = '';
+					if (item.Desc != null && item.Desc.trim() !== '') {
+						desc = item.Desc;
+					} else if (jiechuMap.has(item.OrderName)) {
+						desc = jiechuMap.get(item.OrderName) || '';
+					} else if (mainDescMap.has(item.OrderName)) {
+						desc = mainDescMap.get(item.OrderName);
+					}
+					return {
+						...item,
+						Desc: desc
+					};
+				});
+
+				progressDataJiechu.forEach(item => {
+					if (!orderNames.has(item.OrderName)) {
+						result.push({
+							...item,
+							Desc: item.Desc || ''
+						});
+					}
+				});
+
+				return result;
 			},
 			setProgress() {
-			  console.log('setProgress', this.progressData)
-			  this.progressData.forEach((item, index) => {
-			    if (this.info.statusTxt == item.OrderName) {
-			      this.currentProgressIndex = index;
-			      if (this.currentProgressIndex < index) {
-			        item.isFinishStep;
-			      }
-			      if (this.currentProgressIndex > index) {
-			        item.isCurrentStep;
-			      }
-			    }
-			  });
+				// 样式一：只显示接口传过来的状态
+				this.currentProgressIndex = -1; // 初始化为-1，表示未找到匹配项
+				const orderNamesSet = new Set(this.info.orderProgress.map(item => item.OrderName));
+			
+				this.progressData = this.progressData.filter(item => orderNamesSet.has(item.OrderName));
+				this.progressData.forEach((item, index) => {
+					if (this.info.statusTxt === item.OrderName) {
+						this.currentProgressIndex = index;
+					}
+				});
+				
+				// 样式二：显示接口传过来的状态和剩余状态
+				// console.log('setProgress', this.progressData)
+				// this.progressData.forEach((item, index) => {
+				// 	if (this.info.statusTxt == item.OrderName) {
+				// 		this.currentProgressIndex = index;
+				// 		if (this.currentProgressIndex < index) {
+				// 			item.isFinishStep;
+				// 		}
+				// 		if (this.currentProgressIndex > index) {
+				// 			item.isCurrentStep;
+				// 		}
+				// 	}
+				// });
 			},
 			currentStepStatus(index) {
-			  let result = '';
-			  if (this.currentProgressIndex < index) {
-			    result = 'step-finish';
-			  }
-			  if (this.currentProgressIndex == index) {
-			    result = 'step-current';
-			  }
-			  return result;
+				let result = '';
+				if (this.currentProgressIndex < index) {
+					result = 'step-finish';
+				}
+				if (this.currentProgressIndex == index) {
+					result = 'step-current';
+				}
+				return result;
 			}
 		}
 	};

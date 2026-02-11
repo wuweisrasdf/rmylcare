@@ -72,12 +72,12 @@
 			},
 			jump() {
 				if (this.type == 1) {
-					uni.navigateTo({ // 签约成功
+					uni.reLaunch({ // 签约成功，销毁页面栈，不允许再返回前面的操作
 						url: `/pages/sign/success?orderId=${this.orderId}`
 					});
 				}
 				if (this.type == 2) {
-					uni.navigateTo({ // 解约成功
+					uni.redirectTo({ // 解约成功
 						url: `/pages/refund/cancel-success?orderId=${this.orderId}`
 					});
 				}

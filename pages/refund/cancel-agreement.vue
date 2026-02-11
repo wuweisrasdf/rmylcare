@@ -32,7 +32,7 @@
 
 
 		<view class="btn-group">
-			<u-button :custom-style="primaryBtnStyle" @click="toSign">
+			<u-button :custom-style="primaryBtnStyle" @click="toSign" :disabled="!canSign">
 				去签字
 			</u-button>
 			<u-button :custom-style="secondaryBtnStyle" @click="goPrev">
@@ -90,9 +90,6 @@
 			}
 		},
 		onLoad(options) {
-			if (options.orderCode) {
-				this.orderCode = options.orderCode;
-			}
 			if (options.orderId) {
 				this.orderId = options.orderId;
 				this.init();
@@ -107,8 +104,10 @@
 				isSigning: false, // 标记是否刚从签署页返回
 				orderInfo: {},
 				userInfo: {}, // 甲方信息
+				canSign: false, // 是否可以签署解除协议
 				info: {
 					userName: '', // 甲方姓名
+					userPhone: '', // 甲方手机
 					productName: '', // 产品名称
 					price: 0, // 签约金额
 					orderCode: '', // 协议号
@@ -118,20 +117,6 @@
 		},
 		methods: {
 			async init() {
-				// 1. 获取产妇和甲方信息
-				const result = await api.getMotherAndUser();
-				if (result.code !== 200) {
-					uni.showToast({
-						title: '甲方信息加载失败',
-						icon: 'none'
-					});
-					return;
-				}
-
-				this.userInfo = result.user || {};
-				
-				this.info.userName = this.user.nickName; // 客户端当前用户就是甲方
-				
 				// 获取产品信息
 				const productId = 1; // 固定值 1
 				const res = await api.getProductById(productId);
@@ -155,6 +140,11 @@
 				this.info.price = row.priceOut;
 				this.info.orderCode = row.orderCode; // 协议号
 				this.info.signDate = row.signDate;
+				this.info.userName = row.userName;
+				this.info.userPhone = row.phonenumber;
+				if (!row.signReturnDate) {
+					this.canSign = true;
+				}
 			},
 			goPrev() {
 				uni.navigateBack();
@@ -166,7 +156,7 @@
 			},
 			// 获取签名URL
 			async getSignUrl() {
-				if (!this.userInfo.nickName || !this.userInfo.phonenumber) {
+				if (!this.info.userName || !this.info.userPhone) {
 					uni.showToast({
 						title: "获取甲方信息失败",
 						icon: 'none'
@@ -180,8 +170,8 @@
 					//returnURL: api.signReturnUrl,
 					returnURL: '',
 					signType: '2', // 签约=1，解约=2
-					signerName: this.userInfo.nickName, // 签约甲方的姓名
-					signerPhone: this.userInfo.phonenumber, // 签约甲方的手机号
+					signerName: this.info.userName, // 签约甲方的姓名
+					signerPhone: this.info.userPhone, // 签约甲方的手机号
 				}
 
 				uni.showLoading({
@@ -216,6 +206,9 @@
 			},
 			// 去签字
 			async toSign() {
+				if (!this.canSign) {
+					return;
+				}
 				
 				let refundParams = {
 					orderId: this.orderId,

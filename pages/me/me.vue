@@ -11,10 +11,16 @@
 	
     <!-- 头像区域 -->
     <view class="avatar-container" >
-		  <view v-if="!userAvatar" class="default-avatar" :style="{ width: '168rpx', height: '168rpx' }">
+<!-- 		  <view v-if="!userAvatar" class="default-avatar" :style="{ width: '168rpx', height: '168rpx' }">
 			  <text class="avatar-text">头像</text>
 		  </view>
-		  <image v-else class="avatar" :src="userAvatar" mode="aspectFill"></image>
+		  <image v-else class="avatar" :src="userAvatar" mode="aspectFill"></image> -->
+		  
+		  <image
+		    :src="'/static/images/avatar-placeholder.png'" 
+		    class="avatar" 
+		    mode="aspectFill"
+		  />
     </view>
 
     <!-- 功能卡片区域 -->

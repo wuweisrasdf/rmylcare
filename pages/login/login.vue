@@ -273,7 +273,7 @@
 		width: 538rpx;
 		height: 98rpx;
 		border-radius: 52rpx;
-		background-color: #A4AFEB;
+		background-color: #4A63E4;
 		color: #fff;
 		font-size: 36rpx;
 		border: none;
