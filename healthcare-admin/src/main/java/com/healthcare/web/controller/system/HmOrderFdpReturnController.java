@@ -1,6 +1,10 @@
 package com.healthcare.web.controller.system;
 
+import java.text.SimpleDateFormat;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
 import javax.servlet.http.HttpServletResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,8 +20,10 @@ import com.healthcare.common.annotation.Log;
 import com.healthcare.common.core.controller.BaseController;
 import com.healthcare.common.core.domain.AjaxResult;
 import com.healthcare.common.enums.BusinessType;
+import com.healthcare.system.domain.HmOrderFdp;
 import com.healthcare.system.domain.HmOrderFdpReturn;
 import com.healthcare.system.service.IHmOrderFdpReturnService;
+import com.healthcare.system.service.IHmOrderFdpService;
 
 import io.swagger.annotations.ApiOperation;
 
@@ -36,6 +42,9 @@ public class HmOrderFdpReturnController extends BaseController
 {
     @Autowired
     private IHmOrderFdpReturnService hmOrderFdpReturnService;
+    
+    @Autowired
+    private IHmOrderFdpService hmOrderFdpService;
 
     /**
      * 查询冻干粉订单退款列表
@@ -80,7 +89,10 @@ public class HmOrderFdpReturnController extends BaseController
     @PostMapping
     public AjaxResult add(@RequestBody HmOrderFdpReturn hmOrderFdpReturn)
     {
-        return toAjax(hmOrderFdpReturnService.insertHmOrderFdpReturn(hmOrderFdpReturn));
+    	AjaxResult ajax = AjaxResult.success();
+    	hmOrderFdpReturnService.insertHmOrderFdpReturn(hmOrderFdpReturn);
+    	ajax.put("id", hmOrderFdpReturn.getId());
+        return ajax;
     }
 
     /**
@@ -92,6 +104,30 @@ public class HmOrderFdpReturnController extends BaseController
     public AjaxResult edit(@RequestBody HmOrderFdpReturn hmOrderFdpReturn)
     {
         return toAjax(hmOrderFdpReturnService.updateHmOrderFdpReturn(hmOrderFdpReturn));
+    }
+    
+    /**
+     * 查询冻干粉订单退款
+     */
+    @ApiOperation("查询冻干粉订单退款")
+    @PostMapping("/list4order")
+    public AjaxResult list4order(@RequestBody HmOrderFdpReturn hmOrderFdpReturn)
+    {
+    	SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    	AjaxResult ajax = AjaxResult.success();
+    	Map<String, String> result = new HashMap<String, String>();
+    	List<HmOrderFdpReturn> list = hmOrderFdpReturnService.selectHmOrderFdpReturnList(hmOrderFdpReturn);
+    	if(list.size() > 0) {
+    		result.put("StatusDate", sdf.format(list.get(0).getSignDate()));
+    		HmOrderFdp orderObj = hmOrderFdpService.selectHmOrderFdpById(hmOrderFdpReturn.getOrderId());
+    		result.put("ProCode", orderObj.getOrderCode());
+    		result.put("AmountReceived", orderObj.getPriceOut().toString());
+    		ajax.put("orderReturn", result);
+    	}
+    	else {
+    		ajax = AjaxResult.error("订单没有解约!");
+    	}
+        return ajax;
     }
 
     /**
