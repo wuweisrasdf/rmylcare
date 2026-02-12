@@ -25,6 +25,8 @@ import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.healthcare.common.annotation.Log;
 import com.healthcare.common.config.orderSystemConfig;
 import com.healthcare.common.core.controller.BaseController;
@@ -32,6 +34,8 @@ import com.healthcare.common.core.domain.AjaxResult;
 import com.healthcare.common.core.domain.entity.SysUser;
 import com.healthcare.common.enums.BusinessType;
 import com.healthcare.system.domain.HmOrderFdp;
+import com.healthcare.system.domain.HmOrderFdpReturn;
+import com.healthcare.system.service.IHmOrderFdpReturnService;
 import com.healthcare.system.service.IHmOrderFdpService;
 import com.healthcare.system.service.ISysUserService;
 
@@ -55,6 +59,9 @@ public class HmOrderFdpController extends BaseController
 {
     @Autowired
     private IHmOrderFdpService hmOrderFdpService;
+    
+    @Autowired
+    private IHmOrderFdpReturnService hmOrderFdpReturnService;
     
     @Autowired
     private RedisCache redisCache;
@@ -85,7 +92,6 @@ public class HmOrderFdpController extends BaseController
     @ApiOperation("冻干粉订单列表")
     public TableDataInfo list4user(HmOrderFdp hmOrderFdp) throws Exception
     {
-    	
     	Map<String , String> statusList = new HashMap<String,String>();
     	List codeList = new ArrayList();
         List<HmOrderFdp> list = hmOrderFdpService.selectHmOrderFdpMotherList(hmOrderFdp);
@@ -152,14 +158,13 @@ public class HmOrderFdpController extends BaseController
             	}
         	}
         	else {
-        		
         		Map<String, String> progInfo = new HashMap<String, String>();
         		progInfo.put("id", "0");
         		progInfo.put("OrderName", "未签约");
         		progInfo.put("StatusDate", sdf.format(tmpObj.getCreateTime()));
         		progressList.add(progInfo);
         		
-        		if(tmpObj.getSignDate() != null) {
+        		if(!tmpObj.getProCode().isEmpty()) {
         			Map<String, String> progInfo1 = new HashMap<String, String>();
             		progInfo1.put("id", "1");
             		progInfo1.put("OrderName", "已签约");
@@ -178,14 +183,41 @@ public class HmOrderFdpController extends BaseController
         	tmpObj.setOrderProgress(progressList);
         	
         	//详情页面又加入了甲方手机号、证件类型、证件号
-        	Long userId = tmpObj.getUserId();
-        	SysUser userObj = userService.selectUserById(userId);
         	tmpObj.setMotherIdType(tmpObj.getIdType());
         	tmpObj.setMotherIdCode(tmpObj.getIdCode());
         	tmpObj.setMotherPhonenumber(tmpObj.getPhonenumber());
-        	tmpObj.setIdType(userObj.getIdType());
-        	tmpObj.setIdCode(userObj.getIdCode());
-        	tmpObj.setPhonenumber(userObj.getPhonenumber());
+        	
+        	if(tmpObj.getUserInfo() == null) //如果还没签约，从user里读
+        	{
+        		Long userId = tmpObj.getUserId();
+        		SysUser userObj = userService.selectUserById(userId);
+        		tmpObj.setIdType(userObj.getIdType());
+        		tmpObj.setIdCode(userObj.getIdCode());
+            	tmpObj.setPhonenumber(userObj.getPhonenumber());
+            	tmpObj.setUserName(userObj.getNickName());
+            	tmpObj.setUserEmail(userObj.getEmail());
+        	}
+        	else {//已签约的从user_info字段里读
+        		String jsonStr = tmpObj.getUserInfo();
+        		JsonObject jsonObject = JsonParser.parseString(jsonStr).getAsJsonObject();
+        		tmpObj.setUserName(jsonObject.get("userName").getAsString());
+        		tmpObj.setIdType(jsonObject.get("idType").getAsString());
+        		
+        		tmpObj.setIdCode(jsonObject.get("idCode").getAsString());
+        		tmpObj.setUserEmail(jsonObject.get("userEmail").getAsString());
+        		tmpObj.setPhonenumber(jsonObject.get("phonenumber").getAsString());
+        	}
+        	
+        	//详情页需要加入是否已经签署解约 
+            HmOrderFdpReturn cond = new HmOrderFdpReturn();
+            cond.setOrderId(tmpObj.getId());
+			List<HmOrderFdpReturn> resultList = hmOrderFdpReturnService.selectHmOrderFdpReturnList(cond );
+			if(resultList.size() > 0) {
+				HmOrderFdpReturn orderReturn = resultList.get(resultList.size()-1);
+				if(!orderReturn.getProCode().isEmpty()) {
+					tmpObj.setSignReturnDate(orderReturn.getSignDate());
+				}
+			}
         	list.set(0,  tmpObj);
         }
         
