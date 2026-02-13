@@ -255,6 +255,41 @@ public class WxUtils
 	    return payParams; // 返回给小程序前端
 	}
 	
+	public String getWxToken(RedisCache redisCache) throws Exception {
+		
+		String accessToken = "";
+		
+		String version = RuoYiConfig.getVersion();
+		if(version.equals("3.8.7-TEST")) //测试环境是不能自己生成token的,只能到正式环境去取
+		{
+			accessToken = HttpUtils.sendGet("https://dhmapi.rmylcare.com/system/token/getWxToken");
+			return accessToken;
+		}
+		
+		
+		if(redisCache.hasKey("WXTOKEN"))
+			accessToken = redisCache.getCacheObject("WXTOKEN");
+		//如果取不到就调接口
+		if(accessToken == null || accessToken.isEmpty()) {
+			
+			String tokenUrl = "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid="+appId+"&secret="+AppSecret;
+			String returnString = HttpUtils.sendGet(tokenUrl);
+			JSONObject returnObj = JSON.parseObject(returnString);
+			if(returnObj == null) {
+				throw new Exception("获取微信token失败！");
+			}
+			
+			accessToken = returnObj.getString("access_token");
+			if(accessToken.isEmpty()) {
+				throw new Exception("获取微信token失败！");
+			}
+				
+			redisCache.setCacheObject("WXTOKEN", accessToken, 60, TimeUnit.MINUTES);
+		}
+		return accessToken;
+		
+	}
+	
 	public String getAppId() {
 		return appId;
 	}
