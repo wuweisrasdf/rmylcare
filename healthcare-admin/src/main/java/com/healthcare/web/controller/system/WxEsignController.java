@@ -19,6 +19,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.config.annotation.web.configurers.oauth2.client.OAuth2LoginConfigurer.UserInfoEndpointConfig;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -223,12 +224,25 @@ public class WxEsignController extends BaseController
 		Long userId = orderObj.getUserId();
 		SysUser userObj = userService.selectUserById(userId);
 		
+		// 甲方信息回填到协议中
+        Map<String, String> userInfo = new HashMap<String, String>();
+        userInfo.put("userName", userObj.getNickName());
+        userInfo.put("idType", userObj.getIdType());
+        userInfo.put("idCode", userObj.getIdCode());
+        userInfo.put("userEmail", userObj.getEmail());
+        userInfo.put("phonenumber", userObj.getPhonenumber());
+        String json = JSON.toJSONString(userInfo);
+        condObj.setUserInfo(json);
+        hmOrderFdpService.updateHmOrderFdp(condObj);
+        /////////////////////////////////////////////
+        orderObj.setUserInfo(json);
+		
 		if(this.signType.equals("1")) {
-			this.contractFile = replacePDF(this.contractFile1,userObj, orderObj);
+			this.contractFile = replacePDF(this.contractFile1, orderObj);
 			this.returnURL = this.returnURL1;
 		}
 		else if(this.signType.equals("2")){
-			this.contractFile = replacePDF(this.contractFile2,userObj, orderObj);
+			this.contractFile = replacePDF(this.contractFile2, orderObj);
 			this.returnURL = this.returnURL2;
 		}
 		else {
@@ -278,19 +292,16 @@ public class WxEsignController extends BaseController
             if (uploadResult.getIntValue("errCode") != 0) {
                 throw new RuntimeException("文件上传失败");
             }
-
             // 3. 轮询等待文件处理完成（状态 2 或 5）
             waitForFileReady(fileId);
             
             // 4. 创建签署流程并获取 H5 签署链接
             String signUrl = createPersonalSignFlow(fileId, signerName, signerPhone);
-
-    		ajax.put("signUrl",signUrl);
+            
+            
+            ajax.put("signUrl",signUrl);
     		
             return ajax;
-
-
-			
 		} catch (EsignDemoException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -559,9 +570,9 @@ public class WxEsignController extends BaseController
         //第2个位置
         if(this.signType.equals("1")) {
 	        JSONObject position2 = new JSONObject();
-	        position2.put("positionPage", "8"); // 必须是字符串
-	        position2.put("positionX", 450);
-	        position2.put("positionY", 250);
+	        position2.put("positionPage", "10"); // 必须是字符串
+	        position2.put("positionX", 200);
+	        position2.put("positionY", 700);
 	        
 	        JSONObject normalConfig2 = new JSONObject();
 	        normalConfig2.put("psnSealStyles", "0,1"); // 手写签名 + 姓名章
@@ -644,7 +655,8 @@ public class WxEsignController extends BaseController
         signUrlBody.put("clientType", "H5");     // 明确指定 H5，适配小程序 WebView
         signUrlBody.put("needLogin", false);
         signUrlBody.put("operator", operator);
-
+        signUrlBody.put("redirectconfig", "{\"redirectUrl\":\"wechat://back\"}");
+        
         String signUrlJsonBody = signUrlBody.toJSONString();
         System.out.println("🔗 获取签署链接请求体: " + signUrlJsonBody);
 
@@ -701,7 +713,7 @@ public class WxEsignController extends BaseController
 		AjaxResult ajax = AjaxResult.success();
 		WxUtils wxUtils = new WxUtils();
 
-		String accessToken = getWxToken(wxUtils.getAppId(),wxUtils.getAppSecret());
+		String accessToken = wxUtils.getWxToken(redisCache);
 		
 		String returnString = wxUtils.getSessionKeyFromWeChat(wx.code, accessToken);
 		//String returnString = "{\"errcode\":0,\"errmsg\":\"ok\",\"phone_info\":{\"phoneNumber\":\"15699736798\",\"purePhoneNumber\":\"15699736798\",\"countryCode\":\"86\",\"watermark\":{\"timestamp\":1769751529,\"appid\":\"wxe83a3700d3b60132\"}}}";
@@ -755,7 +767,7 @@ public class WxEsignController extends BaseController
 		AjaxResult ajax = AjaxResult.success();
 		WxUtils wxUtils = new WxUtils();
 
-		String accessToken = getWxToken(wxUtils.getAppId(),wxUtils.getAppSecret());
+		String accessToken = wxUtils.getWxToken(redisCache);
 		
 		String fn = wxUtils.getQRcode(wx.getUserId(), accessToken, wxPayConfig);
 		ajax.put("qrcode", fn);
@@ -820,6 +832,19 @@ public class WxEsignController extends BaseController
     }
 	
 	/**
+     * 设置订单系统token
+     * @throws Exception 
+     */
+	@ApiOperation("清除订单系统token")
+	@PostMapping("/delordersystemtoken")
+    public AjaxResult delordersystemtoken() throws Exception
+    {
+		AjaxResult ajax = AjaxResult.success();
+		redisCache.deleteObject("ORDERTOKEN");
+        return ajax;
+    }
+	
+	/**
      * 获取微信支付的参数
      * @throws Exception 
      */
@@ -840,31 +865,7 @@ public class WxEsignController extends BaseController
 		return ajax;
 	}
 	
-	private String getWxToken(String appId, String AppSecret) throws Exception {
-		
-		String accessToken = "";
-		if(redisCache.hasKey("WXTOKEN"))
-			accessToken = redisCache.getCacheObject("WXTOKEN");
-		//如果取不到就调接口
-		if(accessToken == null || accessToken.isEmpty()) {
-			
-			String tokenUrl = "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid="+appId+"&secret="+AppSecret;
-			String returnString = HttpUtils.sendGet(tokenUrl);
-			JSONObject returnObj = JSON.parseObject(returnString);
-			if(returnObj == null) {
-				throw new Exception("获取微信token失败！");
-			}
-			
-			accessToken = returnObj.getString("access_token");
-			if(accessToken.isEmpty()) {
-				throw new Exception("获取微信token失败！");
-			}
-				
-			redisCache.setCacheObject("WXTOKEN", accessToken, 60, TimeUnit.MINUTES);
-		}
-		return accessToken;
-		
-	}
+	
 	
 	/**
      * 支付成功回调
@@ -889,7 +890,14 @@ public class WxEsignController extends BaseController
 			 String total_fee = notifyData.get("total_fee");
 
 			 orderNo = orderNo.replace("PFDP","");
-	         Long orderId = Long.parseLong(orderNo) - 20000L;
+			 String version = RuoYiConfig.getVersion();
+			 Long orderId = 0L;
+			 //if(version.equals("3.8.7-TEST")) {
+				 orderId = Long.parseLong(orderNo) - 20000L;
+			 //}
+			 //else {
+			 //	 orderId = Long.parseLong(orderNo) - 30000L;
+			 //}
 	         
 	         BigDecimal payAmount = new BigDecimal(total_fee); //total_fee是分
 	         BigDecimal divisor = new BigDecimal("100");
@@ -921,7 +929,9 @@ public class WxEsignController extends BaseController
     /*
      * 替换PDF中甲方姓名，电话
      */
-    private String replacePDF(String srcFile, SysUser userObj, HmOrderFdp orderObj) throws IOException {
+    private String replacePDF(String srcFile, HmOrderFdp orderObj) throws IOException {
+    	String jsonStr = orderObj.getUserInfo();
+		JsonObject jsonObject = JsonParser.parseString(jsonStr).getAsJsonObject();
 
     	String uuid = IdUtils.simpleUUID();
     	String destFileName = RuoYiConfig.getUploadPath() + "/" + uuid + ".pdf";
@@ -933,27 +943,26 @@ public class WxEsignController extends BaseController
     	if(this.signType.equals("1")) {
 			PDPage page = document.getPage(2); // 获取第3页
 			PDPageContentStream contentStream = new PDPageContentStream(document, page, PDPageContentStream.AppendMode.APPEND, true, true); // 使用APPEND模式以避免清除现有内容
-			changeTxt(contentStream , font, 180, 675, userObj.getNickName());
-			changeTxt(contentStream , font, 200, 645, userObj.getIdCode());
+			changeTxt(contentStream , font, 180, 675, jsonObject.get("userName").getAsString());
+			changeTxt(contentStream , font, 200, 645, jsonObject.get("idCode").getAsString());
 			changeTxt(contentStream , font, 120, 620, orderObj.getAddress());
-			changeTxt(contentStream , font, 150, 595, userObj.getPhonenumber());
-			changeTxt(contentStream , font, 350, 595, userObj.getEmail());
+			changeTxt(contentStream , font, 150, 595, jsonObject.get("phonenumber").getAsString());
+			changeTxt(contentStream , font, 350, 595, jsonObject.get("userEmail").getAsString());
 			changeTxt(contentStream , font, 150, 565, DateUtils.dateTime(orderObj.getDueDate()));
 			changeTxt(contentStream , font, 350, 565, orderObj.getHospitalName());
 			contentStream.close(); // 关闭内容流以保存更改
 			
 			page = document.getPage(8); // 获取第9页
 			contentStream = new PDPageContentStream(document, page, PDPageContentStream.AppendMode.APPEND, true, true); // 使用APPEND模式以避免清除现有内容
-			changeTxt(contentStream , font, 130, 420, "0");
-			changeTxt(contentStream , font, 240, 335, orderObj.getPriceOut().toString());
-			changeTxt(contentStream , font, 380, 335, MoneyUtils.toChinese(orderObj.getPriceOut().toString()));
+			changeTxt(contentStream , font, 240, 440, orderObj.getPriceOut().toString());
+			changeTxt(contentStream , font, 380, 440, MoneyUtils.toChinese(orderObj.getPriceOut().toString()));
 			contentStream.close(); // 关闭内容流以保存更改
     	}
     	else if(this.signType.equals("2")) {
     		PDPage page = document.getPage(0); // 获取第1页
 			PDPageContentStream contentStream = new PDPageContentStream(document, page, PDPageContentStream.AppendMode.APPEND, true, true); // 使用APPEND模式以避免清除现有内容
-			changeTxt(contentStream , font, 150, 650, userObj.getNickName());
-			changeTxt(contentStream , font, 350, 650, userObj.getIdCode());
+			changeTxt(contentStream , font, 150, 650, jsonObject.get("userName").getAsString());
+			changeTxt(contentStream , font, 350, 650, jsonObject.get("idCode").getAsString());
 			changeTxt(contentStream , font, 350, 620, orderObj.getOrderCode());
 			contentStream.close(); // 关闭内容流以保存更改
     	}
