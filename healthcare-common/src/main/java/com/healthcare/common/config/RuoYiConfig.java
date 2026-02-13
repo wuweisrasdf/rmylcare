@@ -16,7 +16,7 @@ public class RuoYiConfig
     private String name;
 
     /** 版本 */
-    private String version;
+    private static String version;
 
     /** 版权年份 */
     private String copyrightYear;
@@ -40,7 +40,7 @@ public class RuoYiConfig
         this.name = name;
     }
 
-    public String getVersion()
+    public static String getVersion()
     {
         return version;
     }
