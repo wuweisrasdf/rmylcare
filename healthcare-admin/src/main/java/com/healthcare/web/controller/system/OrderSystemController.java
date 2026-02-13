@@ -144,7 +144,7 @@ public class OrderSystemController extends BaseController
 				logger.info("sync false:orderreturnId="+orderReturn.getId()+"["+orderReturn.getProCode()+"]");
 		}
 		
-		return "";
+		return "sync finished!";
 	}
 	
 	
@@ -207,7 +207,6 @@ public class OrderSystemController extends BaseController
 		para.put("AmountReceivable", orderObj.getPriceOut());
 		para.put("SignDate", orderObj.getSignDate());
 		para.put("SalesCode", SalesCode);
-		
 		
 		String result = orderSystemUtils.send2OrderSystem(orderSystemConfig, "CreateProtocolV1", para.toString());
 		
