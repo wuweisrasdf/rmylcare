@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
+import com.healthcare.common.config.RuoYiConfig;
 import com.healthcare.common.config.orderSystemConfig;
 import com.healthcare.common.core.redis.RedisCache;
 import com.healthcare.common.utils.http.HttpUtils;
@@ -20,6 +21,14 @@ public class OrderSystemUtils {
 	public String gettoken(orderSystemConfig orderSystemConfig) throws Exception
     {
 		String accessToken = "";
+		
+		String version = RuoYiConfig.getVersion();
+		if(version.equals("3.8.7-TEST")) //测试环境是不能自己生成token的,只能到正式环境去取
+		{
+			accessToken = HttpUtils.sendGet("https://dhmapi.rmylcare.com/system/token/getOrderSystemToken");
+			return accessToken;
+		}
+		
 		if(redisCache.hasKey("ORDERTOKEN"))
 			accessToken = redisCache.getCacheObject("ORDERTOKEN");
 		//如果取不到就调接口
