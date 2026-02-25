@@ -41,7 +41,8 @@ rabbitMQ:
   
 # 电子签配置
 esign:
-  appId: 7439098939 
+  appId: 7439098939
+  assignedSealId: abfb6411-43f3-485d-a3e3-3d726f983850
   appSecret: 33e38adaa1c2f9cd842c034e80ed58e9
   host: https://smlopenapi.esign.cn
   returnUrl1: http://47.94.145.40:8080/system/esign/returnURL1

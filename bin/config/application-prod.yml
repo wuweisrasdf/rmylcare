@@ -41,8 +41,9 @@ rabbitMQ:
   
 # 电子签配置
 esign:
-  appId: 5112046949 
+  appId: 5112046949
   appSecret: 66b415e9e6fbeea2008278a2e3ee6ea5
+  assignedSealId: 9c6b3327-17f6-4a60-bb47-c7696c99d7c1
   host: https://openapi.esign.cn
   returnUrl1: https://dhmapi.rmylcare.com/system/esign/returnURL1
   returnUrl2: https://dhmapi.rmylcare.com/system/esign/returnURL2
