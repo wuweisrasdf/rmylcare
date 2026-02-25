@@ -16,6 +16,8 @@ public class eSignConfig
     private String appId;
 
     private String appSecret;
+    
+    private String assignedSealId;
 
     private String host;
     
@@ -41,6 +43,14 @@ public class eSignConfig
 
 	public void setAppSecret(String appSecret) {
 		this.appSecret = appSecret;
+	}
+	
+	public String getAssignedSealId() {
+		return assignedSealId;
+	}
+
+	public void setAssignedSealId(String assignedSealId) {
+		this.assignedSealId = assignedSealId;
 	}
 
 	public String getHost() {
