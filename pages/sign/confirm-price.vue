@@ -30,10 +30,10 @@
 			</view>
 		</view>
 
-		<!-- 底部按钮 -->
+		<!-- 底部按钮  -->
 		<view class="btn-group">
 			<u-button :custom-style="prevBtnStyle" @click="goPrev">
-				{{ fromOrder == 0 ? '上一步' : '修改'}}
+				返回修改
 			</u-button>
 			<u-button :custom-style="nextBtnStyle" @click="submit">
 				确认价格，去签字
@@ -85,7 +85,7 @@
 			if (options.fromOrder) {
 				this.fromOrder = options.fromOrder;
 			}
-			
+
 			if (options.orderId) {
 				this.orderId = options.orderId;
 				
@@ -182,6 +182,8 @@
 					return;
 				}
 				
+				console.log('result',result);
+				
 				// 4. 根据 motherId 精确查找产妇
 				let motherInfo = {};
 				if (Array.isArray(result.mother)) {
@@ -211,8 +213,8 @@
 				const orderId = this.orderId;
 				const params = {
 					orderId: orderId,
-					returnURL: api.signReturnUrl,
-					//returnURL: 'wechat://back', // 固定值wechat://back，用户签署完成后自动跳转回开发者的微信小程序
+					returnURL: "",
+					//returnURL: api.signReturnUrl,
 					signType: '1', // 签约=1，解约=2
 					signerName: this.userInfo.nickName, // 签约甲方的姓名
 					signerPhone: this.userInfo.phonenumber, // 签约甲方的手机号
@@ -242,9 +244,23 @@
 					uni.hideLoading();
 
 					console.log("签名失败：", err)
+					let errMsg = '';
+					
+					if (err && err.message) {
+					    // 大多数情况下，err.message 就是 "创建签署流程失败: ..."
+					    errMsg = err.message;
+					} else if (err && err.msg) {
+					    errMsg = err.msg;
+					} else if (err && err.data && err.data.msg) {
+					    errMsg = err.data.msg;
+					} else {
+					    errMsg = '签名失败，请稍后重试';
+					}
+					
 					uni.showToast({
-						title: "甲方签名或手机号错误",
-						icon: 'none'
+						title: errMsg,
+						icon: 'none',
+						duration: 5000
 					});
 				}
 			},
@@ -283,7 +299,7 @@
 			},
 			goPrev() {
 				// 返回产妇和甲方填写页
-				uni.navigateTo({
+				uni.redirectTo({
 					url: `/pages/sign/form?orderId=${this.orderId}`
 				})
 			}

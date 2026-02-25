@@ -52,6 +52,7 @@
 						'pages/login/login',
 						'pages/index/index',
 						'pages/index/scan',
+						'pages/product/promotion', // 产品宣传页
 						'pages/agreement/agreement', // 用户协议页
 						'pages/agreement/privacy' // 隐私政策页
 					];

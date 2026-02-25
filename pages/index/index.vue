@@ -17,7 +17,7 @@
 			</view>
 
 			<!-- 两个按钮卡片 -->
-			<view class="btn-container">
+<!-- 			<view class="btn-container">
 				<view class="btn-card" @click="goToPromotion(1)">
 					<text class="btn-title">保障计划 Pro</text>
 					<view class="btn-content">
@@ -33,9 +33,50 @@
 						<text class="btn-text">细胞囊泡</text>
 					</view>
 				</view>
-			</view>
+				
+				<view class="btn-card" @click="goToPromotion(3)">
+						<text class="btn-title">胎盘冻干粉</text>
+						<view class="btn-content">
+							<image src="/static/icons/molecule.png" class="btn-icon" mode="aspectFit" />
+							<text class="btn-text">胎盘冻干粉</text>
+						</view>
+					</view>
+			</view> -->
 			
-			<button @click="toSign" style="margin-top: 50rpx;">开始签约</button>
+			<!-- <button @click="toSign" style="margin-top: 50rpx;">开始签约</button> -->
+			
+			<view class="btn-container">
+			    <!-- 第一行：原有的两个卡片 -->
+			    <view class="btn-row">
+			        <view class="btn-card" @click="goToPromotion(1)">
+			            <text class="btn-title">保障计划 Pro</text>
+			            <view class="btn-content">
+			                <image src="/static/icons/wave.png" class="btn-icon" mode="aspectFit" />
+			                <text class="btn-text">成人优因</text>
+			            </view>
+			        </view>
+			
+			        <view class="btn-card" @click="goToPromotion(2)">
+			            <text class="btn-title">唤醒肌肤神奇之旅</text>
+			            <view class="btn-content">
+			                <image src="/static/icons/molecule.png" class="btn-icon" mode="aspectFit" />
+			                <text class="btn-text">细胞囊泡</text>
+			            </view>
+			        </view>
+			    </view>
+			
+			    <!-- 第二行：新增的卡片 (左对齐) -->
+			    <view class="btn-row single-card-row">
+			        <view class="btn-card" @click="goToPromotion(3)">
+			            <text class="btn-title">紫河车 古老的智慧</text>
+			            <view class="btn-content">
+			                <!-- 请替换为实际的图标路径 -->
+			                <image src="/static/icons/molecule.png" class="btn-icon" mode="aspectFit" />
+			                <text class="btn-text">胎盘冻干粉</text>
+			            </view>
+			        </view>
+			    </view>
+			</view>
 		</view>
 
 		<TabBar :current-tab="currentTab" />
@@ -105,12 +146,9 @@
 <style lang="scss" scoped>
 	.container {
 		background-color: #ffffff;
-		/* 使用 padding-bottom 为 TabBar 留出空间 */
-		padding: 0rpx 26rpx 180rpx 26rpx;
-		/* bottom padding >= TabBar高度(100rpx) + 安全区(～40rpx) */
+		padding: 0rpx 26rpx 220rpx 26rpx;
 		min-height: 100vh;
 		box-sizing: border-box;
-		/* 确保 padding 包含在 100vh 内 */
 	}
 
 	.content-container {
@@ -123,13 +161,8 @@
 	.aboutus {
 		width: 704rpx;
 		height: 276.6rpx;
-		/* 根据图片实际比例选择： */
 		object-fit: contain;
-		/* 推荐：如果图片不能裁剪 */
-		/* object-fit: cover; */
-		/* 如果允许裁剪，且必须填满 */
 		background-color: #f8f8f8;
-		/* 防止加载失败时白屏 */
 	}
 
 	.company-name {
@@ -147,19 +180,53 @@
 		line-height: 58rpx;
 	}
 
+	/* --- 修改开始：仅调整布局逻辑 --- */
 	.btn-container {
 		margin-top: 58rpx;
 		display: flex;
+		flex-direction: column;
 		gap: 30rpx;
 		width: 100%;
-		justify-content: space-between;
+	}
+
+	.btn-row {
+		display: flex;
+		width: 100%;
+		gap: 30rpx;
+		
+		/* 第一行：两个卡片平分 */
+		&:not(.single-card-row) {
+			justify-content: space-between;
+			
+			.btn-card {
+				flex: 1; /* 自动占满剩余空间 */
+				width: auto; 
+			}
+		}
+
+		/* 第二行：单个卡片居中 */
+		&.single-card-row {
+			justify-content: flex-start;
+			
+			.btn-card {
+				/* 核心修复：强制宽度等于第一行单个卡片的宽度 */
+				/* 算法：(100% 总宽 - 30rpx 间隙) / 2 */
+				width: calc((100% - 30rpx) / 2);
+				flex: none; /* 禁止 flex 自动伸缩，严格遵循 width */
+			}
+		}
 	}
 
 	.btn-card {
-		flex: 1;
+		/* 保留你原有的所有视觉样式 */
 		padding: 40rpx 30rpx;
 		background: #F2F4FA;
 		border-radius: 40rpx;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		/* 新增：防止内容溢出导致高度不一致 */
+		box-sizing: border-box; 
 	}
 
 	.btn-title {
@@ -172,17 +239,22 @@
 	.btn-content {
 		display: flex;
 		margin-top: 28rpx;
+		align-items: center; /* 确保图标文字垂直对齐 */
 	}
 
 	.btn-icon {
 		width: 52rpx;
 		height: 52rpx;
 		margin-right: 46rpx;
+		flex-shrink: 0; /* 防止图标被压缩 */
 	}
 
 	.btn-text {
 		font-weight: bold;
 		font-size: 36rpx;
 		color: #000000;
+		/* 防止文字过长换行破坏布局 */
+		white-space: nowrap; 
 	}
+	/* --- 修改结束 --- */
 </style>

@@ -23,14 +23,15 @@
 	    </view>
 	
 	    <!-- 昵称 -->
-	    <view class="list-item" @click="handleGetUserInfo">
+	   <!-- <view class="list-item" @click="handleGetUserInfo"> -->
+	   <view class="list-item">
 	      <view class="item-left">
 	        <image class="icon" src="/static/icons/nickname.png" mode="aspectFill"></image>
 	        <text class="label">姓名</text>
 	      </view>
 	      <view class="item-right">
 	        <text class="value">{{ formData.nickName || '未设置' }}</text>
-	        <text class="arrow">></text>
+	       <!-- <text class="arrow">></text> -->
 	      </view>
 	    </view>
 	
@@ -306,7 +307,7 @@ export default {
 			
 			uni.showToast({ title: '更新成功', icon: 'success' });
 		}
-		console.log("获取用户信息失败")
+		//console.log("获取用户信息失败")
 	},
 
     // --- 昵称 ---

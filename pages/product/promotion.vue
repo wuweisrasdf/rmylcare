@@ -85,9 +85,12 @@
 					if (this.type == 1) {
 						this.title = '成人优因';
 						this.promoImage = navbarArray[0] && navbarArray[0].bar  || '';
-					} else {
+					} else if (this.type == 2) {
 						this.title = '细胞囊泡'
 						this.promoImage = navbarArray[1] && navbarArray[1].dtl  || '';
+					} else if (this.type == 3) {
+						this.title = '胎盘冻干粉'
+						this.promoImage = navbarArray[2] && navbarArray[2].prod  || '';
 					}
 				}
 			},

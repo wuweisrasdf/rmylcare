@@ -184,15 +184,19 @@
 
 		</view>
 
-		<!-- 底部按钮 -->
+		
+		<!-- 底部按钮 - 修改为悬浮底部 -->
 		<view class="btn-group" v-if="(info.proStatus == 2) || (info.proStatus == 1 && info.orderStatus==11)">
-			<u-button :custom-style="nextBtnStyle" @click="toSign" v-if="info.proStatus == 2">
-				去签字
-			</u-button>
-			<u-button :custom-style="nextBtnStyle" @click="toPay" v-if="info.proStatus == 1 && info.orderStatus==11">
-				去支付
-			</u-button>
+		    <u-button :custom-style="nextBtnStyle" @click="toSign" v-if="info.proStatus == 2">
+		        继续编辑
+		    </u-button>
+		    <u-button :custom-style="nextBtnStyle" @click="toPay" v-if="info.proStatus == 1 && info.orderStatus==11">
+		        去支付
+		    </u-button>
 		</view>
+		
+		<!-- 底部占位元素，避免内容被固定按钮遮挡 -->
+		<view class="bottom-placeholder" v-if="(info.proStatus == 2) || (info.proStatus == 1 && info.orderStatus==11)"></view>
 
 	</view>
 
@@ -570,9 +574,7 @@
 <style lang="scss" scoped>
 	.order-detail-wrap {
 		min-height: 100vh;
-		/* 关键：撑满整个视口 */
 		background-color: #f5f5f5;
-		/* 这才是你看到的背景 */
 		box-sizing: border-box;
 		padding-bottom: 120rpx;
 
@@ -841,11 +843,33 @@
 		}
 	}
 
-	.btn-group {
-		display: flex;
-		justify-content: space-between;
-		margin: 70rpx 26rpx 0;
-	}
+.btn-group {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    padding: 20rpx 26rpx 30rpx;
+    background-color: #f5f5f5;
+    box-shadow: 0 -4rpx 20rpx rgba(0, 0, 0, 0.05);
+    z-index: 100;
+    
+    // 确保按钮占据固定宽度
+    .u-btn {
+        flex: 1;
+        
+        &:first-child {
+            margin-right: 20rpx;
+        }
+    }
+}
+
+// 底部占位元素，高度与固定按钮组一致
+.bottom-placeholder {
+    height: 148rpx; // 与 .btn-group 的高度保持一致
+    width: 100%;
+}
 
 
 	.order-step-wrap {

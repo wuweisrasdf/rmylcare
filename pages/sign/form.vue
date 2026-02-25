@@ -136,7 +136,7 @@
 							<text class="required-star">*</text>
 
 							<view class="">
-								<text class="hint">关系是丈夫，需填写</text>
+								<text class="hint">关系是配偶，需填写</text>
 							</view>
 						</view>
 						<u--input v-model="formData.nickName" placeholder="请输入甲方姓名" border="none"
@@ -210,7 +210,7 @@
 							<text>地址</text>
 							<text class="required-star">*</text>
 						</view>
-						<u--input v-model="formData.address" placeholder="请输入详细地址" border="none" height="80"
+						<u--input v-model="formData.address" placeholder="请输入详细收货地址" border="none" height="80"
 							:custom-style="inputStyle" />
 					</u-form-item>
 				</view>
@@ -384,7 +384,51 @@
 						type: 'email',
 						message: '请输入正确的邮箱地址',
 						trigger: 'blur'
-					}]
+					}],
+					motherIdCode: [{
+							required: true,
+							message: '请填写证件号码',
+							trigger: 'blur'
+						},
+						// 【新增】身份证格式校验器
+						{
+							validator: (rule, value, callback) => {
+								// 只有当证件类型是身份证 且 有值时才校验
+								if (this.formData.motherIdType === '1' && value) {
+									if (!this.isValidIdCard(value)) {
+										callback(new Error('母亲身份证号码格式不正确'));
+									} else {
+										callback();
+									}
+								} else {
+									callback();
+								}
+							},
+							trigger: 'blur'
+						}
+					],
+					userIdCode: [{
+							required: true,
+							message: '请填写证件号码',
+							trigger: 'blur'
+						},
+						// 【新增】身份证格式校验器
+						{
+							validator: (rule, value, callback) => {
+								// 只有当证件类型是身份证 且 有值时才校验
+								if (this.formData.userIdType === '1' && value) {
+									if (!this.isValidIdCard(value)) {
+										callback(new Error('甲方身份证号码格式不正确'));
+									} else {
+										callback();
+									}
+								} else {
+									callback();
+								}
+							},
+							trigger: 'blur'
+						}
+					]
 				},
 				idTypeOptions: [{
 						value: '1',
@@ -418,7 +462,7 @@
 				showPicker: false,
 				currentPickerFor: '',
 				pickerList: [],
-				minDate: new Date('2025-01-01').getTime(), // 预产期最小日期
+				minDate: new Date().getTime(), // 预产期最小日期
 				maxDate: new Date('2035-12-31').getTime(), // 预产期最大日期
 				showDatePicker: false,
 				orderId: 0, // 订单id
@@ -501,6 +545,24 @@
 						});
 						return;
 					}
+
+					// 已签约订单，不允许修改
+					if (order.proStatus != 2) {
+						uni.showToast({
+							title: '已签约订单，不允许修改',
+							icon: 'none',
+							duration: 3000
+						});
+						return;
+					}
+					
+					// if (order.signDate) { // order.signDate 这个不靠谱
+					// 	uni.showToast({
+					// 		title: '该订单已签约',
+					// 		icon: 'none'
+					// 	});
+					// 	return;
+					// }
 
 					// 2. 获取产妇和甲方信息
 					const res = await api.getMotherAndUser();
@@ -673,99 +735,99 @@
 			// 身份证合法性校验（18位）
 			isValidIdCard(idCard) {
 				// 转换为大写
-				    const cardId = String(idCard).toUpperCase();
-				    
-				    // 正则验证基本格式
-				    const regx = /(^\d{15}$)|(^\d{17}([0-9]|X)$)/;
-				    if (!regx.test(cardId)) {
-				        return false;
-				    }
-				    
-				    // 分割数组
-				    let arr_split = [];
-				    
-				    if (cardId.length === 18) {
-				        // 检查18位
-				        // 校验位按照ISO 7064:1983.MOD 11-2的规定生成，X可以认为是数字10。
-				        const arr_int = [7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2];
-				        const arr_ch = ['1', '0', 'X', '9', '8', '7', '6', '5', '4', '3', '2'];
-				        let sign = 0;
-				        
-				        for (let i = 0; i < 17; i++) {
-				            const b = parseInt(cardId[i], 10);
-				            const w = arr_int[i];
-				            sign += b * w;
-				        }
-				        
-				        const n = sign % 11;
-				        const val_num = arr_ch[n];
-				        
-				        // 校验码验证
-				        if (val_num !== cardId.substr(17, 1)) {
-				            return false;
-				        } else {
-				            return true;
-				        }
-				        
-				    } else if (cardId.length === 15) {
-				        // 检查15位
-				        const regx15 = /^(\d{6})+(\d{2})+(\d{2})+(\d{2})+(\d{3})$/;
-				        const match = cardId.match(regx15);
-				        
-				        if (!match) {
-				            return false;
-				        }
-				        
-				        // 检查生日日期是否正确
-				        const dtm_birth = '19' + match[2] + '-' + match[3] + '-' + match[4];
-				        const birthDate = new Date(dtm_birth);
-				        
-				        // 验证日期有效性（模仿PHP的strtotime行为）
-				        if (this.isValidDate(birthDate, dtm_birth)) {
-				            return true;
-				        } else {
-				            return false;
-				        }
-				    }
-				    
-				    return false;
+				const cardId = String(idCard).toUpperCase();
+
+				// 正则验证基本格式
+				const regx = /(^\d{15}$)|(^\d{17}([0-9]|X)$)/;
+				if (!regx.test(cardId)) {
+					return false;
+				}
+
+				// 分割数组
+				let arr_split = [];
+
+				if (cardId.length === 18) {
+					// 检查18位
+					// 校验位按照ISO 7064:1983.MOD 11-2的规定生成，X可以认为是数字10。
+					const arr_int = [7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2];
+					const arr_ch = ['1', '0', 'X', '9', '8', '7', '6', '5', '4', '3', '2'];
+					let sign = 0;
+
+					for (let i = 0; i < 17; i++) {
+						const b = parseInt(cardId[i], 10);
+						const w = arr_int[i];
+						sign += b * w;
+					}
+
+					const n = sign % 11;
+					const val_num = arr_ch[n];
+
+					// 校验码验证
+					if (val_num !== cardId.substr(17, 1)) {
+						return false;
+					} else {
+						return true;
+					}
+
+				} else if (cardId.length === 15) {
+					// 检查15位
+					const regx15 = /^(\d{6})+(\d{2})+(\d{2})+(\d{2})+(\d{3})$/;
+					const match = cardId.match(regx15);
+
+					if (!match) {
+						return false;
+					}
+
+					// 检查生日日期是否正确
+					const dtm_birth = '19' + match[2] + '-' + match[3] + '-' + match[4];
+					const birthDate = new Date(dtm_birth);
+
+					// 验证日期有效性（模仿PHP的strtotime行为）
+					if (this.isValidDate(birthDate, dtm_birth)) {
+						return true;
+					} else {
+						return false;
+					}
+				}
+
+				return false;
 			},
 			/**
 			 * 辅助函数：验证日期是否有效（模仿PHP的strtotime行为）
 			 */
 			isValidDate(date, dateString) {
-			    // 检查日期对象是否有效
-			    if (Object.prototype.toString.call(date) !== '[object Date]' || isNaN(date.getTime())) {
-			        return false;
-			    }
-			    
-			    // 验证日期格式是否匹配
-			    const parts = dateString.split('-');
-			    if (parts.length !== 3) return false;
-			    
-			    const year = parseInt(parts[0], 10);
-			    const month = parseInt(parts[1], 10);
-			    const day = parseInt(parts[2], 10);
-			    
-			    // 检查日期是否与输入一致
-			    if (date.getFullYear() !== year || 
-			        (date.getMonth() + 1) !== month || 
-			        date.getDate() !== day) {
-			        return false;
-			    }
-			    
-			    // 检查月份和日期的合理性
-			    if (month < 1 || month > 12 || day < 1 || day > 31) {
-			        return false;
-			    }
-			    
-			    // 检查特定月份的天数
-			    const daysInMonth = new Date(year, month, 0).getDate();
-			    if (day > daysInMonth) {
-			        return false;
-			    }
-			    
-			    return true;
+				// 检查日期对象是否有效
+				if (Object.prototype.toString.call(date) !== '[object Date]' || isNaN(date.getTime())) {
+					return false;
+				}
+
+				// 验证日期格式是否匹配
+				const parts = dateString.split('-');
+				if (parts.length !== 3) return false;
+
+				const year = parseInt(parts[0], 10);
+				const month = parseInt(parts[1], 10);
+				const day = parseInt(parts[2], 10);
+
+				// 检查日期是否与输入一致
+				if (date.getFullYear() !== year ||
+					(date.getMonth() + 1) !== month ||
+					date.getDate() !== day) {
+					return false;
+				}
+
+				// 检查月份和日期的合理性
+				if (month < 1 || month > 12 || day < 1 || day > 31) {
+					return false;
+				}
+
+				// 检查特定月份的天数
+				const daysInMonth = new Date(year, month, 0).getDate();
+				if (day > daysInMonth) {
+					return false;
+				}
+
+				return true;
 			},
 			async submitForm() {
 				// 表单验证
@@ -852,7 +914,8 @@
 			},
 			async createPdfOrder(motherId) {
 				const now = new Date();
-				const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+				const today =
+					`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
 
 				const params = {
 					motherId: motherId, // 母亲id
@@ -899,14 +962,14 @@
 				} catch (err) {
 					console.warn('获取用户详情失败，但不影响跳转');
 				}
-			
+
 				// 所有操作完成，隐藏 loading 并跳转
 				uni.hideLoading();
 				uni.showToast({
 					title: '保存成功',
 					icon: 'success'
 				});
-			
+
 				setTimeout(() => {
 					uni.navigateTo({
 						url: `/pages/sign/auth?orderId=${this.orderId}`
