@@ -158,6 +158,9 @@ public class WxEsignController extends BaseController
 	
     // 应用密钥
     public static String EsignAppSecret;
+    
+    // 企业印章ID
+    public static String assignedSealId;
 	
     // e签宝接口调用域名（模拟环境）
     public static String EsignHost ;
@@ -191,6 +194,7 @@ public class WxEsignController extends BaseController
     	this.EsignAppId = eSignConfig.getAppId();
     	this.EsignAppSecret = eSignConfig.getAppSecret();
     	this.EsignHost = eSignConfig.getHost();
+    	this.assignedSealId = eSignConfig.getAssignedSealId();
     	
     	this.returnURL1 = eSignConfig.getReturnUrl1();
     	this.returnURL2 = eSignConfig.getReturnUrl2();
@@ -296,7 +300,7 @@ public class WxEsignController extends BaseController
             waitForFileReady(fileId);
             
             // 4. 创建签署流程并获取 H5 签署链接
-            String signUrl = createPersonalSignFlow(fileId, signerName, signerPhone);
+            String signUrl = createPersonalSignFlow(fileId, orderObj.getOrderCode(), signerName, signerPhone);
             
             
             ajax.put("signUrl",signUrl);
@@ -515,7 +519,7 @@ public class WxEsignController extends BaseController
 	 /**
      * 创建个人手动签署流程（严格遵循 V3 文档）
      */
-    private String createPersonalSignFlow(String fileId, String signerName, String mobile) throws Exception {
+    private String createPersonalSignFlow(String fileId, String orderOrder,String signerName, String mobile) throws Exception {
         // 1、基于文件发起签署
         String createApiPath = "/v3/sign-flow/create-by-file";
 
@@ -534,8 +538,8 @@ public class WxEsignController extends BaseController
         }
         else if(this.signType.equals("2")) {
         	position.put("positionPage", "1"); // 必须是字符串
-	        position.put("positionX", 500);
-	        position.put("positionY", 120);
+	        position.put("positionX", 450);
+	        position.put("positionY", 150);
         }
 
         JSONObject normalConfig = new JSONObject();
@@ -556,9 +560,11 @@ public class WxEsignController extends BaseController
         JSONObject psnSignerInfo = new JSONObject();
         psnSignerInfo.put("psnAccount", mobile); // 手机号
         psnSignerInfo.put("psnInfo", psnInfo);
-
-        // 签署方
+        
+        
+        // 签署方 —— 甲方
         JSONObject signer = new JSONObject();
+        signer.put("signConfig", getSignConfig()); 
         signer.put("signerType", 0); // 0 = 个人
         signer.put("psnSignerInfo", psnSignerInfo);
         signer.put("signFields", signFields);
@@ -572,7 +578,7 @@ public class WxEsignController extends BaseController
 	        JSONObject position2 = new JSONObject();
 	        position2.put("positionPage", "10"); // 必须是字符串
 	        position2.put("positionX", 200);
-	        position2.put("positionY", 700);
+	        position2.put("positionY", 710);
 	        
 	        JSONObject normalConfig2 = new JSONObject();
 	        normalConfig2.put("psnSealStyles", "0,1"); // 手写签名 + 姓名章
@@ -602,24 +608,40 @@ public class WxEsignController extends BaseController
 	        signer2.put("signFields", signFields2);
 	
 	        signers.add(signer2);
+	        
+	        ///// 签署方 —— 人民医疗
+	        JSONObject signerOrg = getOrgsigner(fileId);
+	        signers.add(signerOrg);
         }
         else if(this.signType.equals("2")) {
         	//解约只有一个签名
         }
-        ///////////////////////////////////////////////////////
 
         // docs
         JSONObject doc = new JSONObject();
         doc.put("fileId", fileId);
-        doc.put("fileName", "电子合同.pdf");
+        doc.put("fileName", "冻干粉电子合同.pdf");
         JSONArray docs = new JSONArray();
         docs.add(doc);
 
         // signFlowConfig
         JSONObject signFlowConfig = new JSONObject();
-        signFlowConfig.put("signFlowTitle", "个人电子合同签署");
+        if(this.signType.equals("1")) {
+        	signFlowConfig.put("signFlowTitle", "冻干粉电子合同["+orderOrder+"]");
+        }
+        else {
+        	signFlowConfig.put("signFlowTitle", "解约协议["+orderOrder+"]");
+        }
+        	
+        
         signFlowConfig.put("autoFinish", true);
         signFlowConfig.put("notifyUrl", returnURL); //签署成功后的回调地址
+        
+        JSONObject redirectConfig = new JSONObject();
+        redirectConfig.put("redirectUrl", "wechat://back");
+        redirectConfig.put("redirectDelayTime", "0");
+        
+        signFlowConfig.put("redirectConfig",redirectConfig);
 
         // 请求体
         JSONObject requestBody = new JSONObject();
@@ -673,6 +695,45 @@ public class WxEsignController extends BaseController
         }
 
         return signUrlResult.getJSONObject("data").getString("url");
+    }
+    
+    //返回企业签署人信息
+    private JSONObject getOrgsigner(String fileId) {
+        JSONObject position = new JSONObject();
+        
+        position.put("positionPage", "10"); // 必须是字符串
+        position.put("positionX", 200);
+        position.put("positionY", 550);
+        
+        JSONObject normalConfig = new JSONObject();
+        
+        normalConfig.put("signFieldStyle", 1);
+        normalConfig.put("autoSign", "true"); // 手写签名 + 姓名章
+        normalConfig.put("assignedSealId", this.assignedSealId);
+        
+        normalConfig.put("signFieldStyle", 1);
+        normalConfig.put("signFieldPosition", position);
+
+        JSONObject signField = new JSONObject();
+        signField.put("fileId", fileId);
+        signField.put("signFieldType", "0");
+        signField.put("normalSignFieldConfig", normalConfig);
+
+        JSONArray signFields = new JSONArray();
+        signFields.add(signField);
+
+    	JSONObject signer = new JSONObject();
+    	signer.put("signConfig", getSignConfig()); 
+        signer.put("signerType", 1); // 1 = 企业
+        signer.put("signFields", signFields);
+    	return signer;
+    }
+    
+    //返回签署顺序
+    private JSONObject getSignConfig() {
+    	JSONObject signOrder = new JSONObject();
+        signOrder.put("signOrder", 1);
+    	return signOrder;
     }
 
 	
