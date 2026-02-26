@@ -1,13 +1,16 @@
 <template>
 	<view class="container" :style="{ paddingTop: containerPaddingTop }">
-		
-		<u-image :src="promoImage" width="100%" height="auto" mode="widthFix" v-if="promoImage" :lazy-load="true">
-			<!-- 加载中提示 -->
-			<template v-slot:loading>
-				<u-loading-icon color="red"></u-loading-icon>
-			</template>
-		
-		</u-image>
+
+		<!-- 多张图片展示 - 无间距，不预览 -->
+		<view class="detail-images" v-if="detailImages.length > 0">
+			<view class="image-item" v-for="(img, index) in detailImages" :key="index">
+				<u-image :src="img" width="100%" height="auto" mode="widthFix" :lazy-load="true">
+					<template v-slot:loading>
+						<u-loading-icon color="red"></u-loading-icon>
+					</template>
+				</u-image>
+			</view>
+		</view>
 
 		<view class="btn-group">
 			<u-button class="next-btn" :custom-style="nextBtnStyle" @click="handleNext">
@@ -22,7 +25,7 @@
 	import {
 		mapState
 	} from 'vuex'
-	
+
 	export default {
 		computed: {
 			// 计算容器顶部内边距（转为 rpx）
@@ -46,7 +49,7 @@
 		},
 		data() {
 			return {
-				promoImage: '',
+				detailImages: [], // 存储多张图片
 			};
 		},
 		onLoad() {
@@ -60,20 +63,20 @@
 				if (res.code == 200) {
 					const data = res.data || {};
 
-					let navbarArray;
+					// 处理 details 字段
+					let detailsArray = [];
 					try {
-						navbarArray = JSON.parse(data.navbar);
+						detailsArray = JSON.parse(data.details);
 					} catch (e) {
-						console.error('navbar 字段不是合法的 JSON 字符串', e);
-						navbarArray = []; // 容错处理
+						console.error('details 字段不是合法的 JSON 字符串', e);
+						detailsArray = [];
 					}
-					console.log(navbarArray);
 
-					this.promoImage = navbarArray[2] && navbarArray[2].prod || '';
+					console.log('detailsArray:', detailsArray);
+					this.detailImages = detailsArray;
 				}
 			},
 			handleNext() {
-
 				uni.navigateTo({
 					url: '/pages/sign/guide'
 				})
@@ -89,7 +92,26 @@
 		min-height: 100vh;
 		padding-bottom: 100rpx;
 	}
-	
+
+	/* 多张图片展示样式 - 无间距 */
+	.detail-images {
+		// 移除容器内边距的影响
+		margin-left: -26rpx;
+		margin-right: -26rpx;
+		width: calc(100% + 52rpx); // 补偿左右内边距
+	}
+
+	.image-item {
+		// 移除所有间距
+		line-height: 0; // 防止图片间出现空白
+		font-size: 0; // 防止图片间出现空白
+
+		// 移除边框圆角和阴影
+		// border-radius: 16rpx;
+		// overflow: hidden;
+		// box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+	}
+
 	.btn-group {
 		margin-top: 50rpx;
 		display: flex;

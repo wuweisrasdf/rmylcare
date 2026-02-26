@@ -111,15 +111,18 @@
 	}
 
 	.tab-icon {
-		width: 70rpx;
-		height: auto;
+		width: 40rpx;
+		height: 40rpx;
 	}
 
 	.tab-text {
 		font-size: 32rpx;
-		color: #727272;
-		/* 默认颜色为未激活状态的颜色 */
+		color: #757575;
 		font-weight: bold;
+
+		&.active {
+			color: #4A63E2;
+		}
 	}
 
 	.tabbar-item.active .tab-text {

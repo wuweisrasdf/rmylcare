@@ -1,6 +1,7 @@
 <template>
 	<view class="container">
 		<web-view :src="decodedSignUrl" style="width: 100vw; height: 100vh;" @message="handleGetMessage" />
+		<view v-if="isReloading" class="reload-tip">页面刷新中...</view>
 	</view>
 </template>
 
@@ -10,7 +11,8 @@
 			return {
 				type: 1,
 				orderId: '',
-				decodedSignUrl: ''
+				decodedSignUrl: '',
+				isReloading: false // 刷新状态提示
 			};
 		},
 		onLoad(options) {
@@ -70,6 +72,22 @@
 					});
 				}
 			},
+			/**
+			 * 【新增】供中间页调用的刷新方法
+			 * 当从公证签小程序刷脸返回后，中间页会调用此方法刷新 web-view
+			 */
+			reloadPage(url) {
+				console.log('---signature reloadPage 被调用', url);
+				if (url) {
+					this.isReloading = true;
+					// 更新 web-view 的 src 触发刷新
+					this.decodedSignUrl = url;
+					// 延迟关闭提示
+					setTimeout(() => {
+						this.isReloading = false;
+					}, 1000);
+				}
+			},
 			jump() {
 				if (this.type == 1) {
 					uni.reLaunch({ // 签约成功，销毁页面栈，不允许再返回前面的操作
@@ -93,13 +111,16 @@
 		position: relative;
 	}
 
-	.tip {
-		position: absolute;
-		bottom: 20rpx;
-		left: 0;
-		right: 0;
-		text-align: center;
-		color: #666;
-		font-size: 24rpx;
+	.reload-tip {
+		position: fixed;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		background: rgba(0, 0, 0, 0.7);
+		color: white;
+		padding: 20rpx 40rpx;
+		border-radius: 40rpx;
+		font-size: 28rpx;
+		z-index: 999;
 	}
 </style>

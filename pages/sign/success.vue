@@ -1,249 +1,198 @@
 <template>
-	<view class="container" :style="{ paddingTop: containerPaddingTop }">
-		<view class="content-container">
-			<view class="top">
-				<image src="/static/icons/sign-success.png" mode="widthFix"></image>
-				<text class="title">签约成功！</text>
+	<view class="container">
+		<!-- 主体内容区 -->
+		<view class="content-wrapper">
+			<!-- 成功图标 (带动画) -->
+			<view class="icon-box">
+				<image src="/static/icons/sign-success.png" mode="widthFix" class="success-icon"></image>
+				<view class="ripple-effect"></view>
 			</view>
 
-			<view class="info">
-				<view class="item">
-					<text class="label">甲方名称</text>
-					<text class="value">{{ info.userName }}</text>
-				</view>
+			<!-- 标题 -->
+			<text class="main-title">您已成功签约！</text>
+			<text class="sub-title">正在为您准备支付环境...</text>
 
-				<view class="item">
-					<text class="label">产品名称</text>
-					<text class="value">{{ info.productName }}</text>
+			<!-- 倒计时展示区 -->
+			<view class="countdown-container">
+				<!-- 环形进度条 (纯 CSS 实现) -->
+				<view class="progress-ring">
+					<svg width="120" height="120" viewBox="0 0 120 120" class="ring-svg">
+						<!-- 背景圆环 -->
+						<circle cx="60" cy="60" r="52" stroke="#F0F2F5" stroke-width="8" fill="none" />
+						<!-- 进度圆环 (动态旋转) -->
+						<circle 
+							cx="60" 
+							cy="60" 
+							r="52" 
+							stroke="#4A63E4" 
+							stroke-width="8" 
+							fill="none"
+							stroke-dasharray="326" 
+							stroke-dashoffset="326"
+							:style="{ strokeDashoffset: dashOffset, transition: 'stroke-dashoffset 1s linear' }"
+							transform="rotate(-90 60 60)"
+							stroke-linecap="round"
+						/>
+					</svg>
+					<!-- 中间数字 -->
+					<view class="timer-text">
+						<text class="num">{{ countdown }}</text>
+						<text class="unit">s</text>
+					</view>
 				</view>
-
-				<view class="item">
-					<text class="label">签约金额</text>
-					<text class="value">￥{{ info.price }}</text>
-				</view>
-
-				<view class="item">
-					<text class="label">协议号</text>
-					<text class="value">{{ info.orderCode }}</text>
-				</view>
-
-				<view class="item">
-					<text class="label">签约时间</text>
-					<text class="value">{{ info.signDate }}</text>
-				</view>
+				
+				<text class="tips-text">
+					{{ countdown > 0 ? '自动发起支付' : '即将跳转...' }}
+				</text>
 			</view>
 
-			<view class="desc">
-				<view class="desc-head">
-					<view class="desc-icon"></view>
-					<text class="desc-title">后续步骤</text>
-				</view>
-				<view class="desc-content">
-					<view class="content-item">
-						<view class="list-icon"></view>
-						<text class="text">您可以随时查看业务进度</text>
-					</view>
-					<view class="content-item">
-						<view class="list-icon"></view>
-						<text class="text">胎盘接收后将实时更新状态</text>
-					</view>
-					<view class="content-item">
-						<view class="list-icon"></view>
-						<text class="text">重要通知将通过微信服务通知推送</text>
-					</view>
-				</view>
-
+			<!-- 异常/手动干预区 (仅在非倒计时或出错时显示，或者始终显示一个小入口) -->
+			<view class="action-area" v-if="!isAutoPaying || payError">
+				<text class="manual-link" @click="toPay">
+					{{ payError ? '支付准备失败，点击重试' : '不想等待？立即支付' }}
+				</text>
 			</view>
-
 		</view>
 
-		<!-- 按钮组容器 -->
-		<view class="btn-group">
-			<u-button :custom-style="primaryBtnStyle" @click="toPay">
-				去支付
-			</u-button>
-			<u-button :custom-style="secondaryBtnStyle" @click="viewOrder">
-				查看订单
-			</u-button>
+		<!-- 底部版权或提示 (可选) -->
+		<view class="footer-tip">
+			<text>请勿关闭页面，以免订单失效</text>
 		</view>
 	</view>
 </template>
 
 <script>
 	import * as api from '@/utils/api.js'
-	import {
-		mapState
-	} from 'vuex'
+	import { mapState } from 'vuex'
 
 	export default {
+		data() {
+			return {
+				orderId: '',
+				countdown: 5, // 倒计时秒数
+				timer: null,
+				isAutoPaying: false, // 是否正在自动流程中
+				payError: false,     // 标记是否发生错误
+				totalTime: 5
+			};
+		},
 		computed: {
-			...mapState({
-				user: state => state.user,
-				token: state => state.token,
-			}),
-			containerPaddingTop() {
-				const barHeight = (this.CustomBar || 0) * 2 + 'rpx';
-				return barHeight;
-			},
-			primaryBtnStyle() {
-				return {
-					height: '98rpx',
-					borderRadius: '49rpx',
-					backgroundColor: '#4A63E4',
-					fontWeight: 'bold',
-					fontSize: '32rpx',
-					color: '#FFFFFF'
-				};
-			},
-			secondaryBtnStyle() {
-				return {
-					height: '98rpx',
-					borderRadius: '49rpx',
-					border: '2px solid rgba(142,142,142,0.5)',
-					backgroundColor: 'transparent', // 透明背景
-					fontWeight: 'bold',
-					fontSize: '32rpx',
-					color: '#3D3D3D'
-				};
+			...mapState(['user', 'token']),
+			// 计算 SVG 圆环偏移量：周长 2*PI*R ≈ 326
+			// offset = 周长 - (当前时间 / 总时间) * 周长
+			dashOffset() {
+				const circumference = 2 * Math.PI * 52; // 326.7
+				const offset = circumference - (this.countdown / this.totalTime) * circumference;
+				return offset;
 			}
 		},
 		onLoad(options) {
 			if (options.orderId) {
 				this.orderId = options.orderId;
-				this.init();
+				this.startCountdown();
+			} else {
+				uni.showToast({ title: '订单号缺失', icon: 'none' });
 			}
 		},
-		data() {
-			return {
-				orderId: '',
-				paying: false, // 支付防重复点击
-				info: {
-					userName: '', // 甲方姓名
-					productName: '', // 产品名称
-					price: 0, // 签约金额
-					orderCode: '', // 协议号
-					signDate: '', // 签约时间
-				}
-			};
+		onUnload() {
+			if (this.timer) clearTimeout(this.timer);
 		},
 		methods: {
-			async init() {
-				if (!this.user.wxOpenId) {
-					uni.showToast({
-						title: '缺少openID，请联系管理员',
-						icon: 'none'
-					});
-					return;
-				}
+			startCountdown() {
+				this.isAutoPaying = true;
+				this.payError = false;
+				this.countdown = this.totalTime;
 
-				// 获取产品信息
-				const productId = 1; // 固定值 1
-				const res = await api.getProductById(productId);
-				if (res.code == 200) {
-					const data = res.data || {};
-					this.info.productName = data.productName || '';
-				}
-				
-				// 获取合同信息
-				const result = await api.getFdpOrder(this.orderId);
-				if (result.code == 200 && result.rows.length > 0) {
-					const order = result.rows[0];
-					
-					this.info.price = order.priceOut;
-					this.info.orderCode = order.orderCode; // 协议号
-					this.info.signDate = order.signDate;
-					this.info.userName = order.userName;
-				}
+				// 预加载支付参数（可选优化：提前请求，倒计时结束时直接调起）
+				this.preparePayment();
 
+				this.timer = setInterval(() => {
+					if (this.countdown > 1) {
+						this.countdown--;
+					} else {
+						// 倒计时结束
+						clearInterval(this.timer);
+						this.countdown = 0;
+						this.executePayment();
+					}
+				}, 1000);
 			},
-			// 去支付
-			async toPay() {
-				if (!this.orderId) {
-					uni.showToast({
-						title: '订单信息缺失',
-						icon: 'none'
-					});
-					return;
-				}
 
-				// 防止重复点击
-				if (this.paying) return;
-				this.paying = true;
+			// 预先获取支付参数，避免倒计时结束时网络卡顿
+			async preparePayment() {
+				if (!this.user.wxOpenId) return;
+				try {
+					const longId = this.user.wxOpenId.replace(/^"(.*)"$/, '$1');
+					await api.createPayment({ longId, orderId: this.orderId });
+					// 这里可以先存下参数，也可以等到 executePayment 再请求一次确保最新
+				} catch (e) {
+					console.log('预加载支付参数失败，将在点击或倒计时结束时重试');
+				}
+			},
+
+			// 执行支付逻辑
+			async executePayment() {
+				if (!this.orderId) return;
+				
+				// 防止重复触发
+				if (this.isProcessing) return;
+				this.isProcessing = true;
 
 				try {
-					// 1. 调用后端接口，获取微信支付参数
 					const longId = this.user.wxOpenId.replace(/^"(.*)"$/, '$1');
-					
-					const params = {
-						longId: longId,
-						orderId: this.orderId
-					};
-					const res = await api.createPayment(params);
+					const res = await api.createPayment({ longId, orderId: this.orderId });
 
 					if (res.code !== 200 || !res.para) {
-						uni.showToast({
-							title: res.msg || '获取支付参数失败',
-							icon: 'none'
-						});
-						return;
+						throw new Error(res.msg || '获取支付参数失败');
 					}
 
 					const payData = res.para;
-
-					// 2. 调起微信支付
-					const paymentResult = await uni.requestPayment({
+					
+					// 调起微信支付
+					await uni.requestPayment({
 						timeStamp: String(payData.timeStamp),
 						nonceStr: payData.nonceStr,
 						package: payData.package,
 						signType: payData.signType || 'MD5',
 						paySign: payData.paySign
 					});
-					console.log('paymentResult',paymentResult); //{errMsg: "requestPayment:ok"}
-					
+
+					// 支付成功回调
 					uni.showModal({
-					    title: '支付提示',
-					    content: '您已完成支付？',
-					    showCancel: false, // 不显示“取消”按钮（更符合流程）
-					    confirmText: '已完成',
-					    success: (res) => {
-					      if (res.confirm) {
-							// 3. 支付成功
+						title: '支付提示',
+						content: '支付已完成？',
+						showCancel: false,
+						confirmText: '是的',
+						success: () => {
 							uni.redirectTo({
 								url: '/pages/sign/pay-success?orderId=' + this.orderId
 							});
-					      }
-					    },
+						}
 					});
 
-
-					return;
-
 				} catch (err) {
-					// 支付失败或用户取消
-					console.error('支付失败:', err);
+					this.isProcessing = false;
+					this.isAutoPaying = false; // 停止自动流程
+					this.payError = true;      // 显示错误状态
 
-					// err.errMsg 可能包含 "requestPayment:fail cancel"（用户取消）
 					if (err.errMsg && err.errMsg.includes('cancel')) {
-						uni.showToast({
-							title: '已取消支付',
-							icon: 'none'
-						});
+						// 用户取消，通常不需要报错，但这里因为不是用户主动点的，所以提示一下
+						uni.showToast({ title: '已取消支付', icon: 'none' });
 					} else {
-						uni.showToast({
-							title: '支付失败，请重试',
-							icon: 'none'
-						});
+						uni.showToast({ title: '自动支付失败，请手动重试', icon: 'none' });
 					}
-				} finally {
-					this.paying = false
 				}
 			},
-			// 查看订单
+
+			// 手动点击触发
+			toPay() {
+				if (this.timer) clearInterval(this.timer);
+				this.isAutoPaying = false;
+				this.executePayment();
+			},
+
 			viewOrder() {
-				uni.redirectTo({
-					url: `/pages/order/order`
-					//url: `/pages/order/detail?orderId=${this.orderId}`
-				});
+				uni.redirectTo({ url: '/pages/order/order' });
 			}
 		}
 	};
@@ -251,123 +200,154 @@
 
 <style lang="scss" scoped>
 	.container {
-		background-color: #ffffff;
-		padding: 0 74rpx;
 		min-height: 100vh;
+		background-color: #FFFFFF;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		padding-top: 15vh; // 顶部留白
 		box-sizing: border-box;
+	}
+
+	.content-wrapper {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		width: 100%;
+		animation: fadeIn 0.8s ease-out;
+	}
+
+	/* 图标与涟漪动画 */
+	.icon-box {
 		position: relative;
 		display: flex;
-		flex-direction: column;
-	}
+		justify-content: center;
+		align-items: center;
+		margin-bottom: 40rpx;
 
-	.content-container {
-		.top {
-			display: flex;
-			flex-direction: column;
-			justify-content: center;
-			align-items: center;
-			text-align: center;
+		.success-icon {
+			width: 160rpx;
+			height: 160rpx;
+			z-index: 2;
+			animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+		}
 
-			image {
-				width: 100rpx;
-				height: 100rpx;
-				margin-bottom: 40rpx;
-			}
-
-			.title {
-				font-weight: 800;
-				font-size: 32rpx;
-				color: #000000;
-				margin-bottom: 40rpx;
-				text-align: center;
-			}
+		.ripple-effect {
+			position: absolute;
+			width: 160rpx;
+			height: 160rpx;
+			border-radius: 50%;
+			background-color: rgba(74, 99, 228, 0.1);
+			z-index: 1;
+			animation: ripple 2s infinite;
 		}
 	}
 
-	.info {
-		background: #F6F7FC;
-		border-radius: 40rpx;
-		padding: 0 60rpx;
-		box-sizing: border-box;
-		padding-top: 50rpx;
-
-		.item {
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
-			padding-bottom: 50rpx;
-
-			.label {
-				font-weight: 500;
-				font-size: 28rpx;
-				color: #B0B0B0;
-			}
-
-			.value {
-				font-weight: 500;
-				font-size: 28rpx;
-				color: #151515;
-				flex: 1;
-				text-align: right;
-			}
-		}
-
+	.main-title {
+		font-size: 40rpx;
+		font-weight: 800;
+		color: #151515;
+		margin-bottom: 16rpx;
+		letter-spacing: 1rpx;
 	}
 
-	.desc {
-		margin: 116rpx 26rpx;
-
-		.desc-head {
-			display: flex;
-			flex-direction: row;
-			align-items: center;
-
-			.desc-icon {
-				width: 6rpx;
-				height: 28rpx;
-				background: #4A63E4;
-				border-radius: 3rpx;
-				margin-right: 24rpx;
-			}
-
-			.desc-title {
-				font-weight: bold;
-				font-size: 32rpx;
-				color: #2C2C2C;
-			}
-		}
-
-		.desc-content {
-			margin-top: 52rpx;
-
-			.content-item {
-				display: flex;
-				flex-direction: row;
-				align-items: center;
-				margin-bottom: 20rpx;
-
-				.list-icon {
-					width: 12rpx;
-					height: 12rpx;
-					background: #4A63E4;
-					border-radius: 50%;
-					margin-right: 18rpx;
-				}
-
-				.text {
-					font-weight: bold;
-					font-size: 26rpx;
-					color: #5B5B5B;
-				}
-			}
-		}
-
+	.sub-title {
+		font-size: 28rpx;
+		color: #909399;
+		margin-bottom: 60rpx;
 	}
 
-	.btn-group {
+	/* 倒计时圆环 */
+	.countdown-container {
 		display: flex;
 		flex-direction: column;
-		gap: 22rpx;
-		margin-bottom: 130rpx;
+		align-items: center;
+		margin-bottom: 40rpx;
+	}
+
+	.progress-ring {
+		position: relative;
+		width: 120px;
+		height: 120px;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+	}
+
+	.ring-svg {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+	}
+
+	.timer-text {
+		display: flex;
+		align-items: baseline;
+		justify-content: center;
+		z-index: 10;
+
+		.num {
+			font-size: 48px;
+			font-weight: bold;
+			color: #4A63E4;
+			line-height: 1;
+			font-family: DINAlternate-Bold, sans-serif; /* 如果有数字字体更好 */
+		}
+
+		.unit {
+			font-size: 24rpx;
+			color: #C0C4CC;
+			margin-left: 4rpx;
+			font-weight: 500;
+		}
+	}
+
+	.tips-text {
+		margin-top: 24rpx;
+		font-size: 26rpx;
+		color: #909399;
+		letter-spacing: 1rpx;
+	}
+
+	/* 手动操作区 */
+	.action-area {
+		margin-top: 40rpx;
+		height: 40rpx; /* 占位防止跳动 */
+
+		.manual-link {
+			font-size: 26rpx;
+			color: #4A63E4;
+			text-decoration: underline;
+			text-underline-offset: 4rpx;
+			opacity: 0.8;
+			padding: 10rpx 20rpx;
+			border-radius: 30rpx;
+			background-color: rgba(74, 99, 228, 0.05);
+		}
+	}
+
+	.footer-tip {
+		position: absolute;
+		bottom: 60rpx;
+		font-size: 24rpx;
+		color: #C0C4CC;
+	}
+
+	/* 动画定义 */
+	@keyframes popIn {
+		0% { transform: scale(0); opacity: 0; }
+		100% { transform: scale(1); opacity: 1; }
+	}
+
+	@keyframes fadeIn {
+		0% { opacity: 0; transform: translateY(20rpx); }
+		100% { opacity: 1; transform: translateY(0); }
+	}
+
+	@keyframes ripple {
+		0% { transform: scale(1); opacity: 0.6; }
+		100% { transform: scale(2.5); opacity: 0; }
 	}
 </style>

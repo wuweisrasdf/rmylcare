@@ -58,9 +58,10 @@
 
 				<!-- 母亲手机号 -->
 				<view class="form-item">
-					<u-form-item prop="motherPhone" class="custom-form-item">
+					<u-form-item prop="motherPhone"  required  class="custom-form-item">
 						<view slot="label" class="form-label">
 							<text>母亲手机号</text>
+							<text class="required-star">*</text>
 						</view>
 						<u--input v-model="formData.motherPhone" placeholder="请输入手机号" border="none" height="80"
 							:custom-style="inputStyle" @input="handleMotherPhoneInput" />
@@ -307,6 +308,11 @@
 						required: true,
 						message: '请填写母亲姓名',
 						trigger: 'blur'
+					}, {
+						min: 2,
+						max: 50,
+						message: '姓名长度必须在 2 到 50 个字符之间',
+						trigger: 'blur'
 					}],
 					motherIdType: [{
 						required: true,
@@ -337,6 +343,11 @@
 						required: true,
 						message: '请填写甲方姓名',
 						trigger: 'blur'
+					}, {
+						min: 2,
+						max: 50,
+						message: '姓名长度必须在 2 到 50 个字符之间',
+						trigger: 'blur'
 					}],
 					userIdType: [{
 						required: true,
@@ -365,15 +376,16 @@
 						trigger: 'blur'
 					}],
 					motherPhone: [{
-						validator(rule, value, callback) {
-							if (value && !/^1[3-9]\d{9}$/.test(value)) {
-								callback(new Error('请输入正确的手机号码'));
-							} else {
-								callback();
-							}
+							required: true,
+							message: '请填写电话号码',
+							trigger: 'blur'
 						},
-						trigger: 'blur'
-					}],
+						{
+							pattern: /^1[3-9]\d{9}$/,
+							message: '请输入正确的手机号码',
+							trigger: 'blur'
+						}
+					],
 					motherEmail: [{
 						type: 'email',
 						message: '请输入正确的邮箱地址',
@@ -555,7 +567,7 @@
 						});
 						return;
 					}
-					
+
 					// if (order.signDate) { // order.signDate 这个不靠谱
 					// 	uni.showToast({
 					// 		title: '该订单已签约',

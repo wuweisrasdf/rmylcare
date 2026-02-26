@@ -16,63 +16,38 @@
 				是一家以提供全面医疗健康管理服务为核心业务的专业医疗管理企业。公司致力于整合优质医疗资源，打造高品质的医疗服务平台，为广大人民群众提供全方位、全周期的医疗服务。业务领域方面，人民医疗涵盖基因检测、医疗健康等相关管理、运营及咨询的医疗服务输出。
 			</view>
 
-			<!-- 两个按钮卡片 -->
-<!-- 			<view class="btn-container">
-				<view class="btn-card" @click="goToPromotion(1)">
-					<text class="btn-title">保障计划 Pro</text>
-					<view class="btn-content">
-						<image src="/static/icons/wave.png" class="btn-icon" mode="aspectFit" />
-						<text class="btn-text">成人优因</text>
-					</view>
-				</view>
-
-				<view class="btn-card" @click="goToPromotion(2)">
-					<text class="btn-title">唤醒肌肤神奇之旅</text>
-					<view class="btn-content">
-						<image src="/static/icons/molecule.png" class="btn-icon" mode="aspectFit" />
-						<text class="btn-text">细胞囊泡</text>
-					</view>
-				</view>
-				
-				<view class="btn-card" @click="goToPromotion(3)">
-						<text class="btn-title">胎盘冻干粉</text>
-						<view class="btn-content">
-							<image src="/static/icons/molecule.png" class="btn-icon" mode="aspectFit" />
-							<text class="btn-text">胎盘冻干粉</text>
-						</view>
-					</view>
-			</view> -->
 			
-			<!-- <button @click="toSign" style="margin-top: 50rpx;">开始签约</button> -->
+		<!-- 	<button @click="toSign" style="margin-top: 50rpx;">测试签约</button> -->
 			
 			<view class="btn-container">
 			    <!-- 第一行：原有的两个卡片 -->
 			    <view class="btn-row">
+					<view class="btn-card" @click="goToPromotion(3)">
+					    <text class="btn-title">1V1私人订制</text>
+					    <view class="btn-content">
+					        <!-- 请替换为实际的图标路径 -->
+					        <image src="/static/icons/molecule.png" class="btn-icon" mode="aspectFit" />
+					        <text class="btn-text">胎盘冻干粉</text>
+					    </view>
+					</view>
+					
 			        <view class="btn-card" @click="goToPromotion(1)">
-			            <text class="btn-title">保障计划 Pro</text>
+			            <text class="btn-title">评估个人患病风险</text>
 			            <view class="btn-content">
 			                <image src="/static/icons/wave.png" class="btn-icon" mode="aspectFit" />
-			                <text class="btn-text">成人优因</text>
+			                <text class="btn-text">基因检测</text>
 			            </view>
 			        </view>
 			
+			    </view>
+			
+			    <!-- 第二行：新增的卡片 (左对齐) -->
+			    <view class="btn-row single-card-row">
 			        <view class="btn-card" @click="goToPromotion(2)">
 			            <text class="btn-title">唤醒肌肤神奇之旅</text>
 			            <view class="btn-content">
 			                <image src="/static/icons/molecule.png" class="btn-icon" mode="aspectFit" />
 			                <text class="btn-text">细胞囊泡</text>
-			            </view>
-			        </view>
-			    </view>
-			
-			    <!-- 第二行：新增的卡片 (左对齐) -->
-			    <view class="btn-row single-card-row">
-			        <view class="btn-card" @click="goToPromotion(3)">
-			            <text class="btn-title">紫河车 古老的智慧</text>
-			            <view class="btn-content">
-			                <!-- 请替换为实际的图标路径 -->
-			                <image src="/static/icons/molecule.png" class="btn-icon" mode="aspectFit" />
-			                <text class="btn-text">胎盘冻干粉</text>
 			            </view>
 			        </view>
 			    </view>

@@ -66,8 +66,8 @@
 				</view>
 				<view class="tips-content">
 					<text>• 点击上方卡片可查看协议详情</text>
-					<text>• 建议在WiFi环境下查看，协议文件可能较大</text>
 					<text>• 如需下载保存，请在预览页面操作</text>
+					<text>• 客服电话：010-85795849</text>
 				</view>
 			</view>
 		</view>

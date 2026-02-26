@@ -64,6 +64,12 @@
 				</view>
 			</view>
 		</view>
+		
+		<view class="cancel-btn" v-if="currentStatusId >= 8">
+			<u-button :custom-style="cancelBtnStyle" @click="unbindAgreement">
+				解除协议
+			</u-button>
+		</view>
 
 		<view class="list-wrap order-list">
 			<view class="order-list-title">
@@ -151,15 +157,15 @@
 				</view>
 				<view class="card-arrow"></view>
 			</view>
-
-			<view class="action-card unbind-agreement" @click="unbindAgreement" v-if="currentStatusId >= 8">
-				<!-- <view class="action-card unbind-agreement" @click="unbindAgreement"> -->
-				<view class="card-content">
-					<text class="card-title">协议解除</text>
-					<text class="card-desc">申请协议解除和退费</text>
+			
+			<!-- 	<view class="action-card unbind-agreement" @click="unbindAgreement" v-if="currentStatusId >= 8">
+					<view class="card-content">
+						<text class="card-title">协议解除</text>
+						<text class="card-desc">申请协议解除和退费</text>
+					</view>
+					<view class="card-arrow"></view>
 				</view>
-				<view class="card-arrow"></view>
-			</view>
+			 -->
 
 			<view class="action-card refund-progress" @click="refundProgress" v-if="currentStatusId >= 9 && info.priceOut > 0">
 				<view class="card-content">
@@ -179,6 +185,10 @@
 				<view class="content-item">
 					<view class="list-icon"></view>
 					<text class="text">业务进度会随时变更，如有问题请联系客服。</text>
+				</view>
+				<view class="content-item">
+					<view class="list-icon"></view>
+					<text class="text">客服电话：010-85795849</text>
 				</view>
 			</view>
 
@@ -226,6 +236,16 @@
 					height: '98rpx',
 					borderRadius: '49rpx',
 					backgroundColor: '#4A63E4',
+					color: '#FFFFFF',
+					fontSize: '32rpx',
+					fontWeight: 'bold',
+				};
+			},
+			cancelBtnStyle(){
+				return {
+					height: '98rpx',
+					borderRadius: '49rpx',
+					backgroundColor: '#f9ae3d',
 					color: '#FFFFFF',
 					fontSize: '32rpx',
 					fontWeight: 'bold',
@@ -974,5 +994,9 @@
 				display: block !important;
 			}
 		}
+	}
+	
+	.cancel-btn{
+		margin: 70rpx 40rpx 0;
 	}
 </style>

@@ -193,7 +193,7 @@
 							// 是从扫码进入的 → 跳签约页
 							uni.removeStorageSync('FROM_SCAN');
 							uni.redirectTo({
-								url: `/pages/index/intro`
+								url: '/pages/index/flow'
 							});
 						} else {
 							// 普通打开 → 跳首页

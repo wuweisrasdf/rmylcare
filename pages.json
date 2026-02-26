@@ -96,6 +96,12 @@
 				"navigationBarTitleText": "选择医院"
 			}
 		},
+		{
+			"path": "pages/middle/esign",
+			"style": {
+				"navigationBarTitleText": "刷脸加载"
+			}
+		},
 
 
 		// 订单
@@ -181,6 +187,12 @@
 			"path": "pages/me/me",
 			"style": {
 				"navigationBarTitleText": "我的"
+			}
+		},
+		{
+			"path": "pages/index/flow",
+			"style": {
+				"navigationBarTitleText": "扫码签约流程"
 			}
 		}
 

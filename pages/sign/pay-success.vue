@@ -45,7 +45,7 @@
 					</view>
 					<view class="content-item">
 						<view class="list-icon"></view>
-						<text class="text">胎盘接受后将实时接收更新状态送</text>
+						<text class="text">胎盘接收后将实时接收更新状态</text>
 					</view>
 					<view class="content-item">
 						<view class="list-icon"></view>

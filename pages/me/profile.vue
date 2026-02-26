@@ -359,8 +359,9 @@ export default {
         uni.showToast({ title: '请输入邮箱', icon: 'none' });
         return;
       }
-      // 邮箱正则（简化版）
-      const emailReg = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      // 邮箱正则
+      //const emailReg = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // （简化版）
+	  const emailReg = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
       if (!emailReg.test(val)) {
         uni.showToast({ title: '邮箱格式不正确', icon: 'none' });
         return;
