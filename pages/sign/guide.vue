@@ -16,7 +16,7 @@
 
 			<view class="steps">
 				<!-- 步骤1 -->
-				<view class="step-item">
+				<view class="step-item" @click="handleStart">
 					<view class="step-icon">
 						<image src="/static/icons/guide-edit.png" mode="widthFix"></image>
 					</view>

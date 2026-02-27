@@ -61,7 +61,7 @@
 		<!-- 底部功能按钮区域 -->
 		<view class="bottom-buttons">
 			<view class="button-item">
-				<text class="button-number">24/7</text>
+				<text class="button-number">工作日</text>
 				<text class="button-label">在线服务</text>
 			</view>
 			<view class="button-item">

@@ -69,11 +69,11 @@
 		data() {
 			return {
 				orderId: '',
-				countdown: 5, // 倒计时秒数
+				countdown: 2, // 倒计时秒数
 				timer: null,
 				isAutoPaying: false, // 是否正在自动流程中
 				payError: false,     // 标记是否发生错误
-				totalTime: 5
+				totalTime: 2
 			};
 		},
 		computed: {

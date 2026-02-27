@@ -8,7 +8,6 @@
 			<view class="info">
 				<view class="item">
 					<text class="label">退款金额</text>
-					<!-- <text class="refund-btn">退款中</text> -->
 				</view>
 				<view class="item">
 					<text class="label price">￥{{ orderReturn.AmountReceived || 0 }}</text>
@@ -32,7 +31,6 @@
 					<text class="label">退款方式</text>
 					<text class="value">原路返回</text>
 				</view>
-
 			</view>
 		</view>
 
@@ -48,6 +46,7 @@
 		<view class="desc">
 			<text class="text">提示：退款通常在审批通过后的10个工作日内到账。</text>
 			<text class="text">如有疑问，请联系客服。</text>
+			<text class="text">客服电话：010-85795849</text>
 		</view>
 	</view>
 </template>
@@ -83,7 +82,7 @@
 					height: '98rpx',
 					borderRadius: '49rpx',
 					border: '2px solid rgba(142,142,142,0.5)',
-					backgroundColor: 'transparent', // 透明背景
+					backgroundColor: 'transparent',
 					fontWeight: 'bold',
 					fontSize: '32rpx',
 					color: '#3D3D3D'
@@ -98,7 +97,7 @@
 		},
 		data() {
 			return {
-				orderId: '', // 订单id
+				orderId: '',
 				orderReturn: {}
 			};
 		},
@@ -114,12 +113,6 @@
 				}
 				
 				this.orderReturn = res.orderReturn || {};
-
-				/*
-				退款单号 = 协议号 ProCode
-				退款金额 = 实际收款 AmountReceived
-				申请时间 = 协议解除时间 StatusDate
-				*/
 			},
 			viewOrder() {
 				uni.redirectTo({
@@ -199,33 +192,20 @@
 				background: #161421;
 				opacity: 0.1;
 			}
-
 		}
 	}
-
-	.refund-btn {
-		background-image: url('/static/images/refund-btn.png');
-		background-size: 100% 100%;
-		font-weight: 500;
-		font-size: 26rpx;
-		color: #FFFFFF;
-		width: 162rpx;
-		height: 54rpx;
-		text-align: center;
-		line-height: 54rpx;
-	}
-
-
 
 	.desc {
 		padding: 70rpx 30rpx;
 		text-align: left;
 
 		.text {
+			display: block; /* 【关键修改】设置为块级元素，强制独占一行 */
 			font-weight: bold;
 			font-size: 28rpx;
 			color: #979797;
-			line-height: 54rpx;
+			line-height: 40rpx;
+			margin-bottom: 8rpx; /* 可选：增加行间距，让排版更舒适 */
 		}
 	}
 

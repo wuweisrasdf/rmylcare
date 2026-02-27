@@ -65,9 +65,13 @@
 			</view>
 		</view>
 		
-		<view class="cancel-btn" v-if="currentStatusId >= 8">
-			<u-button :custom-style="cancelBtnStyle" @click="unbindAgreement">
-				解除协议
+		<view class="cancel-btn" v-if="(currentStatusId == 8) || (currentStatusId >= 9 && info.priceOut > 0)">
+			<u-button :custom-style="cancelBtnStyle" @click="unbindAgreement" v-if="currentStatusId == 8">
+				协议解除
+			</u-button>
+			
+			<u-button :custom-style="cancelBtnStyle" @click="refundProgress" v-if="currentStatusId >= 9 && info.priceOut > 0">
+				退款进度
 			</u-button>
 		</view>
 
@@ -96,7 +100,7 @@
 									</view>
 									<view class="bottom-line"></view>
 									<view class="date">
-										{{item.StatusDate || ''}}
+										{{item.StatusDate | formatDate}}
 									</view>
 								</view>
 							</view>
@@ -116,7 +120,7 @@
 									</view>
 									<view class="bottom-line"></view>
 									<view class="date">
-										{{item.StatusDate || '' || ''}}
+										{{item.StatusDate | formatDate}}
 									</view>
 								</view>
 							</view>
@@ -136,7 +140,7 @@
 									</view>
 									<view class="bottom-line"></view>
 									<view class="date">
-										{{item.StatusDate || ''}}
+										{{item.StatusDate | formatDate}}
 									</view>
 								</view>
 							</view>
@@ -158,14 +162,14 @@
 				<view class="card-arrow"></view>
 			</view>
 			
-			<!-- 	<view class="action-card unbind-agreement" @click="unbindAgreement" v-if="currentStatusId >= 8">
-					<view class="card-content">
-						<text class="card-title">协议解除</text>
-						<text class="card-desc">申请协议解除和退费</text>
-					</view>
-					<view class="card-arrow"></view>
+			<view class="action-card unbind-agreement" @click="unbindAgreement" v-if="currentStatusId == 8">
+				<view class="card-content">
+					<text class="card-title">协议解除</text>
+					<text class="card-desc">申请协议解除和退费</text>
 				</view>
-			 -->
+				<view class="card-arrow"></view>
+			</view>
+			
 
 			<view class="action-card refund-progress" @click="refundProgress" v-if="currentStatusId >= 9 && info.priceOut > 0">
 				<view class="card-content">
@@ -196,11 +200,11 @@
 
 		
 		<!-- 底部按钮 - 修改为悬浮底部 -->
-		<view class="btn-group" v-if="(info.proStatus == 2) || (info.proStatus == 1 && info.orderStatus==11)">
+		<view class="btn-group" v-if="(info.proStatus == 2) || (info.proStatus == 1 && info.orderStatus==11  && currentStatusId < 8)">
 		    <u-button :custom-style="nextBtnStyle" @click="toSign" v-if="info.proStatus == 2">
 		        继续编辑
 		    </u-button>
-		    <u-button :custom-style="nextBtnStyle" @click="toPay" v-if="info.proStatus == 1 && info.orderStatus==11">
+		    <u-button :custom-style="nextBtnStyle" @click="toPay" v-if="info.proStatus == 1 && info.orderStatus==11 && currentStatusId < 8">
 		        去支付
 		    </u-button>
 		</view>
@@ -343,6 +347,24 @@
 
 				const option = options.find(item => String(item.value) === String(value));
 				return option ? option.label : '';
+			},
+			formatDate(value) {
+			        if (!value) return '';
+			        
+			        const date = new Date(value);
+			        
+			        // 检查日期是否有效
+			        if (isNaN(date.getTime())) {
+			            // 如果解析失败，尝试直接截取字符串前10位作为兜底
+			            return String(value).substring(0, 10);
+			        }
+			
+			        const year = date.getFullYear();
+			        // 月份需要 +1，且补零
+			        const month = String(date.getMonth() + 1).padStart(2, '0');
+			        const day = String(date.getDate()).padStart(2, '0');
+			
+			        return `${year}-${month}-${day}`;
 			}
 		},
 		data() {

@@ -90,7 +90,7 @@
 		background-color: #ffffff;
 		padding: 0 26rpx;
 		min-height: 100vh;
-		padding-bottom: 100rpx;
+		padding-bottom: 170rpx;
 	}
 
 	/* 多张图片展示样式 - 无间距 */
@@ -105,16 +105,20 @@
 		// 移除所有间距
 		line-height: 0; // 防止图片间出现空白
 		font-size: 0; // 防止图片间出现空白
-
-		// 移除边框圆角和阴影
-		// border-radius: 16rpx;
-		// overflow: hidden;
-		// box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
 	}
 
 	.btn-group {
-		margin-top: 50rpx;
+		position: fixed;
+		background-color: #ffffff;
+		left:0;
+		right:0;
+		bottom:0;
+		z-index: 999;
+		box-shadow: 0 -4rpx 1rpx rgba(0, 0, 0, 0.05);
+		padding: 30rpx 26rpx;
+		//padding-bottom: calc(24rpx + env(safe-area-inset-bottom));
 		display: flex;
 		justify-content: center;
+		box-sizing: border-box;
 	}
 </style>

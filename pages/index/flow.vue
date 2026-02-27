@@ -32,7 +32,8 @@
 		data() {
 			return {
 				loading: true,
-				salesId: null
+				salesId: null,
+				currentStatusId: null
 			}
 		},
 		onLoad(){
@@ -42,6 +43,22 @@
 			}
 		},
 		methods: {
+			// 获取订单流程ID
+			getCurrentStatusId(order) {
+				const progress = order?.orderProgress;
+				if (!Array.isArray(progress) || progress.length === 0) {
+					return 0; // 默认为未签约
+				}
+				const lastStep = progress[progress.length - 1];
+				console.log('lastStep', lastStep);
+				let stepid = 0
+				if (lastStep.id) {
+					stepid = Number(lastStep.id)
+				} else if (lastStep.Id) {
+					stepid = Number(lastStep.Id)
+				}
+				return stepid;
+			},
 			// 检查订单状态
 			async checkOrderStatus() {
 				this.loading = true;
@@ -73,9 +90,10 @@
 			
 					const latestOrder = mySalesOrders[0];
 					console.log('最新订单:', latestOrder);
+					const lastStatusId = this.getCurrentStatusId(latestOrder);
 			
 					// 3. 判断状态
-					if ((latestOrder.proStatus == 2) || (latestOrder.proStatus == 1 && latestOrder.orderStatus==11)) {
+					if ((latestOrder.proStatus == 2) || (latestOrder.proStatus == 1 && latestOrder.orderStatus==11 && lastStatusId < 8)) {
 						// 发现未完成订单
 						uni.showModal({
 							title: '提示',

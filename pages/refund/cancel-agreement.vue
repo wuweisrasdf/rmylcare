@@ -41,7 +41,7 @@
 		</view>
 
 		<view class="desc">
-			<text class="text">提交后，您的解除协议将生效，退款将在7个工作日内处理。</text>
+			<text class="text">提交后，您的解除协议将生效，退款将在10个工作日内处理。</text>
 		</view>
 	</view>
 </template>

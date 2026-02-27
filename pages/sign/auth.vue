@@ -255,7 +255,7 @@
 		display: flex;
 		flex-direction: column;
 		min-height: 100vh;
-		background-color: #F5F5F5;
+		background-color: #FFFFFF;
 		box-sizing: border-box;
 		/* 底部留白给按钮 */
 		//padding-bottom: 180rpx; 
