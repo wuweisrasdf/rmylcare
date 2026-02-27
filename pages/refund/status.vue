@@ -44,10 +44,27 @@
 		</view>
 
 		<view class="desc">
-			<text class="text">提示：退款通常在审批通过后的10个工作日内到账。</text>
-			<text class="text">如有疑问，请联系客服。</text>
-			<text class="text">客服电话：010-85795849</text>
+			<view class="desc-head">
+				<view class="desc-icon"></view>
+				<text class="desc-title">温馨提示</text>
+			</view>
+			<view class="desc-content">
+				<view class="content-item">
+					<view class="list-icon"></view>
+					<text class="text">退款通常在审批通过后的10个工作日内到账。</text>
+				</view>
+				<view class="content-item">
+					<view class="list-icon"></view>
+					<text class="text">如有问题请联系客服。</text>
+				</view>
+				<view class="content-item">
+					<view class="list-icon"></view>
+					<text class="text">客服电话：010-85795849</text>
+				</view>
+			</view>
+
 		</view>
+
 	</view>
 </template>
 
@@ -137,6 +154,7 @@
 		position: relative;
 		display: flex;
 		flex-direction: column;
+		padding-bottom: 120rpx;
 	}
 
 	.content-container {
@@ -196,17 +214,53 @@
 	}
 
 	.desc {
-		padding: 70rpx 30rpx;
-		text-align: left;
+		margin: 70rpx 26rpx 0;
 
-		.text {
-			display: block; /* 【关键修改】设置为块级元素，强制独占一行 */
-			font-weight: bold;
-			font-size: 28rpx;
-			color: #979797;
-			line-height: 40rpx;
-			margin-bottom: 8rpx; /* 可选：增加行间距，让排版更舒适 */
+		.desc-head {
+			display: flex;
+			flex-direction: row;
+			align-items: center;
+
+			.desc-icon {
+				width: 6rpx;
+				height: 28rpx;
+				background: #4A63E4;
+				border-radius: 3rpx;
+				margin-right: 24rpx;
+			}
+
+			.desc-title {
+				font-weight: bold;
+				font-size: 32rpx;
+				color: #2C2C2C;
+			}
 		}
+
+		.desc-content {
+			margin-top: 52rpx;
+
+			.content-item {
+				display: flex;
+				flex-direction: row;
+				align-items: center;
+
+				.list-icon {
+					width: 12rpx;
+					height: 12rpx;
+					background: #4A63E4;
+					border-radius: 50%;
+					margin-right: 18rpx;
+					margin-left: 24rpx;
+				}
+
+				.text {
+					font-weight: bold;
+					font-size: 26rpx;
+					color: #5B5B5B;
+				}
+			}
+		}
+
 	}
 
 	.btn-group {
