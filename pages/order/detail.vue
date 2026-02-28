@@ -279,25 +279,25 @@
 			    }
 			
 			    // 2. 从后往前遍历 (因为最新的步骤通常在后面)
-			    // 找到第一个 StatusDate 不为空、不为 null、且不仅仅是空格的项
+			    // 找到第一个 Status 为 "1" (已完成) 的项
 			    for (let i = progress.length - 1; i >= 0; i--) {
 			        const step = progress[i];
 			        
 			        // 兼容 id 或 Id 字段
 			        const stepIdVal = step.id || step.Id;
 			        
-			        // 获取日期字符串，并去除首尾空格
-			        const dateStr = (step.StatusDate || '').trim();
+			        // 获取 Status 字段，转为字符串并去除空格，防止 " 1 " 这种情况
+			        const statusVal = String(step.Status || '').trim();
 			
-			        // 核心判断：日期必须有效
-			        if (dateStr !== '') {
-			            // 找到了最新的有效步骤，返回其 ID
+			        // 核心判断：Status 必须为 "1" (代表完成)
+			        if (statusVal === '1') {
+			            // 找到了最后一个已完成的步骤，返回其 ID
 			            return Number(stepIdVal);
 			        }
 			    }
 			
-			    // 3. 如果遍历完所有项，发现所有 StatusDate 都是空的
-			    // 返回 0 或者你希望的默认状态 (例如返回第一项的 ID，或者 0)
+			    // 3. 如果遍历完所有项，没有发现任何 Status 为 "1" 的步骤
+			    // 返回 0 (代表未开始或无有效进度)
 			    return 0; 
 			}
 		},
