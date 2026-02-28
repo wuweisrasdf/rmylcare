@@ -255,20 +255,50 @@
 					fontWeight: 'bold',
 				};
 			},
+			// currentStatusId() {
+			// 	const progress = this.info?.orderProgress;
+			// 	if (!Array.isArray(progress) || progress.length === 0) {
+			// 		return 0; // 默认为未签约
+			// 	}
+			// 	const lastStep = progress[progress.length - 1];
+			// 	console.log('lastStep', lastStep);
+			// 	let stepid = 0
+			// 	if (lastStep.id) {
+			// 		stepid = Number(lastStep.id)
+			// 	} else if (lastStep.Id) {
+			// 		stepid = Number(lastStep.Id)
+			// 	}
+			// 	return stepid;
+			// }
 			currentStatusId() {
-				const progress = this.info?.orderProgress;
-				if (!Array.isArray(progress) || progress.length === 0) {
-					return 0; // 默认为未签约
-				}
-				const lastStep = progress[progress.length - 1];
-				console.log('lastStep', lastStep);
-				let stepid = 0
-				if (lastStep.id) {
-					stepid = Number(lastStep.id)
-				} else if (lastStep.Id) {
-					stepid = Number(lastStep.Id)
-				}
-				return stepid;
+			    const progress = this.info?.orderProgress;
+			    
+			    // 1. 基础校验：必须是数组且不为空
+			    if (!Array.isArray(progress) || progress.length === 0) {
+			        return 0; 
+			    }
+			
+			    // 2. 从后往前遍历 (因为最新的步骤通常在后面)
+			    // 找到第一个 StatusDate 不为空、不为 null、且不仅仅是空格的项
+			    for (let i = progress.length - 1; i >= 0; i--) {
+			        const step = progress[i];
+			        
+			        // 兼容 id 或 Id 字段
+			        const stepIdVal = step.id || step.Id;
+			        
+			        // 获取日期字符串，并去除首尾空格
+			        const dateStr = (step.StatusDate || '').trim();
+			
+			        // 核心判断：日期必须有效
+			        if (dateStr !== '') {
+			            // 找到了最新的有效步骤，返回其 ID
+			            return Number(stepIdVal);
+			        }
+			    }
+			
+			    // 3. 如果遍历完所有项，发现所有 StatusDate 都是空的
+			    // 返回 0 或者你希望的默认状态 (例如返回第一项的 ID，或者 0)
+			    return 0; 
 			}
 		},
 		filters: {

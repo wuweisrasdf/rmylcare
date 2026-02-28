@@ -14,7 +14,7 @@
 
 		<view class="btn-group">
 			<u-button class="next-btn" :custom-style="nextBtnStyle" @click="handleNext">
-				下一步
+				开始签约
 			</u-button>
 		</view>
 	</view>
