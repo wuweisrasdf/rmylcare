@@ -37,7 +37,7 @@
 					<view class="info-row">
 						<view class="field">
 							<text class="label">签约日期:</text>
-							<text class="value">{{ item.signDate }}</text>
+							<text class="value">{{ item.signDate | formatDate }}</text>
 						</view>
 						<!-- 这里可以留空或放其他字段 -->
 						<view class="field"></view>
@@ -77,7 +77,24 @@
 			TabBar
 		},
 		filters: {
-
+			formatDate(value) {
+			        if (!value) return '';
+			        
+			        const date = new Date(value);
+			        
+			        // 检查日期是否有效
+			        if (isNaN(date.getTime())) {
+			            // 如果解析失败，尝试直接截取字符串前10位作为兜底
+			            return String(value).substring(0, 10);
+			        }
+			
+			        const year = date.getFullYear();
+			        // 月份需要 +1，且补零
+			        const month = String(date.getMonth() + 1).padStart(2, '0');
+			        const day = String(date.getDate()).padStart(2, '0');
+			
+			        return `${year}-${month}-${day}`;
+			}
 		},
 		computed: {
 			...mapState({

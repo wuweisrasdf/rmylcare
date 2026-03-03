@@ -70,7 +70,7 @@
 				协议解除
 			</u-button>
 			
-			<u-button :custom-style="cancelBtnStyle" @click="refundProgress" v-if="currentStatusId >= 9 && info.priceOut > 0">
+			<u-button :custom-style="cancelBtnStyle" @click="refundProgress" v-if="currentStatusId >= 9 && info.priceOut > 0 && info.payDate">
 				退款进度
 			</u-button>
 		</view>
@@ -171,7 +171,7 @@
 			</view>
 			
 
-			<view class="action-card refund-progress" @click="refundProgress" v-if="currentStatusId >= 9 && info.priceOut > 0">
+			<view class="action-card refund-progress" @click="refundProgress" v-if="currentStatusId >= 9 && info.priceOut > 0 && info.payDate">
 				<view class="card-content">
 					<text class="card-title">退款进度</text>
 					<text class="card-desc">查看已退款的进度</text>
@@ -249,7 +249,7 @@
 				return {
 					height: '98rpx',
 					borderRadius: '49rpx',
-					backgroundColor: '#f9ae3d',
+					backgroundColor: '#4A63E4',
 					color: '#FFFFFF',
 					fontSize: '32rpx',
 					fontWeight: 'bold',

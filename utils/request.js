@@ -42,8 +42,8 @@ function handleError(result, options) {
   if (options.toast !== false) {
 	let title = msg;
 	// 对外隐藏服务器错误
-	if (code == 500) {
-		title = '服务器开小差了';
+	if (code == 500) { //这是业务代码500，不是http请求500
+		//title = '服务器开小差了';
 	}else if (code == 401) {
 		title = '登录已过期，重新登录';
 	}
@@ -81,10 +81,13 @@ export default {
         options.data = options.data || this.common.data
         options.method = options.method || this.common.method
         options.dataType = options.dataType || this.common.dataType
-		options.toast = options.toast || this.common.toast
 
 		if (typeof(options.useToken) == 'undefined'){
 			options.useToken = this.common.useToken
+		}
+		
+		if (typeof(options.toast) == 'undefined'){
+			options.toast = this.common.toast
 		}
 		
         // 请求

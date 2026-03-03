@@ -16,7 +16,7 @@
 					<text class="value">{{ info.productName }}</text>
 				</view>
 				
-				<view class="item">
+				<view class="item" v-if="orderInfo.payDate">
 					<text class="label">签约金额</text>
 					<text class="value">￥{{ info.price }}</text>
 				</view>
@@ -39,10 +39,29 @@
 				取消
 			</u-button>
 		</view>
-
+		
 		<view class="desc">
-			<text class="text">提交后，您的解除协议将生效，退款将在10个工作日内处理。</text>
+			<view class="desc-head">
+				<view class="desc-icon"></view>
+				<text class="desc-title">温馨提示</text>
+			</view>
+			<view class="desc-content">
+				<view class="content-item" v-if="orderInfo.payDate">
+					<view class="list-icon"></view>
+					<text class="text">提交后，您的解除协议将生效，退款将在10个工作日内处理。</text>
+				</view>
+				<view class="content-item">
+					<view class="list-icon"></view>
+					<text class="text">如有问题请联系客服。</text>
+				</view>
+				<view class="content-item">
+					<view class="list-icon"></view>
+					<text class="text">客服电话：010-85795849</text>
+				</view>
+			</view>
+		
 		</view>
+
 	</view>
 </template>
 
@@ -243,6 +262,7 @@
 		position: relative;
 		display: flex;
 		flex-direction: column;
+		padding-bottom: 120rpx;
 	}
 	
 	.content-container {
@@ -327,14 +347,53 @@
 
 
 	.desc {
-		margin: 70rpx auto;
-		text-align: center;
-
-		.text {
-			font-weight: 500;
-			font-size: 24rpx;
-			color: #2449FF;
+		margin: 70rpx 26rpx 0;
+	
+		.desc-head {
+			display: flex;
+			flex-direction: row;
+			align-items: center;
+	
+			.desc-icon {
+				width: 6rpx;
+				height: 28rpx;
+				background: #4A63E4;
+				border-radius: 3rpx;
+				margin-right: 24rpx;
+			}
+	
+			.desc-title {
+				font-weight: bold;
+				font-size: 32rpx;
+				color: #2C2C2C;
+			}
 		}
+	
+		.desc-content {
+			margin-top: 52rpx;
+	
+			.content-item {
+				display: flex;
+				flex-direction: row;
+				align-items: center;
+	
+				.list-icon {
+					width: 12rpx;
+					height: 12rpx;
+					background: #4A63E4;
+					border-radius: 50%;
+					margin-right: 18rpx;
+					margin-left: 24rpx;
+				}
+	
+				.text {
+					font-weight: bold;
+					font-size: 26rpx;
+					color: #5B5B5B;
+				}
+			}
+		}
+	
 	}
 
 	.btn-group {

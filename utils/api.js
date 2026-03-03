@@ -89,3 +89,6 @@ export const paySuccess = params => { return $H.post(`${$C.baseUrl}/system/payme
 
 // 获取医院列表
 export const getHospitalList = () => { return $H.get(`${$C.baseUrl}/system/fdp/getHospital`) };
+
+// 验证销售人员二维码
+export const checkwxqrcode = params => { return $H.post(`${$C.baseUrl}/system/esign/checkwxqrcode`, params, { toast: false }) };

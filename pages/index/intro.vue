@@ -4,10 +4,10 @@
 		<!-- 多张图片展示 - 无间距，不预览 -->
 		<view class="detail-images" v-if="detailImages.length > 0">
 			<view class="image-item" v-for="(img, index) in detailImages" :key="index">
-				<u-image :src="img" width="100%" height="auto" mode="widthFix" :lazy-load="true">
-					<template v-slot:loading>
-						<u-loading-icon color="red"></u-loading-icon>
-					</template>
+				<u-image :src="img" width="100%" height="auto" mode="widthFix" :showLoading="true">
+						<template v-slot:loading>
+							<view class="loading-placeholder">加载中...</view>
+						</template>
 				</u-image>
 			</view>
 		</view>
@@ -120,5 +120,14 @@
 		display: flex;
 		justify-content: center;
 		box-sizing: border-box;
+	}
+	
+	.loading-placeholder {
+		height: 300rpx;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		color: #999;
+		background-color: #f5f5f5;
 	}
 </style>
