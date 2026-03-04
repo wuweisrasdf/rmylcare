@@ -161,9 +161,12 @@
 					}
 				} catch (err) {
 					console.log('err', err);
+					console.log(`encryptedData=${encryptedData}&code=${code}&iv=${iv}&code2=${code2}`)
+					let msg = err.message || '网络错误'
 					uni.showToast({
-						title: '网络错误',
-						icon: 'none'
+						title: msg,
+						icon: 'none',
+						duration: 5000
 					});
 				} finally {
 					this.isRedirecting = false;

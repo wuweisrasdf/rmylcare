@@ -4,7 +4,7 @@ import $H from './request.js';
 // ========== 认证与用户相关 ==========
 
 // 微信手机号一键登录
-export const getwxphone = params => { return $H.post(`${$C.baseUrl}/system/esign/getwxphone`, params, { useToken: false }) };
+export const getwxphone = params => { return $H.post(`${$C.baseUrl}/system/esign/getwxphone`, params, { useToken: false , toast: false }) };
 
 // 账号密码登录
 export const loginPwd = params => { return $H.post(`${$C.baseUrl}/login`, params, { useToken: false }) };

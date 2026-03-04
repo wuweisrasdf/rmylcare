@@ -23,7 +23,7 @@
 
 				<view class="item">
 					<text class="label">申请时间</text>
-					<text class="value">{{ orderReturn.StatusDate || '' }}</text>
+					<text class="value">{{ orderReturn.StatusDate | formatDate }}</text>
 				</view>
 				<view class="bottom-line"></view>
 
@@ -75,6 +75,26 @@
 	} from 'vuex'
 
 	export default {
+		filters:{
+			formatDate(value) {
+			        if (!value) return '';
+			        
+			        const date = new Date(value);
+			        
+			        // 检查日期是否有效
+			        if (isNaN(date.getTime())) {
+			            // 如果解析失败，尝试直接截取字符串前10位作为兜底
+			            return String(value).substring(0, 10);
+			        }
+			
+			        const year = date.getFullYear();
+			        // 月份需要 +1，且补零
+			        const month = String(date.getMonth() + 1).padStart(2, '0');
+			        const day = String(date.getDate()).padStart(2, '0');
+			
+			        return `${year}-${month}-${day}`;
+			}
+		},
 		computed: {
 			...mapState({
 				user: state => state.user,
