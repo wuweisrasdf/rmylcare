@@ -173,14 +173,14 @@
 				})
 			},
 			async getList() {
-				uni.showLoading({
-					title: '数据加载中'
-				})
+				// uni.showLoading({
+				// 	title: '数据加载中'
+				// })
 
 				try {
 					const res = await api.getFdpOrderListForUser(this.user.userId,null,null);
 					if (res.code !== 200) {
-						uni.hideLoading();
+						//uni.hideLoading();
 						uni.showToast({
 							title: res.msg || '请求失败',
 							icon: 'none'
@@ -217,14 +217,14 @@
 					}
 				} catch (error) {
 					console.error('请求出错:', error);
-					uni.hideLoading();
+					//uni.hideLoading();
 
-					uni.showToast({
-						title: '网络错误，请重试',
-						icon: 'none'
-					});
+					// uni.showToast({
+					// 	title: '网络错误，请重试',
+					// 	icon: 'none'
+					// });
 				}finally{
-					uni.hideLoading();
+					//uni.hideLoading();
 				}
 			}
 
