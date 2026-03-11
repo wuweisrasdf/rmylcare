@@ -16,7 +16,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONArray;
+import com.alibaba.fastjson2.JSONObject;
 import com.healthcare.common.annotation.Log;
+import com.healthcare.common.config.orderSystemConfig;
 import com.healthcare.common.core.controller.BaseController;
 import com.healthcare.common.core.domain.AjaxResult;
 import com.healthcare.common.enums.BusinessType;
@@ -27,6 +32,7 @@ import com.healthcare.system.service.IHmOrderFdpService;
 
 import io.swagger.annotations.ApiOperation;
 
+import com.healthcare.common.utils.OrderSystemUtils;
 import com.healthcare.common.utils.poi.ExcelUtil;
 import com.healthcare.common.core.page.TableDataInfo;
 
@@ -45,6 +51,9 @@ public class HmOrderFdpReturnController extends BaseController
     
     @Autowired
     private IHmOrderFdpService hmOrderFdpService;
+    
+    @Autowired
+	private orderSystemConfig orderSystemConfig;
 
     /**
      * 查询冻干粉订单退款列表
@@ -108,10 +117,11 @@ public class HmOrderFdpReturnController extends BaseController
     
     /**
      * 查询冻干粉订单退款
+     * @throws Exception 
      */
     @ApiOperation("查询冻干粉订单退款")
     @PostMapping("/list4order")
-    public AjaxResult list4order(@RequestBody HmOrderFdpReturn hmOrderFdpReturn)
+    public AjaxResult list4order(@RequestBody HmOrderFdpReturn hmOrderFdpReturn) throws Exception
     {
     	SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     	AjaxResult ajax = AjaxResult.success();
@@ -125,7 +135,26 @@ public class HmOrderFdpReturnController extends BaseController
     		ajax.put("orderReturn", result);
     	}
     	else {
-    		ajax = AjaxResult.error("订单没有解约!");
+    		// 样本检测不合格时，直接退款，没有解约协议
+    		//ajax = AjaxResult.error("订单没有解约!");
+    		HmOrderFdp orderObj = hmOrderFdpService.selectHmOrderFdpById(hmOrderFdpReturn.getOrderId());
+    		
+    		OrderSystemUtils orderSystemUtils = new OrderSystemUtils();
+            JSONArray progress = orderSystemUtils.getOrderDetail(orderSystemConfig, orderObj.getOrderCode());
+            
+            for (int i = 0; i < progress.size(); i++) {
+        		Map<String, String> progObj = new HashMap<String, String>();
+        	    String jsonString = progress.getString(i);
+        	    jsonString = jsonString.replace("[", "");
+        	    jsonString = jsonString.replace("]", "");
+        	    JSONObject jsonObject = JSON.parseObject(jsonString);
+        	    if("8".equals(jsonObject.getString("Id"))){
+        	    	result.put("StatusDate", jsonObject.getString("StatusDate"));
+        	    	result.put("ProCode", orderObj.getOrderCode());
+        	    	result.put("AmountReceived", orderObj.getPriceOut().toString());
+        	    	ajax.put("orderReturn", result);
+        	    }
+            }
     	}
         return ajax;
     }
