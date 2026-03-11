@@ -23,9 +23,9 @@ public class OrderSystemUtils {
 		String accessToken = "";
 		
 		String version = RuoYiConfig.getVersion();
-		if(version.equals("3.8.7-TEST")) //测试环境是不能自己生成token的,只能到正式环境去取
+		if(version.equals("3.8.7-LOCAL")) //测试环境是不能自己生成token的,只能到测试环境去取
 		{
-			accessToken = HttpUtils.sendGet("https://dhmapi.rmylcare.com/system/token/getOrderSystemToken");
+			accessToken = HttpUtils.sendGet("https://dhmapi-test.rmylcare.com/system/token/getOrderSystemToken");
 			return accessToken;
 		}
 		
