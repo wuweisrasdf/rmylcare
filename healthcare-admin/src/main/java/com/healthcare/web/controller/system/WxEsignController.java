@@ -7,7 +7,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -543,7 +545,7 @@ public class WxEsignController extends BaseController
         }
 
         JSONObject normalConfig = new JSONObject();
-        normalConfig.put("psnSealStyles", "0,1"); // 手写签名 + 姓名章
+        normalConfig.put("psnSealStyles", "0,2"); // 手写签名 + 姓名章
         normalConfig.put("signFieldStyle", 1);
         normalConfig.put("signFieldPosition", position);
 
@@ -581,7 +583,7 @@ public class WxEsignController extends BaseController
 	        position2.put("positionY", 710);
 	        
 	        JSONObject normalConfig2 = new JSONObject();
-	        normalConfig2.put("psnSealStyles", "0,1"); // 手写签名 + 姓名章
+	        normalConfig2.put("psnSealStyles", "0,2"); // 手写签名 + 姓名章
 	        normalConfig2.put("signFieldStyle", 1);
 	        normalConfig2.put("signFieldPosition", position2);
 	        
@@ -830,9 +832,31 @@ public class WxEsignController extends BaseController
 
 		String accessToken = wxUtils.getWxToken(redisCache);
 		
-		String fn = wxUtils.getQRcode(wx.getUserId(), accessToken, wxPayConfig);
+		String fn = wxUtils.getQRcode(wx.getUserId(), accessToken, wxPayConfig, redisCache);
 		ajax.put("qrcode", fn);
 
+        return ajax;
+		
+    }
+	
+	/**
+     * 校验销售二维码有效性
+     * @throws Exception 
+     */
+	@ApiOperation("校验销售二维码有效性")
+	@PostMapping("/checkwxqrcode")
+    public AjaxResult checkWxQRcode(@RequestBody EwxParam wx) throws Exception
+    {
+		AjaxResult ajax = AjaxResult.success();
+		
+		String qrToken = redisCache.getCacheObject("qrToken_"+wx.getUserId().toString());
+		
+		if(wx.getToken().equals(qrToken)) {
+			redisCache.deleteObject("qrToken_"+wx.getUserId().toString());
+		}
+		else {
+			ajax = AjaxResult.error("无效的二维码");
+		}
         return ajax;
     }
 	
@@ -953,12 +977,12 @@ public class WxEsignController extends BaseController
 			 orderNo = orderNo.replace("PFDP","");
 			 String version = RuoYiConfig.getVersion();
 			 Long orderId = 0L;
-			 //if(version.equals("3.8.7-TEST")) {
+			 if(version.equals("3.8.7-TEST") || version.equals("3.8.7-LOCAL")) {
 				 orderId = Long.parseLong(orderNo) - 20000L;
-			 //}
-			 //else {
-			 //	 orderId = Long.parseLong(orderNo) - 30000L;
-			 //}
+			 }
+			 else {
+			 	 orderId = Long.parseLong(orderNo) - 30000L;
+			 }
 	         
 	         BigDecimal payAmount = new BigDecimal(total_fee); //total_fee是分
 	         BigDecimal divisor = new BigDecimal("100");
@@ -984,8 +1008,33 @@ public class WxEsignController extends BaseController
 		     //log.error("WeChat payment notification processing failed", e);
 			 return "<xml><return_code><![CDATA[FAIL]]></return_code></xml>";
 		 }
- }
+	}
     
+	
+	/**
+     * 发送微信小程序消息
+     * @throws Exception 
+     */
+	@ApiOperation("发送微信小程序消息")
+	@PostMapping("/sendWxMessage")
+	public AjaxResult sendWxMessage(Long orderId, int messageType) throws Exception{
+		AjaxResult ajax = AjaxResult.success();
+		
+		WxUtils wxUtils = new WxUtils();
+		String accessToken = wxUtils.getWxToken(redisCache);
+		
+		HmOrderFdp order = hmOrderFdpService.selectHmOrderFdpById(orderId);
+		if(messageType == 1) { //未支付
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+			SysUser userObj = userService.selectUserById(order.getUserId());
+			ajax.success(wxUtils.sendPayMessage(accessToken, userObj.getWxOpenId(), "胎盘冻干粉", "未支付", order.getPriceOut().toString(), sdf.format(order.getSignDate())));
+		}
+		else if(messageType == 2) {
+			
+		}
+		
+		return ajax;
+	}
     
     /*
      * 替换PDF中甲方姓名，电话
@@ -1018,6 +1067,17 @@ public class WxEsignController extends BaseController
 			changeTxt(contentStream , font, 240, 440, orderObj.getPriceOut().toString());
 			changeTxt(contentStream , font, 380, 440, MoneyUtils.toChinese(orderObj.getPriceOut().toString()));
 			contentStream.close(); // 关闭内容流以保存更改
+			
+			page = document.getPage(0); // 获取第1页
+			contentStream = new PDPageContentStream(document, page, PDPageContentStream.AppendMode.APPEND, true, true); // 使用APPEND模式以避免清除现有内容
+			changeTxt(contentStream , font, 450, 120, LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy年MM月dd日")));
+			contentStream.close(); // 关闭内容流以保存更改
+			
+			page = document.getPage(9); // 获取第10页
+			contentStream = new PDPageContentStream(document, page, PDPageContentStream.AppendMode.APPEND, true, true); // 使用APPEND模式以避免清除现有内容
+			changeTxt(contentStream , font, 100, 540, LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy年MM月dd日")));
+			changeTxt(contentStream , font, 100, 680, LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy年MM月dd日")));
+			contentStream.close(); // 关闭内容流以保存更改
     	}
     	else if(this.signType.equals("2")) {
     		PDPage page = document.getPage(0); // 获取第1页
@@ -1025,6 +1085,7 @@ public class WxEsignController extends BaseController
 			changeTxt(contentStream , font, 150, 650, jsonObject.get("userName").getAsString());
 			changeTxt(contentStream , font, 350, 650, jsonObject.get("idCode").getAsString());
 			changeTxt(contentStream , font, 350, 620, orderObj.getOrderCode());
+			changeTxt(contentStream , font, 420, 115, LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy    MM    dd")));
 			contentStream.close(); // 关闭内容流以保存更改
     	}
 		document.save(destFileName); // 保存填充后的文件
