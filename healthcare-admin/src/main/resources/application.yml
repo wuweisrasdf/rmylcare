@@ -3,11 +3,11 @@ ruoyi:
   # 名称
   name: RuoYi
   # 版本
-  version: 3.8.7-TEST
+  version: 3.8.7-LOCAL
   # 版权年份
   copyrightYear: 2024
   # 文件路径 示例（ Windows配置D:/ruoyi/uploadPath，Linux配置 /home/ruoyi/uploadPath）
-  profile: /data/docker-nginx/html/dhm-test.rmylcare.com/uploadPath
+  profile: C:/ruoyi/uploadPath
   # 获取ip地址开关
   addressEnabled: false
   # 验证码类型 math 数字计算 char 字符验证
@@ -41,11 +41,12 @@ rabbitMQ:
   
 # 电子签配置
 esign:
-  appId: 7439098939 
+  appId: 7439098939
+  assignedSealId: abfb6411-43f3-485d-a3e3-3d726f983850
   appSecret: 33e38adaa1c2f9cd842c034e80ed58e9
   host: https://smlopenapi.esign.cn
-  returnUrl1: https://dhmapi-test.rmylcare.com/system/esign/returnURL1
-  returnUrl2: https://dhmapi-test.rmylcare.com/system/esign/returnURL2
+  returnUrl1: http://47.94.145.40:8080/system/esign/returnURL1
+  returnUrl2: http://47.94.145.40:8080/system/esign/returnURL2
   contractFile1: /contract1.pdf
   contractFile2: /contract2.pdf
 
@@ -53,12 +54,12 @@ wxpay:
   appid: wxe83a3700d3b60132 # 微信小程序appid
   secret: 597ce52c64d3293fac4d6360f5772619 # 微信小程序密钥
   merchantId: 1732682102 # 商户号
-  #privateKeyPath: C:/ruoyi/uploadPath/upload/apiclient_key.pem # 商户API私钥路径（测试环境）绝对路径
+  privateKeyPath: C:/ruoyi/uploadPath/upload/apiclient_key.pem # 商户API私钥路径（测试环境）绝对路径
   #merchantSerialNumber: 3**************** # 商户API证书序列号
   apiV2Key: K9mNp3QxL7vWzA1bC5dEf8GhIj2Kl4Mn # 商户APIV2密钥
   #apiV3Key: *************** # 商户APIV3密钥
-  payNotifyUrl: https://dhmapi-test.rmylcare.com/system/esign/paySuccess # 支付通知地址（测试环境）
-  refundNotifyUrl: https://dhmapi-test.rmylcare.com/system/esign/refundSuccess # 退款通知地址（测试环境）
+  payNotifyUrl: http://47.94.145.40:8080/system/esign/paySuccess # 支付通知地址（测试环境）
+  refundNotifyUrl: http://47.94.145.40:8080/system/esign/refundSuccess # 退款通知地址（测试环境）
   #publicKeyId: 'PUB_KEY_ID_*********' # 商户API公钥ID 平台证书序列号
   #publicKeyPath: C:/ruoyi/uploadPath/upload/pub_key.pem # 商户API公钥路径
   downloadUrl: https://dhm-test.rmylcare.com
@@ -66,7 +67,7 @@ wxpay:
 ordersystem:
   url: https://wwwtest.rmylcare.com/
   id: api2026appinfo
-  secret: 7b36f5c9a30f0cd802642223d6ea5a486c712a91e48443e8c4c506ef042c66ca
+  secret: c4c506ef042c66ca0cd80264227b36f5c9a30fc712a91e48443e823d6ea5a486
 
 # 日志配置
 logging:
@@ -105,15 +106,13 @@ spring:
   # redis 配置
   redis:
     # 地址
-    host: dhm-bj-j-test-redis-001.redis.rds.aliyuncs.com
+    host: localhost
     # 端口，默认为6379
     port: 6379
     # 数据库索引
     database: 0
-    # 帐号
-    username: dhm_develop_rw
     # 密码
-    password: dhm_rw@2026
+    password:
     # 连接超时时间
     timeout: 10s
     lettuce:
@@ -134,7 +133,7 @@ token:
   # 令牌密钥
   secret: abcdefghijklmnopqrstuvwxyz
   # 令牌有效期（默认30分钟）
-  expireTime: 30
+  expireTime: 7200
 
 # MyBatis配置
 mybatis:

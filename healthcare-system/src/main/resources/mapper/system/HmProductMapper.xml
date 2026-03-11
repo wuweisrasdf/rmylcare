@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.healthcare.system.mapper.HmProductMapper">
+    
+    <resultMap type="HmProduct" id="HmProductResult">
+        <result property="id"    column="id"    />
+        <result property="productName"    column="product_name"    />
+        <result property="navbar"    column="navbar"    />
+        <result property="details"    column="details"    />
+        <result property="price"    column="price"    />
+    </resultMap>
+
+    <sql id="selectHmProductVo">
+        select id, product_name, navbar, details, price from hm_product
+    </sql>
+
+    <select id="selectHmProductList" parameterType="HmProduct" resultMap="HmProductResult">
+        <include refid="selectHmProductVo"/>
+        <where>  
+            <if test="productName != null  and productName != ''"> and product_name like concat('%', #{productName}, '%')</if>
+            <if test="navbar != null  and navbar != ''"> and navbar = #{navbar}</if>
+            <if test="details != null  and details != ''"> and details = #{details}</if>
+            <if test="price != null "> and price = #{price}</if>
+        </where>
+    </select>
+    
+    <select id="selectHmProductById" parameterType="Long" resultMap="HmProductResult">
+        <include refid="selectHmProductVo"/>
+        where id = #{id}
+    </select>
+        
+    <insert id="insertHmProduct" parameterType="HmProduct" useGeneratedKeys="true" keyProperty="id">
+        insert into hm_product
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="productName != null">product_name,</if>
+            <if test="navbar != null">navbar,</if>
+            <if test="details != null">details,</if>
+            <if test="price != null">price,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="productName != null">#{productName},</if>
+            <if test="navbar != null">#{navbar},</if>
+            <if test="details != null">#{details},</if>
+            <if test="price != null">#{price},</if>
+         </trim>
+    </insert>
+
+    <update id="updateHmProduct" parameterType="HmProduct">
+        update hm_product
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="productName != null">product_name = #{productName},</if>
+            <if test="navbar != null">navbar = #{navbar},</if>
+            <if test="details != null">details = #{details},</if>
+            <if test="price != null">price = #{price},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteHmProductById" parameterType="Long">
+        delete from hm_product where id = #{id}
+    </delete>
+
+    <delete id="deleteHmProductByIds" parameterType="String">
+        delete from hm_product where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

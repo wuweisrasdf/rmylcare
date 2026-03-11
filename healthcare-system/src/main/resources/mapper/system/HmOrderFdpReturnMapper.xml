@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.healthcare.system.mapper.HmOrderFdpReturnMapper">
+    
+    <resultMap type="HmOrderFdpReturn" id="HmOrderFdpReturnResult">
+        <result property="id"    column="id"    />
+        <result property="orderId"    column="order_id"    />
+        <result property="status"    column="status"    />
+        <result property="price"    column="price"    />
+        <result property="signDate"    column="sign_date"    />
+        <result property="proCode"    column="pro_code"    />
+        <result property="syncFlag"    column="sync_flag"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+    </resultMap>
+
+    <sql id="selectHmOrderFdpReturnVo">
+        select id, order_id, status, price, sign_date, pro_code, sync_flag, create_by, create_time from hm_order_fdp_return
+    </sql>
+
+    <select id="selectHmOrderFdpReturnList" parameterType="HmOrderFdpReturn" resultMap="HmOrderFdpReturnResult">
+        <include refid="selectHmOrderFdpReturnVo"/>
+        <where>  
+            <if test="orderId != null "> and order_id = #{orderId}</if>
+            <if test="status != null "> and status = #{status}</if>
+            <if test="price != null "> and price = #{price}</if>
+            <if test="signDate != null "> and sign_date = #{signDate}</if>
+            <if test="proCode != null "> and pro_code = #{proCode}</if>
+            <if test="syncFlag != null "> and sync_flag = #{syncFlag}</if>
+        </where>
+    </select>
+    
+    <select id="selectHmOrderFdpReturnById" parameterType="Long" resultMap="HmOrderFdpReturnResult">
+        <include refid="selectHmOrderFdpReturnVo"/>
+        where id = #{id}
+    </select>
+        
+    <insert id="insertHmOrderFdpReturn" parameterType="HmOrderFdpReturn" useGeneratedKeys="true" keyProperty="id">
+        insert into hm_order_fdp_return
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="orderId != null">order_id,</if>
+            <if test="status != null">status,</if>
+            <if test="price != null">price,</if>
+            <if test="signDate != null">sign_date,</if>
+            <if test="proCode != null">pro_code,</if>
+            <if test="syncFlag != null">sync_flag,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="orderId != null">#{orderId},</if>
+            <if test="status != null">#{status},</if>
+            <if test="price != null">#{price},</if>
+            <if test="signDate != null">#{signDate},</if>
+            <if test="proCode != null">#{proCode},</if>
+            <if test="syncFlag != null">#{syncFlag},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateHmOrderFdpReturn" parameterType="HmOrderFdpReturn">
+        update hm_order_fdp_return
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="orderId != null">order_id = #{orderId},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="price != null">price = #{price},</if>
+            <if test="signDate != null">sign_date = #{signDate},</if>
+            <if test="syncFlag != null">sync_flag = #{syncFlag},</if>
+            <if test="proCode != null">pro_code = #{proCode},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteHmOrderFdpReturnById" parameterType="Long">
+        delete from hm_order_fdp_return where id = #{id}
+    </delete>
+
+    <delete id="deleteHmOrderFdpReturnByIds" parameterType="String">
+        delete from hm_order_fdp_return where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>
