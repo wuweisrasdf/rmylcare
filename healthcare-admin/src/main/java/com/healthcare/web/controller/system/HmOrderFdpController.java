@@ -74,14 +74,19 @@ public class HmOrderFdpController extends BaseController
 
     /**
      * 查询冻干粉订单列表
+     * @throws Exception 
      */
     @GetMapping("/list")
     @ApiOperation("冻干粉订单列表")
-    public TableDataInfo list(HmOrderFdp hmOrderFdp)
+    public TableDataInfo list(HmOrderFdp hmOrderFdp) throws Exception
     {
         startPage();
-        List<HmOrderFdp> list = hmOrderFdpService.selectHmOrderFdpList(hmOrderFdp);
-        return getDataTable(list);
+        if(hmOrderFdp.orderCode != null) {
+        	Long id = Long.parseLong(hmOrderFdp.orderCode.substring(6));
+        	hmOrderFdp.setId(id);
+        }
+        TableDataInfo list = this.list4user(hmOrderFdp);
+        return list;
     }
     
     /**
@@ -112,6 +117,7 @@ public class HmOrderFdpController extends BaseController
         
         for (int i = 0; i < list.size(); i++) {
         	HmOrderFdp tmpObj = list.get(i);
+        	tmpObj = doFirstPart(tmpObj);
         	if(tmpObj.getProStatus() == 2)
         		tmpObj.setStatusTxt("未签约");
         	else if(tmpObj.getProStatus() == 1)
@@ -142,6 +148,7 @@ public class HmOrderFdpController extends BaseController
                 progObj1.put("Id", "0");
                 progObj1.put("OrderName", "未签约");
                 progObj1.put("StatusDate", sdf.format(tmpObj.getCreateTime()));
+                progObj1.put("Status", "1");
                 progressList.add(progObj1);
             	for (int i = 0; i < progress.size(); i++) {
             		Map<String, String> progObj = new HashMap<String, String>();
@@ -149,11 +156,10 @@ public class HmOrderFdpController extends BaseController
             	    jsonString = jsonString.replace("[", "");
             	    jsonString = jsonString.replace("]", "");
             	    JSONObject jsonObject = JSON.parseObject(jsonString);
-            	    if(jsonObject.getString("Status").equals("0"))
-            	    	break;
             	    progObj.put("Id", jsonObject.getString("Id"));
                     progObj.put("OrderName", jsonObject.getString("OrderName"));
                     progObj.put("StatusDate", jsonObject.getString("StatusDate"));
+                    progObj.put("Status", jsonObject.getString("Status"));
                     progressList.add(progObj);
             	}
         	}
@@ -162,6 +168,7 @@ public class HmOrderFdpController extends BaseController
         		progInfo.put("id", "0");
         		progInfo.put("OrderName", "未签约");
         		progInfo.put("StatusDate", sdf.format(tmpObj.getCreateTime()));
+        		progInfo.put("Status", "1");
         		progressList.add(progInfo);
         		
         		if(!tmpObj.getProCode().isEmpty()) {
@@ -169,6 +176,7 @@ public class HmOrderFdpController extends BaseController
             		progInfo1.put("id", "1");
             		progInfo1.put("OrderName", "已签约");
             		progInfo1.put("StatusDate", sdf.format(tmpObj.getSignDate()));
+            		progInfo1.put("Status", "1");
             		progressList.add(progInfo1);
             		
             		if(tmpObj.getPayDate() != null) {
@@ -176,37 +184,14 @@ public class HmOrderFdpController extends BaseController
                 		progInfo2.put("id", "2");
                 		progInfo2.put("OrderName", "已付款");
                 		progInfo2.put("StatusDate", sdf.format(tmpObj.getPayDate()));
+                		progInfo2.put("Status", "1");
                 		progressList.add(progInfo2);
             		}
         		}
         	}
         	tmpObj.setOrderProgress(progressList);
         	
-        	//详情页面又加入了甲方手机号、证件类型、证件号
-        	tmpObj.setMotherIdType(tmpObj.getIdType());
-        	tmpObj.setMotherIdCode(tmpObj.getIdCode());
-        	tmpObj.setMotherPhonenumber(tmpObj.getPhonenumber());
-        	
-        	if(tmpObj.getUserInfo() == null) //如果还没签约，从user里读
-        	{
-        		Long userId = tmpObj.getUserId();
-        		SysUser userObj = userService.selectUserById(userId);
-        		tmpObj.setIdType(userObj.getIdType());
-        		tmpObj.setIdCode(userObj.getIdCode());
-            	tmpObj.setPhonenumber(userObj.getPhonenumber());
-            	tmpObj.setUserName(userObj.getNickName());
-            	tmpObj.setUserEmail(userObj.getEmail());
-        	}
-        	else {//已签约的从user_info字段里读
-        		String jsonStr = tmpObj.getUserInfo();
-        		JsonObject jsonObject = JsonParser.parseString(jsonStr).getAsJsonObject();
-        		tmpObj.setUserName(jsonObject.get("userName").getAsString());
-        		tmpObj.setIdType(jsonObject.get("idType").getAsString());
-        		
-        		tmpObj.setIdCode(jsonObject.get("idCode").getAsString());
-        		tmpObj.setUserEmail(jsonObject.get("userEmail").getAsString());
-        		tmpObj.setPhonenumber(jsonObject.get("phonenumber").getAsString());
-        	}
+        	tmpObj = doFirstPart(tmpObj);
         	
         	//详情页需要加入是否已经签署解约 
             HmOrderFdpReturn cond = new HmOrderFdpReturn();
@@ -214,14 +199,45 @@ public class HmOrderFdpController extends BaseController
 			List<HmOrderFdpReturn> resultList = hmOrderFdpReturnService.selectHmOrderFdpReturnList(cond );
 			if(resultList.size() > 0) {
 				HmOrderFdpReturn orderReturn = resultList.get(resultList.size()-1);
-				if(!orderReturn.getProCode().isEmpty()) {
-					tmpObj.setSignReturnDate(orderReturn.getSignDate());
+				if(orderReturn.getProCode() != null) {
+					if(!orderReturn.getProCode().isEmpty()) {
+						tmpObj.setSignReturnDate(orderReturn.getSignDate());
+					}
 				}
 			}
         	list.set(0,  tmpObj);
         }
         
         return getDataTable(list );
+    }
+    
+    private HmOrderFdp doFirstPart(HmOrderFdp tmpObj) {
+    	//详情页面又加入了甲方手机号、证件类型、证件号
+    	tmpObj.setMotherIdType(tmpObj.getIdType());
+    	tmpObj.setMotherIdCode(tmpObj.getIdCode());
+    	tmpObj.setMotherPhonenumber(tmpObj.getPhonenumber());
+    	
+    	if(tmpObj.getUserInfo() == null) //如果还没签约，从user里读
+    	{
+    		Long userId = tmpObj.getUserId();
+    		SysUser userObj = userService.selectUserById(userId);
+    		tmpObj.setIdType(userObj.getIdType());
+    		tmpObj.setIdCode(userObj.getIdCode());
+        	tmpObj.setPhonenumber(userObj.getPhonenumber());
+        	tmpObj.setUserName(userObj.getNickName());
+        	tmpObj.setUserEmail(userObj.getEmail());
+    	}
+    	else {//已签约的从user_info字段里读
+    		String jsonStr = tmpObj.getUserInfo();
+    		JsonObject jsonObject = JsonParser.parseString(jsonStr).getAsJsonObject();
+    		tmpObj.setUserName(jsonObject.get("userName").getAsString());
+    		tmpObj.setIdType(jsonObject.get("idType").getAsString());
+    		
+    		tmpObj.setIdCode(jsonObject.get("idCode").getAsString());
+    		tmpObj.setUserEmail(jsonObject.get("userEmail").getAsString());
+    		tmpObj.setPhonenumber(jsonObject.get("phonenumber").getAsString());
+    	}
+    	return tmpObj;
     }
     
 
