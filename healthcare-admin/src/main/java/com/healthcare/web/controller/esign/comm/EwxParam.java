@@ -13,6 +13,8 @@ public class EwxParam {
 	public String encryptedData;
 	public String iv;
 	
+	public String token;
+	
 	public void EsignParam() {
 		code = "";
 		encryptedData = "";
@@ -55,5 +57,12 @@ public class EwxParam {
 	}
 	public void setCode2(String code2) {
 		this.code2 = code2;
+	}
+
+	public String getToken() {
+		return token;
+	}
+	public void setToken(String token) {
+		this.token = token;
 	}
 }
