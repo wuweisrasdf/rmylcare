@@ -34,6 +34,8 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
@@ -66,9 +68,14 @@ public class WxUtils
 	
 	private final String mchid = "1732682102"; //商户号 在线支付用
 	
+	//解除协议通知
+	private final String returnTemplateId = "IjovGGgSUVmHQL0MePBzbShAAxnRzhVGRkGrA5KrPNE";
+	//未支付通知
+	private final String payTemplateId = "YnLqN20dZlxS-LlCHfdvxokPKrp0uSfUbZHyjiNIzFQ";
+	
 	@Autowired
 	private WxPayConfig wxPayConfig;
-	
+		
 	/*
 	 * 调微信接口取手机号
 	 */
@@ -91,19 +98,27 @@ public class WxUtils
         return respPhone;
     }
 	
-	public String getQRcode(Long userId, String accessToken, WxPayConfig wxPayConfig) throws Exception {
+	public String getQRcode(Long userId, String accessToken, WxPayConfig wxPayConfig, RedisCache redisCache) throws Exception {
 		String fn = "";
 		
 		String url = "https://api.weixin.qq.com/wxa/getwxacodeunlimit"
                 + "?access_token=" + accessToken;
         
         JSONObject jsonObject = new JSONObject();
-        
-        jsonObject.put("env_version", "trial");	//生成用于体验版的二维码,正式发布时去掉
+        String qrToken = UUID.fastUUID().toString().replace("-", "").substring(0,16);
+        String version = RuoYiConfig.getVersion();
+		if(version.equals("3.8.7-TEST") || version.equals("3.8.7-LOCAL")) {
+			jsonObject.put("env_version", "trial");	//生成用于体验版的二维码,正式发布时去掉
+		}
         jsonObject.put("page", "pages/index/scan");
         jsonObject.put("check_path", false);
-        jsonObject.put("scene", "salesId="+userId.toString());
+        String scene = ""+userId.toString()+"/"+qrToken;
+        jsonObject.put("scene", scene);
+        System.out.print(scene);
+        //jsonObject.put("scene", "salesId="+userId.toString());
         String requestBody = jsonObject.toJSONString();
+        
+        redisCache.setCacheObject("qrToken_"+userId.toString(), qrToken);
         
         //发起请求
         byte[] res = getWechatQrcodeByHttpURL(url, requestBody);
@@ -260,7 +275,7 @@ public class WxUtils
 		String accessToken = "";
 		
 		String version = RuoYiConfig.getVersion();
-		if(version.equals("3.8.7-TEST")) //测试环境是不能自己生成token的,只能到正式环境去取
+		if(version.equals("3.8.7-TEST") || version.equals("3.8.7-LOCAL")) //测试环境是不能自己生成token的,只能到正式环境去取
 		{
 			accessToken = HttpUtils.sendGet("https://dhmapi.rmylcare.com/system/token/getWxToken");
 			return accessToken;
@@ -288,6 +303,37 @@ public class WxUtils
 		}
 		return accessToken;
 		
+	}
+	
+	//发送未支付消息
+	public String sendPayMessage(String accessToken, String openId, String prodName, String orderStatus, String orderPrice, String orderTime) {
+		
+		RestTemplate restTemplate = new RestTemplate();
+
+        String url = "https://api.weixin.qq.com/cgi-bin/message/subscribe/send?access_token=" + accessToken;
+
+        SysWxMessage wxMssVo = new SysWxMessage();
+        wxMssVo.setTouser(openId);
+        wxMssVo.setTemplate_id(this.payTemplateId);
+        //wxMssVo.setPage(PAGE);
+
+        // 构造消息内容（key-value 对应模板中的关键词）
+        Map<String, SysWxTempData> data = new HashMap<String, SysWxTempData>();
+        data.put("thing4", new SysWxTempData("您有未支付的订单，请您尽快完成支付。"));
+        data.put("thing1", new SysWxTempData(prodName));
+        data.put("phrase2", new SysWxTempData(orderStatus));
+        data.put("thing3", new SysWxTempData(orderPrice));
+        data.put("time9", new SysWxTempData(orderTime));
+        wxMssVo.setData(data);
+
+        ResponseEntity<String> response = restTemplate.postForEntity(url, wxMssVo, String.class);
+        return response.getBody();
+	}
+	
+	//发送未支付消息
+	public String sendReturnMessage(String token, String OpenId, String orderCode, String orderPrice, String returnTime) {
+		
+		return "";
 	}
 	
 	public String getAppId() {
