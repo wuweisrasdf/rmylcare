@@ -16,41 +16,41 @@
 				是一家以提供全面医疗健康管理服务为核心业务的专业医疗管理企业。公司致力于整合优质医疗资源，打造高品质的医疗服务平台，为广大人民群众提供全方位、全周期的医疗服务。业务领域方面，人民医疗涵盖基因检测、医疗健康等相关管理、运营及咨询的医疗服务输出。
 			</view>
 
-			
-			<!-- <button @click="toSign" style="margin-top: 50rpx;">测试签约</button> -->
-			
+
+<!-- 			<button @click="toSign" style="margin-top: 50rpx;">测试签约</button> -->
+
 			<view class="btn-container">
-			    <!-- 第一行：原有的两个卡片 -->
-			    <view class="btn-row">
+				<!-- 第一行：原有的两个卡片 -->
+				<view class="btn-row">
 					<view class="btn-card" @click="goToPromotion(3)">
-					    <text class="btn-title">1V1私人订制</text>
-					    <view class="btn-content">
-					        <!-- 请替换为实际的图标路径 -->
-					        <image src="/static/icons/molecule.png" class="btn-icon" mode="aspectFit" />
-					        <text class="btn-text">胎盘冻干粉</text>
-					    </view>
+						<text class="btn-title">1V1私人订制</text>
+						<view class="btn-content">
+							<!-- 请替换为实际的图标路径 -->
+							<image src="/static/icons/molecule.png" class="btn-icon" mode="aspectFit" />
+							<text class="btn-text">胎盘冻干粉</text>
+						</view>
 					</view>
-					
-			        <view class="btn-card" @click="goToPromotion(1)">
-			            <text class="btn-title">评估个人患病风险</text>
-			            <view class="btn-content">
-			                <image src="/static/icons/wave.png" class="btn-icon" mode="aspectFit" />
-			                <text class="btn-text">基因检测</text>
-			            </view>
-			        </view>
-			
-			    </view>
-			
-			    <!-- 第二行：新增的卡片 (左对齐) -->
-			    <view class="btn-row single-card-row">
-			        <view class="btn-card" @click="goToPromotion(2)">
-			            <text class="btn-title">唤醒肌肤神奇之旅</text>
-			            <view class="btn-content">
-			                <image src="/static/icons/molecule.png" class="btn-icon" mode="aspectFit" />
-			                <text class="btn-text">细胞囊泡</text>
-			            </view>
-			        </view>
-			    </view>
+
+					<view class="btn-card" @click="goToPromotion(1)">
+						<text class="btn-title">评估个人患病风险</text>
+						<view class="btn-content">
+							<image src="/static/icons/wave.png" class="btn-icon" mode="aspectFit" />
+							<text class="btn-text">基因检测</text>
+						</view>
+					</view>
+
+				</view>
+
+				<!-- 第二行：新增的卡片 (左对齐) -->
+				<view class="btn-row single-card-row">
+					<view class="btn-card" @click="goToPromotion(2)">
+						<text class="btn-title">唤醒肌肤神奇之旅</text>
+						<view class="btn-content">
+							<image src="/static/icons/molecule.png" class="btn-icon" mode="aspectFit" />
+							<text class="btn-text">细胞囊泡</text>
+						</view>
+					</view>
+				</view>
 			</view>
 		</view>
 
@@ -60,7 +60,7 @@
 
 <script>
 	import TabBar from '@/components/TabBar/TabBar.vue';
-	
+
 	import {
 		mapGetters
 	} from 'vuex';
@@ -71,7 +71,7 @@
 		},
 		computed: {
 			...mapGetters(['isLogined']),
-			
+
 			// 计算容器顶部内边距（转为 rpx）
 			containerPaddingTop() {
 				// CustomBar 是 px，uni-app 中 1px = 2rpx
@@ -81,7 +81,7 @@
 		},
 		data() {
 			return {
-				currentTab: 0,
+				currentTab: 0
 			}
 		},
 		onLoad() {
@@ -101,14 +101,14 @@
 					imageUrl: '/static/share.jpg' // 可选：分享封面图
 				}
 			},
-			toSign(){
+			toSign() {
 				if (!this.isLogined) {
 					uni.redirectTo({
 						url: `/pages/login/login`
 					})
 					return;
 				}
-				
+
 				uni.setStorageSync('SCAN_SALES_ID', 1); // 模拟销售
 				uni.navigateTo({
 					url: `/pages/index/intro`
@@ -168,26 +168,28 @@
 		display: flex;
 		width: 100%;
 		gap: 30rpx;
-		
+
 		/* 第一行：两个卡片平分 */
 		&:not(.single-card-row) {
 			justify-content: space-between;
-			
+
 			.btn-card {
-				flex: 1; /* 自动占满剩余空间 */
-				width: auto; 
+				flex: 1;
+				/* 自动占满剩余空间 */
+				width: auto;
 			}
 		}
 
 		/* 第二行：单个卡片居中 */
 		&.single-card-row {
 			justify-content: flex-start;
-			
+
 			.btn-card {
 				/* 核心修复：强制宽度等于第一行单个卡片的宽度 */
 				/* 算法：(100% 总宽 - 30rpx 间隙) / 2 */
 				width: calc((100% - 30rpx) / 2);
-				flex: none; /* 禁止 flex 自动伸缩，严格遵循 width */
+				flex: none;
+				/* 禁止 flex 自动伸缩，严格遵循 width */
 			}
 		}
 	}
@@ -201,7 +203,7 @@
 		flex-direction: column;
 		justify-content: center;
 		/* 新增：防止内容溢出导致高度不一致 */
-		box-sizing: border-box; 
+		box-sizing: border-box;
 	}
 
 	.btn-title {
@@ -214,14 +216,16 @@
 	.btn-content {
 		display: flex;
 		margin-top: 28rpx;
-		align-items: center; /* 确保图标文字垂直对齐 */
+		align-items: center;
+		/* 确保图标文字垂直对齐 */
 	}
 
 	.btn-icon {
 		width: 52rpx;
 		height: 52rpx;
 		margin-right: 46rpx;
-		flex-shrink: 0; /* 防止图标被压缩 */
+		flex-shrink: 0;
+		/* 防止图标被压缩 */
 	}
 
 	.btn-text {
@@ -229,7 +233,8 @@
 		font-size: 36rpx;
 		color: #000000;
 		/* 防止文字过长换行破坏布局 */
-		white-space: nowrap; 
+		white-space: nowrap;
 	}
+
 	/* --- 修改结束 --- */
 </style>

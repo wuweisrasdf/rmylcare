@@ -64,13 +64,38 @@
 				</view>
 			</view>
 		</view>
+
+		<!-- 1-已签约、2-已付款、3-样本接收、4-病毒检测、5-制备完成、6-配送、7-已完成、8-申请解除、9-协议解除、10-已退款 -->
+		<!-- <view class="tracking-number" v-if="currentStatusId >= 6"> -->
+		<view class="tracking-number">
+			<text>快递单号：</text>
+			<text>SFH234567890098765 TODO</text>
+		</view>
 		
+		<view class="detail-btn"> <!-- 0 未签、 1-已签约、2-已付款、3-样本接收、4-病毒检测-->
+			<u-button :custom-style="detailBtnStyle" @click="handleAddress" v-if="currentStatusId < 5">
+				<u-icon name="map" size="36" color="#ffffff"></u-icon>
+				收货地址
+			</u-button>
+			<u-button :custom-style="detailBtnStyle" @click="handleLogistics">
+				<u-icon name="car" size="38" color="#ffffff"></u-icon>
+				物流信息
+			</u-button>
+			<!-- 1-已签约、2-已付款、3-样本接收、4-病毒检测 5-制备完成、6-配送-->
+			<u-button :custom-style="detailBtnStyle" @click="handleInvoice" v-if="currentStatusId > 0 && currentStatusId < 7">
+				<u-icon name="file-text" size="36" color="#ffffff"></u-icon>
+				发票管理 {{ currentStatusId }}
+			</u-button>
+		</view>
+
+
 		<view class="cancel-btn" v-if="(currentStatusId == 8) || (currentStatusId >= 9 && info.priceOut > 0)">
 			<u-button :custom-style="cancelBtnStyle" @click="unbindAgreement" v-if="currentStatusId == 8">
 				协议解除
 			</u-button>
-			
-			<u-button :custom-style="cancelBtnStyle" @click="refundProgress" v-if="currentStatusId >= 9 && info.priceOut > 0 && info.payDate">
+
+			<u-button :custom-style="cancelBtnStyle" @click="refundProgress"
+				v-if="currentStatusId >= 9 && info.priceOut > 0 && info.payDate">
 				退款进度
 			</u-button>
 		</view>
@@ -161,7 +186,7 @@
 				</view>
 				<view class="card-arrow"></view>
 			</view>
-			
+
 			<view class="action-card unbind-agreement" @click="unbindAgreement" v-if="currentStatusId == 8">
 				<view class="card-content">
 					<text class="card-title">协议解除</text>
@@ -169,9 +194,10 @@
 				</view>
 				<view class="card-arrow"></view>
 			</view>
-			
 
-			<view class="action-card refund-progress" @click="refundProgress" v-if="currentStatusId >= 9 && info.priceOut > 0 && info.payDate">
+
+			<view class="action-card refund-progress" @click="refundProgress"
+				v-if="currentStatusId >= 9 && info.priceOut > 0 && info.payDate">
 				<view class="card-content">
 					<text class="card-title">退款进度</text>
 					<text class="card-desc">查看已退款的进度</text>
@@ -198,19 +224,65 @@
 
 		</view>
 
-		
+
 		<!-- 底部按钮 - 修改为悬浮底部 -->
-		<view class="btn-group" v-if="(info.proStatus == 2) || (info.proStatus == 1 && info.orderStatus==11  && currentStatusId < 8)">
-		    <u-button :custom-style="nextBtnStyle" @click="toSign" v-if="info.proStatus == 2">
-		        继续编辑
-		    </u-button>
-		    <u-button :custom-style="nextBtnStyle" @click="toPay" v-if="info.proStatus == 1 && info.orderStatus==11 && currentStatusId < 8">
-		        去支付
-		    </u-button>
+		<view class="btn-group"
+			v-if="(info.proStatus == 2) || (info.proStatus == 1 && info.orderStatus==11  && currentStatusId < 8)">
+			<u-button :custom-style="nextBtnStyle" @click="toSign" v-if="info.proStatus == 2">
+				继续编辑
+			</u-button>
+			<u-button :custom-style="nextBtnStyle" @click="toPay"
+				v-if="info.proStatus == 1 && info.orderStatus==11 && currentStatusId < 8">
+				去支付
+			</u-button>
 		</view>
-		
+
+		<!-- 修改收货地址 -->
+		<u-popup :show="isPopupVisible" mode="center" @close="closePopup" :closeOnClickOverlay="false"
+			:custom-style="{ backgroundColor: 'transparent', borderRadius: '0' }">
+			<view class="popup-content">
+				<!-- 自定义关闭按钮 -->
+				<view class="popup-close-btn" @click="closePopup">
+					<u-icon name="close" size="48" color="#999"></u-icon>
+				</view>
+
+				<view class="form-title">修改收货地址</view>
+
+				<u-form :model="addressForm" :rules="formRules" ref="uFormRef" label-position="top">
+					<u-form-item prop="consignee" required>
+						<view slot="label" class="form-label">
+							<text>收件人</text>
+							<text class="required-star">*</text>
+						</view>
+						<u-input v-model="addressForm.consignee" placeholder="请输入收件人姓名" border="surround" />
+					</u-form-item>
+
+					<u-form-item prop="contactNumber" required>
+						<view slot="label" class="form-label">
+							<text>电话</text>
+							<text class="required-star">*</text>
+						</view>
+						<u-input v-model="addressForm.contactNumber" type="text" placeholder="请输入联系电话" inputmode="tel"
+							border="surround" />
+					</u-form-item>
+
+					<u-form-item prop="deliveryAddress" required>
+						<view slot="label" class="form-label">
+							<text>收货地址</text>
+							<text class="required-star">*</text>
+						</view>
+						<u-input v-model="addressForm.deliveryAddress" placeholder="请输入收货地址" border="surround" />
+					</u-form-item>
+				</u-form>
+
+				<u-button class="save-btn" color="#4A63E4" :customStyle="{borderRadius: '49rpx'}" type="primary" @click="saveAddress">保存</u-button>
+			</view>
+		</u-popup>
+
+
 		<!-- 底部占位元素，避免内容被固定按钮遮挡 -->
-		<view class="bottom-placeholder" v-if="(info.proStatus == 2) || (info.proStatus == 1 && info.orderStatus==11)"></view>
+		<view class="bottom-placeholder" v-if="(info.proStatus == 2) || (info.proStatus == 1 && info.orderStatus==11)">
+		</view>
 
 	</view>
 
@@ -245,7 +317,7 @@
 					fontWeight: 'bold',
 				};
 			},
-			cancelBtnStyle(){
+			cancelBtnStyle() {
 				return {
 					height: '98rpx',
 					borderRadius: '49rpx',
@@ -253,6 +325,22 @@
 					color: '#FFFFFF',
 					fontSize: '32rpx',
 					fontWeight: 'bold',
+				};
+			},
+			detailBtnStyle() {
+				return {
+					height: '80rpx',
+					borderRadius: '40rpx', // 更圆润的椭圆
+					backgroundColor: '#4A63E4',
+					color: '#FFFFFF',
+					fontSize: '28rpx',
+					fontWeight: 'bold',
+					display: 'flex',
+					alignItems: 'center',
+					justifyContent: 'center',
+					gap: '10rpx', // 图标与文字之间的间距
+					padding: '0 20rpx', // 内边距确保内容不贴边
+					minWidth: '160rpx', // 最小宽度避免过窄
 				};
 			},
 			// currentStatusId() {
@@ -271,34 +359,34 @@
 			// 	return stepid;
 			// }
 			currentStatusId() {
-			    const progress = this.info?.orderProgress;
-			    
-			    // 1. 基础校验：必须是数组且不为空
-			    if (!Array.isArray(progress) || progress.length === 0) {
-			        return 0; 
-			    }
-			
-			    // 2. 从后往前遍历 (因为最新的步骤通常在后面)
-			    // 找到第一个 Status 为 "1" (已完成) 的项
-			    for (let i = progress.length - 1; i >= 0; i--) {
-			        const step = progress[i];
-			        
-			        // 兼容 id 或 Id 字段
-			        const stepIdVal = step.id || step.Id;
-			        
-			        // 获取 Status 字段，转为字符串并去除空格，防止 " 1 " 这种情况
-			        const statusVal = String(step.Status || '').trim();
-			
-			        // 核心判断：Status 必须为 "1" (代表完成)
-			        if (statusVal === '1') {
-			            // 找到了最后一个已完成的步骤，返回其 ID
-			            return Number(stepIdVal);
-			        }
-			    }
-			
-			    // 3. 如果遍历完所有项，没有发现任何 Status 为 "1" 的步骤
-			    // 返回 0 (代表未开始或无有效进度)
-			    return 0; 
+				const progress = this.info?.orderProgress;
+
+				// 1. 基础校验：必须是数组且不为空
+				if (!Array.isArray(progress) || progress.length === 0) {
+					return 0;
+				}
+
+				// 2. 从后往前遍历 (因为最新的步骤通常在后面)
+				// 找到第一个 Status 为 "1" (已完成) 的项
+				for (let i = progress.length - 1; i >= 0; i--) {
+					const step = progress[i];
+
+					// 兼容 id 或 Id 字段
+					const stepIdVal = step.id || step.Id;
+
+					// 获取 Status 字段，转为字符串并去除空格，防止 " 1 " 这种情况
+					const statusVal = String(step.Status || '').trim();
+
+					// 核心判断：Status 必须为 "1" (代表完成)
+					if (statusVal === '1') {
+						// 找到了最后一个已完成的步骤，返回其 ID
+						return Number(stepIdVal);
+					}
+				}
+
+				// 3. 如果遍历完所有项，没有发现任何 Status 为 "1" 的步骤
+				// 返回 0 (代表未开始或无有效进度)
+				return 0;
 			}
 		},
 		filters: {
@@ -312,7 +400,7 @@
 				const idCard = value.replace(/\s/g, '');
 
 				const length = idCard.length;
-				
+
 				// 返回相同长度的星号
 				return '*'.repeat(length);
 
@@ -379,22 +467,22 @@
 				return option ? option.label : '';
 			},
 			formatDate(value) {
-			        if (!value) return '';
-			        
-			        const date = new Date(value);
-			        
-			        // 检查日期是否有效
-			        if (isNaN(date.getTime())) {
-			            // 如果解析失败，尝试直接截取字符串前10位作为兜底
-			            return String(value).substring(0, 10);
-			        }
-			
-			        const year = date.getFullYear();
-			        // 月份需要 +1，且补零
-			        const month = String(date.getMonth() + 1).padStart(2, '0');
-			        const day = String(date.getDate()).padStart(2, '0');
-			
-			        return `${year}-${month}-${day}`;
+				if (!value) return '';
+
+				const date = new Date(value);
+
+				// 检查日期是否有效
+				if (isNaN(date.getTime())) {
+					// 如果解析失败，尝试直接截取字符串前10位作为兜底
+					return String(value).substring(0, 10);
+				}
+
+				const year = date.getFullYear();
+				// 月份需要 +1，且补零
+				const month = String(date.getMonth() + 1).padStart(2, '0');
+				const day = String(date.getDate()).padStart(2, '0');
+
+				return `${year}-${month}-${day}`;
 			}
 		},
 		data() {
@@ -452,7 +540,40 @@
 						Desc: '退款已到账',
 					},
 				],
+				isPopupVisible: false,
+				addressForm: {
+					consignee: '',
+					contactNumber: '',
+					deliveryAddress: ''
+				},
+				formRules: {
+					consignee: [{
+						required: true,
+						message: '请填写收件人',
+						trigger: ['blur', 'change']
+					}],
+					contactNumber: [{
+							required: true,
+							message: '请填写联系电话',
+							trigger: ['blur', 'change']
+						},
+						{
+							pattern: /^1[3-9]\d{9}$/,
+							message: '请输入正确的手机号',
+							trigger: ['blur']
+						}
+					],
+					deliveryAddress: [{
+						required: true,
+						message: '请填写收货地址',
+						trigger: ['blur', 'change']
+					}]
+				}
 			};
+		},
+		onReady() {
+			// 设置验证规则
+			this.$refs.uFormRef.setRules(this.formRules);
 		},
 		onLoad(options) {
 			if (options.orderId) {
@@ -503,7 +624,7 @@
 
 							this.progressData = exists ? this.mergeStatuses(this.progressData, this.info
 								.orderProgress) : this.mergeStatusesJiechu(this.info.orderProgress, this
-									.progressDataJiechu, this.progressData);
+								.progressDataJiechu, this.progressData);
 						}
 						this.setProgress();
 					}
@@ -607,14 +728,14 @@
 				// 样式一：只显示接口传过来的状态
 				this.currentProgressIndex = -1; // 初始化为-1，表示未找到匹配项
 				const orderNamesSet = new Set(this.info.orderProgress.map(item => item.OrderName));
-			
+
 				this.progressData = this.progressData.filter(item => orderNamesSet.has(item.OrderName));
 				this.progressData.forEach((item, index) => {
 					if (this.info.statusTxt === item.OrderName) {
 						this.currentProgressIndex = index;
 					}
 				});
-				
+
 				// 样式二：显示接口传过来的状态和剩余状态
 				// console.log('setProgress', this.progressData)
 				// this.progressData.forEach((item, index) => {
@@ -638,6 +759,64 @@
 					result = 'step-current';
 				}
 				return result;
+			},
+			// 处理收货地址逻辑
+			async handleAddress() {
+				const res = await api.getDeliveryAddress(this.orderId);
+				if (res.code == 200) {
+					this.addressForm = {
+						consignee: res.consignee || '',
+						contactNumber: res.contactNumber || '',
+						deliveryAddress: res.deliveryAddress || ''
+					};
+					this.showPopup();
+				}
+			},
+			showPopup() {
+				this.isPopupVisible = true;
+			},
+			closePopup() {
+				this.isPopupVisible = false;
+			},
+			async saveAddress() {
+
+				try {
+					await this.$refs.uFormRef.validate(); 
+					
+					const params = {
+						orderId: this.orderId,
+						consignee: this.addressForm.consignee,
+						deliveryAddress: this.addressForm.deliveryAddress,
+						contactNumber: this.addressForm.contactNumber
+					};
+
+					const updateRes = await api.updateDeliveryAddress(params);
+					if (updateRes.code === 200) {
+						uni.showToast({
+							title: '保存成功',
+							icon: 'success'
+						});
+						this.closePopup();
+					} else {
+						uni.showToast({
+							title: '保存失败',
+							icon: 'none'
+						});
+					}
+				} catch (e) {
+					// 校验失败时，uView 会自动滚动到第一个错误项并提示
+					console.log('表单校验失败:', e);
+				}
+			},
+			handleLogistics() {
+				// 处理物流信息逻辑
+				console.log('处理物流信息');
+			},
+			// 处理发票管理逻辑
+			handleInvoice() {
+				uni.navigateTo({
+					url: `/pages/invoice/management?orderId=${this.orderId}`
+				})
 			}
 		}
 	};
@@ -915,33 +1094,33 @@
 		}
 	}
 
-.btn-group {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    display: flex;
-    justify-content: space-between;
-    padding: 20rpx 26rpx 30rpx;
-    background-color: #f5f5f5;
-    box-shadow: 0 -4rpx 20rpx rgba(0, 0, 0, 0.05);
-    z-index: 100;
-    
-    // 确保按钮占据固定宽度
-    .u-btn {
-        flex: 1;
-        
-        &:first-child {
-            margin-right: 20rpx;
-        }
-    }
-}
+	.btn-group {
+		position: fixed;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		display: flex;
+		justify-content: space-between;
+		padding: 20rpx 26rpx 30rpx;
+		background-color: #f5f5f5;
+		box-shadow: 0 -4rpx 20rpx rgba(0, 0, 0, 0.05);
+		z-index: 100;
 
-// 底部占位元素，高度与固定按钮组一致
-.bottom-placeholder {
-    height: 148rpx; // 与 .btn-group 的高度保持一致
-    width: 100%;
-}
+		// 确保按钮占据固定宽度
+		.u-btn {
+			flex: 1;
+
+			&:first-child {
+				margin-right: 20rpx;
+			}
+		}
+	}
+
+	// 底部占位元素，高度与固定按钮组一致
+	.bottom-placeholder {
+		height: 148rpx; // 与 .btn-group 的高度保持一致
+		width: 100%;
+	}
 
 
 	.order-step-wrap {
@@ -1047,8 +1226,96 @@
 			}
 		}
 	}
-	
-	.cancel-btn{
+
+	.cancel-btn {
 		margin: 70rpx 40rpx 0;
+	}
+
+	.detail-btn {
+		margin: 70rpx 40rpx 0;
+		display: flex;
+		gap: 20rpx;
+	}
+
+
+	.tracking-number {
+		margin: 70rpx 26rpx 0;
+		background-color: #ffffff;
+		border-radius: 16rpx;
+		padding: 30rpx 26rpx;
+		font-size: 32rpx;
+		color: #333;
+		display: flex;
+		align-items: center;
+		//justify-content: space-between;
+		line-height: 1.2;
+
+		text:first-child {
+			font-weight: bold;
+			color: #333;
+		}
+
+		text:last-child {
+			font-weight: normal;
+			color: #666;
+			margin-left: 20rpx;
+			font-size: 32rpx;
+		}
+	}
+
+	.popup-content {
+		position: relative;
+		width: 600rpx;
+		max-width: 90%;
+		background-color: #ffffff;
+		border-radius: 20rpx;
+		padding: 80rpx 40rpx 40rpx;
+		box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.1);
+
+		.popup-close-btn {
+			position: absolute;
+			top: 20rpx;
+			right: 20rpx;
+			z-index: 10;
+			width: 56rpx;
+			height: 56rpx;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+
+		.form-title {
+			font-size: 36rpx;
+			font-weight: bold;
+			color: #333;
+			margin-bottom: 30rpx;
+			text-align: center;
+		}
+
+		// u-form-item 默认有间距，可微调
+		::v-deep .u-form-item {
+			margin-bottom: 30rpx;
+		}
+
+		.save-btn {
+			margin-top: 20rpx;
+			height: 80rpx;
+			font-size: 30rpx;
+			font-weight: bold;
+		}
+	}
+
+	.form-label {
+		display: flex;
+		align-items: center;
+		font-weight: bold;
+		font-size: 28rpx;
+		color: #000000;
+		margin-bottom: 28rpx;
+
+		.required-star {
+			color: #ff4444;
+			margin-left: 4rpx;
+		}
 	}
 </style>

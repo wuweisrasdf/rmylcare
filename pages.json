@@ -125,7 +125,18 @@
 				"navigationBarTitleText": "查看协议"
 			}
 		},
-
+		{
+			"path": "pages/invoice/management",
+			"style": {
+				"navigationBarTitleText": "发票管理"
+			}
+		},
+		{
+			"path": "pages/tracking/tracking",
+			"style": {
+				"navigationBarTitleText": "物流信息"
+			}
+		},
 
 		// 协议
 		{

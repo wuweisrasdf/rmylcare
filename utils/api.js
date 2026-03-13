@@ -92,3 +92,18 @@ export const getHospitalList = () => { return $H.get(`${$C.baseUrl}/system/fdp/g
 
 // 验证销售人员二维码
 export const checkwxqrcode = params => { return $H.post(`${$C.baseUrl}/system/esign/checkwxqrcode`, params, { toast: false }) };
+
+// 获取合同发票信息
+export const getInvoice = (orderId) => { return $H.get(`${$C.baseUrl}/interface/order/getInvoice/${orderId}`) };
+
+// 修改合同发票信息
+export const updateInvoice = params => { return $H.put(`${$C.baseUrl}/interface/order/updateInvoice`, params) };
+
+// 发送电子发票
+export const sendInvoice = params => { return $H.post(`${$C.baseUrl}/interface/order/sendInvoice`, params) };
+
+// 获取合同收货信息接口
+export const getDeliveryAddress = (orderId) => { return $H.get(`${$C.baseUrl}/interface/order/getDeliveryAddress/${orderId}`) };
+
+// 修改合同收货信息接口
+export const updateDeliveryAddress = params => { return $H.put(`${$C.baseUrl}/interface/order/updateDeliveryAddress`, params) };

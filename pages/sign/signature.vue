@@ -12,7 +12,11 @@
 				type: 1,
 				orderId: '',
 				decodedSignUrl: '',
-				isReloading: false // 刷新状态提示
+				isReloading: false, // 刷新状态提示
+				templateIds: [
+					"YnLqN20dZlxS-LlCHfdvxokPKrp0uSfUbZHyjiNIzFQ", // 待付款提醒
+					"IjovGGgSUVmHQL0MePBzbShAAxnRzhVGRkGrA5KrPNE", // 订单取消通知 
+				],
 			};
 		},
 		onLoad(options) {
@@ -89,13 +93,37 @@
 				}
 			},
 			jump() {
+				let templateId = '';
 				if (this.type == 1) {
-					uni.reLaunch({ // 签约成功，销毁页面栈，不允许再返回前面的操作
-						url: `/pages/sign/success?orderId=${this.orderId}`
-					});
+					templateId = this.templateIds[0];
 				}
 				if (this.type == 2) {
-					uni.redirectTo({ // 解约成功
+					templateId = this.templateIds[1];
+				}
+
+				uni.requestSubscribeMessage({
+					tmplIds: [templateId],
+					success: (res) => {
+						console.log('订阅结果:', res);
+						// 可选：记录 accept 状态用于按钮展示（此处可忽略）
+					},
+					fail: (err) => {
+						console.warn('订阅失败:', err);
+						// 即使失败也不阻塞跳转，保证核心流程
+					},
+					complete: () => {
+						// 无论成功失败，都执行跳转
+						this.performJump();
+					}
+				});
+			},
+			performJump() {
+				if (this.type == 1) {
+					uni.reLaunch({
+						url: `/pages/sign/success?orderId=${this.orderId}`
+					});
+				} else if (this.type == 2) {
+					uni.redirectTo({
 						url: `/pages/refund/cancel-success?orderId=${this.orderId}`
 					});
 				}
