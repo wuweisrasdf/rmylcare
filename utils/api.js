@@ -94,7 +94,7 @@ export const getHospitalList = () => { return $H.get(`${$C.baseUrl}/system/fdp/g
 export const checkwxqrcode = params => { return $H.post(`${$C.baseUrl}/system/esign/checkwxqrcode`, params, { toast: false }) };
 
 // 获取合同发票信息
-export const getInvoice = (orderId) => { return $H.get(`${$C.baseUrl}/interface/order/getInvoice/${orderId}`) };
+export const getInvoice = (orderId) => { return $H.get(`${$C.baseUrl}/interface/order/getInvoice/${orderId}`, { toast: false })};
 
 // 修改合同发票信息
 export const updateInvoice = params => { return $H.put(`${$C.baseUrl}/interface/order/updateInvoice`, params) };

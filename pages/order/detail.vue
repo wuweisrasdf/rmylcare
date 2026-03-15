@@ -66,25 +66,24 @@
 		</view>
 
 		<!-- 1-已签约、2-已付款、3-样本接收、4-病毒检测、5-制备完成、6-配送、7-已完成、8-申请解除、9-协议解除、10-已退款 -->
-		<!-- <view class="tracking-number" v-if="currentStatusId >= 6"> -->
-		<view class="tracking-number">
+<!-- 		<view class="tracking-number" v-if="currentStatusId >= 6">
 			<text>快递单号：</text>
 			<text>SFH234567890098765 TODO</text>
-		</view>
+		</view> -->
 		
-		<view class="detail-btn"> <!-- 0 未签、 1-已签约、2-已付款、3-样本接收、4-病毒检测-->
+		<view class="detail-btn"> <!-- 1-已签约、2-已付款、3-样本接收、4-病毒检测-->
 			<u-button :custom-style="detailBtnStyle" @click="handleAddress" v-if="currentStatusId < 5">
 				<u-icon name="map" size="36" color="#ffffff"></u-icon>
 				收货地址
 			</u-button>
-			<u-button :custom-style="detailBtnStyle" @click="handleLogistics">
+<!-- 			<u-button :custom-style="detailBtnStyle" @click="handleLogistics">
 				<u-icon name="car" size="38" color="#ffffff"></u-icon>
 				物流信息
-			</u-button>
+			</u-button> -->
 			<!-- 1-已签约、2-已付款、3-样本接收、4-病毒检测 5-制备完成、6-配送-->
 			<u-button :custom-style="detailBtnStyle" @click="handleInvoice" v-if="currentStatusId > 0 && currentStatusId < 7">
 				<u-icon name="file-text" size="36" color="#ffffff"></u-icon>
-				发票管理 {{ currentStatusId }}
+				发票管理 
 			</u-button>
 		</view>
 
@@ -808,14 +807,16 @@
 					console.log('表单校验失败:', e);
 				}
 			},
+			// 处理物流信息逻辑
 			handleLogistics() {
-				// 处理物流信息逻辑
-				console.log('处理物流信息');
+				uni.navigateTo({
+					url: `/pages/tracking/tracking?orderId=${this.orderId}`
+				})
 			},
 			// 处理发票管理逻辑
 			handleInvoice() {
 				uni.navigateTo({
-					url: `/pages/invoice/management?orderId=${this.orderId}`
+					url: `/pages/invoice/invoice?orderId=${this.orderId}&currentStatusId=${this.currentStatusId}`
 				})
 			}
 		}

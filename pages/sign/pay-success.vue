@@ -297,11 +297,16 @@
 				}
 				
 				try {
-					const invoiceType = this.form.invoiceType === '个人' ? 1 : 2;
+					let invoiceType = 2;
+					let invoiceTitle = this.form.invoiceTitle.trim();
+					if (this.form.invoiceType === '个人') {
+						invoiceType = 1;
+						invoiceTitle = '个人';
+					}
 					
 					const params = {
 					  email: this.form.email.trim(),
-					  invoiceTitle: this.form.invoiceTitle.trim(),
+					  invoiceTitle,
 					  invoiceType,
 					  orderId: this.orderId,
 					  taxId: this.form.taxId.trim()
@@ -313,13 +318,7 @@
 					  uni.redirectTo({ url: `/pages/order/order` });
 					}
 				}catch (err) {
-					console.log('err',err);
-					// const msg = err.message ? err.message : '提交失败';
-					// uni.showToast({
-					// 	title: msg,
-					// 	icon: 'none',
-					// 	duration: 5000
-					// });
+					console.log('提交失败',err);
 				}
 			},
 			isEmailValid(email) {

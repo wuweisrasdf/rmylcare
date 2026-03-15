@@ -126,7 +126,7 @@
 			}
 		},
 		{
-			"path": "pages/invoice/management",
+			"path": "pages/invoice/invoice",
 			"style": {
 				"navigationBarTitleText": "发票管理"
 			}
