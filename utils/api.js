@@ -107,3 +107,6 @@ export const getDeliveryAddress = (orderId) => { return $H.get(`${$C.baseUrl}/in
 
 // 修改合同收货信息接口
 export const updateDeliveryAddress = params => { return $H.put(`${$C.baseUrl}/interface/order/updateDeliveryAddress`, params) };
+
+// 查看顺丰快递接口
+export const getLogistics = (orderId) => { return $H.post(`${$C.baseUrl}/interface/sf/orderTracking?orderId=${orderId}`) };

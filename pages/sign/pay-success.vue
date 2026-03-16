@@ -68,12 +68,16 @@
 						</u-radio-group>
 					</u-form-item>
 
-					<u-form-item v-if="showEnterpriseFields" prop="invoiceTitle" required="true">
+					<u-form-item prop="invoiceTitle" required="true">
 						<view slot="label" class="form-label">
-							<text>企业名称</text>
+							<text>发票抬头</text>
 							<text class="required-star">*</text>
 						</view>
-						<u-input v-model="form.invoiceTitle" placeholder="请输入企业名称" />
+						<u-input 
+						  v-model="form.invoiceTitle" 
+						  :placeholder="form.invoiceType === '个人' ? '个人' : '请输入企业名称'"
+						  :disabled="form.invoiceType === '个人'" 
+						/>
 					</u-form-item>
 
 					<u-form-item v-if="showEnterpriseFields" prop="taxId" required="true">
@@ -326,11 +330,12 @@
 				return re.test(email);
 			},
 			onInvoiceTypeChange(value) {
-				// 清空企业相关字段
-				if (value !== '企业') {
-					this.form.invoiceTitle = '';
-					this.form.taxId = '';
-				}
+			  if (value === '个人') {
+				this.form.invoiceTitle = '个人';
+				this.form.taxId = '';
+			  } else {
+				this.form.invoiceTitle = ''; // 企业时允许输入
+			  }
 			}
 		}
 	};

@@ -24,9 +24,9 @@
 						</u-radio-group>
 					</u-form-item>
 
-					<u-form-item v-if="showEnterpriseFields" prop="invoiceTitle" required="true">
+					<u-form-item prop="invoiceTitle" required="true">
 						<view slot="label" class="form-label">
-							<text>企业名称</text>
+							<text>发票抬头</text>
 							<text class="required-star">*</text>
 						</view>
 						<u-input v-model="form.invoiceTitle" 
@@ -144,7 +144,7 @@
 			},
 			// 是否可以发送邮件
 			canSend(){
-				return this.issued && this.isEmailValid(this.form.email);
+				return this.invoiceUploaded && this.isEmailValid(this.form.email);
 			}
 		},
 		onReady() {
@@ -152,6 +152,10 @@
 			this.$refs.uForm.setRules(this.rules);
 		},
 		onLoad(options) {
+			if (options.invoiceUploaded === 'true'){
+				this.invoiceUploaded = true;
+			}
+			
 			if (options.currentStatusId) {
 				this.currentStatusId = options.currentStatusId;
 			}
@@ -163,7 +167,7 @@
 		data() {
 			return {
 				orderId: '',
-				currentStatusId: 0,
+				invoiceUploaded: false,
 				issued: false, // 是否已开发票
 				form: {
 					invoiceType: '个人', // 默认选择个人 1 个人 2 企业

@@ -6,33 +6,31 @@
 
 		<view class="content-container">
 			<!-- 物流信息列表 -->
-<view class="logistics-list">
-	<view class="steps-container">
-		<view 
-			v-for="(item, index) in logisticsList" 
-			:key="index"
-			class="step-item"
-		>
-			<!-- 左侧步骤节点 -->
-			<view class="step-node">
-				<view class="node-dot"></view>
-				<!-- 竖线（除了最后一项） -->
-				<view v-if="index < logisticsList.length - 1" class="node-line"></view>
+			<view class="logistics-list">
+				<view class="steps-container">
+					<view v-for="(item, index) in logisticsList" :key="index" class="step-item">
+						<!-- 左侧步骤节点 -->
+						<view class="step-node">
+							<view class="node-dot"></view>
+							<!-- 竖线（除了最后一项） -->
+							<view v-if="index < logisticsList.length - 1" class="node-line"></view>
+						</view>
+
+						<!-- 右侧内容 -->
+						<view class="step-content">
+							<text class="info-title">{{ item.title }}</text>
+							<text class="info-time">{{ item.time }}</text>
+						</view>
+					</view>
+				</view>
+				
+				 <!-- 无物流信息提示 -->
+				 <view v-if="!logisticsList.length" class="no-data">
+				 	<text>暂无物流信息</text>
+				 </view>
 			</view>
 
-			<!-- 右侧内容 -->
-			<view class="step-content">
-				<text class="info-title">{{ item.title }}</text>
-				<text class="info-time">{{ item.time }}</text>
-			</view>
-		</view>
-	</view>
-</view>
 
-			<!-- 无物流信息提示 -->
-			<view v-if="!logisticsList.length" class="no-data">
-				<text>暂无物流信息</text>
-			</view>
 		</view>
 	</view>
 </template>
@@ -54,7 +52,7 @@
 				return barHeight;
 			}
 		},
-		onLoad(options) {
+		onLoad(options) { //options.orderId=99
 			if (options.orderId) {
 				this.orderId = options.orderId;
 				this.init();
@@ -68,54 +66,24 @@
 		},
 		methods: {
 			async init() {
-				try {
-					// 模拟数据（实际项目中请替换为 API 调用）
-					this.logisticsList = [
-						{
-							status: '●',
-							title: '您的订单已发货完成',
-							time: '2025-12-10 12:04:14'
-						},
-						{
-							status: '●',
-							title: '您的订单已打包完成',
-							time: '2025-12-10 12:04:15'
-						},
-						{
-							status: '●',
-							title: '商家已发货，正在通知圆通快递取件',
-							time: '2025-12-10 12:04:16'
-						},
-						{
-							status: '●',
-							title: '您的快件在【湖南省长沙市金州开发区】已揽收，揽收人：彭源（13973122213）',
-							time: '2025-12-11 04:37:57'
-						},
-						{
-							status: '●',
-							title: '您的快件已经到达【长沙转运中心】，【物流问题无需找商家或平台，请致电（专属热线:95554）更快解决】',
-							time: '2025-12-11 05:51:23'
-						},
-						{
-							status: '●',
-							title: '您的快件离开【长沙转运中心】，已发往【北京转运中心】。预计【12月13日】到达【北京市】，因运输距离较远，预计将在【13日晚上】为您更新快件状态，请您放心！',
-							time: '2025-12-11 21:39:04'
-						},
-						{
-							status: '●',
-							title: '您的快件已经到达【北京转运中心】，【物流问题无需找商家或平台，请致电（专属热线:95554）更快解决】',
-							time: '2025-12-13 04:02:05'
-						}
-					];
-
-					// 示例：如果要调用真实接口
-					// const res = await api.getLogistics(this.orderId);
-					// if (res.code === 200) {
-					//   this.logisticsList = res.data;
-					// }
-				} catch (error) {
-					console.error('获取物流信息失败:', error);
-				}
+			  try {
+			    const res = await api.getLogistics(this.orderId);
+			    if (res.code === 200 && res.routes) {
+			      // routes 是字符串，需解析为数组
+			      const routesArray = JSON.parse(res.routes);
+			      
+			      // 转换为页面所需格式：{ title, time }
+			      this.logisticsList = routesArray.map(item => ({
+			        title: item.remark || `${item.firstStatusName} - ${item.secondaryStatusName}`,
+			        time: item.acceptTime
+			      })).reverse();
+			    } else {
+			      this.logisticsList = [];
+			    }
+			  } catch (error) {
+			    console.error('获取物流信息失败:', error);
+			    this.logisticsList = [];
+			  }
 			}
 		}
 	};
@@ -142,23 +110,23 @@
 		border-radius: 16rpx;
 		box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.08);
 		padding: 30rpx 24rpx;
-		margin-bottom: 30rpx;
+		margin-bottom: 60rpx;
 	}
-	
+
 	.steps-container {
 		display: flex;
 		flex-direction: column;
 	}
-	
+
 	.step-item {
 		display: flex;
 		margin-bottom: 32rpx;
-	
+
 		&:last-child {
 			margin-bottom: 0;
 		}
 	}
-	
+
 	.step-node {
 		display: flex;
 		flex-direction: column;
@@ -166,7 +134,7 @@
 		margin-right: 24rpx;
 		min-width: 36rpx;
 	}
-	
+
 	.node-dot {
 		width: 16rpx;
 		height: 16rpx;
@@ -174,28 +142,32 @@
 		background-color: #4A63E4;
 		z-index: 2;
 	}
-	
+
 	.node-line {
 		width: 2rpx;
 		flex: 1;
 		background-color: #E5E5E5;
 		margin-top: 8rpx;
 	}
-	
+
 	.step-content {
 		flex: 1;
 	}
-	
+
 	.info-title {
 		font-size: 28rpx;
 		color: #2C2C2C;
 		line-height: 1.4;
 	}
-	
+
 	.info-time {
 		font-size: 24rpx;
 		color: #888888;
 		margin-top: 8rpx;
 		display: block;
+	}
+	
+	.no-data{
+		text-align: center;
 	}
 </style>
