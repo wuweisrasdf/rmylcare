@@ -1,21 +1,39 @@
 <template>
-
 	<view class="container" :style="{ paddingTop: containerPaddingTop }">
-		<u-navbar :fixed="true" :autoBack="false" title="订单列表" leftIconSize="36" leftIconColor="#2C2C2C"
-			@leftClick="goHome" :titleStyle="{ fontWeight: 'bold', fontSize: '36rpx', color: '#2C2C2C' }">
+		<u-navbar 
+			:fixed="true" 
+			:autoBack="false" 
+			title="订单列表" 
+			leftIconSize="36" 
+			leftIconColor="#2C2C2C"
+			@leftClick="goHome" 
+			:titleStyle="{ fontWeight: 'bold', fontSize: '36rpx', color: '#2C2C2C' }">
 		</u-navbar>
 
 		<view class="tab-switch">
-			<view class="tab-item" :class="{ active: currentTab === 'inProgress' }" @click="switchTab('inProgress')">进行中
+			<view 
+				class="tab-item" 
+				:class="{ active: currentTab === 'inProgress' }" 
+				@click="switchTab('inProgress')">
+				进行中
 			</view>
-			<view class="tab-item" :class="{ active: currentTab === 'completed' }" @click="switchTab('completed')">已完成
+			<view 
+				class="tab-item" 
+				:class="{ active: currentTab === 'completed' }" 
+				@click="switchTab('completed')">
+				已完成
 			</view>
 		</view>
 
-		<view v-if="filteredList.length > 0">
-			<view class="content-container">
-				<view v-for="(item, index) in filteredList" :key="index" class="order-card"
+		<!-- 内容区域：使用 flex + overflow 控制滚动 -->
+		<view class="content-container">
+			<view v-if="filteredList.length > 0">
+				<view 
+					v-for="(item, index) in filteredList" 
+					:key="index" 
+					class="order-card"
 					@click="showDetail(item.id)">
+					
 					<!-- 姓名 + 状态标签 -->
 					<view class="header">
 						<text class="name">{{ item.motherName }}</text>
@@ -34,12 +52,12 @@
 							<text class="value">{{ item.orderCode }}</text>
 						</view>
 					</view>
+					
 					<view class="info-row">
 						<view class="field">
 							<text class="label">签约日期:</text>
 							<text class="value">{{ item.signDate | formatDate }}</text>
 						</view>
-						<!-- 这里可以留空或放其他字段 -->
 						<view class="field"></view>
 					</view>
 
@@ -49,51 +67,32 @@
 					</view>
 				</view>
 			</view>
-		</view>
-		<view v-else style="padding-top:50%;">
-			<u-empty text="暂无记录" mode="order" textSize="28" iconSize="90"></u-empty>
 
+			<view v-if="filteredList.length === 0" class="empty-wrapper">
+				<u-empty text="暂无记录" mode="order" textSize="28" iconSize="90"></u-empty>
+			</view>
 		</view>
-
 
 		<!-- <view class="no-more" v-if="pageOptions.is_end">没有更多了</view> -->
-
-
-		<!--   <TabBar :current-tab="currentTab"/> -->
 	</view>
-
-
 </template>
 
 <script>
-	import TabBar from '@/components/TabBar/TabBar.vue';
 	import * as api from '@/utils/api.js'
-	import {
-		mapState
-	} from 'vuex'
+	import { mapState } from 'vuex'
 
 	export default {
-		components: {
-			TabBar
-		},
 		filters: {
 			formatDate(value) {
-			        if (!value) return '';
-			        
-			        const date = new Date(value);
-			        
-			        // 检查日期是否有效
-			        if (isNaN(date.getTime())) {
-			            // 如果解析失败，尝试直接截取字符串前10位作为兜底
-			            return String(value).substring(0, 10);
-			        }
-			
-			        const year = date.getFullYear();
-			        // 月份需要 +1，且补零
-			        const month = String(date.getMonth() + 1).padStart(2, '0');
-			        const day = String(date.getDate()).padStart(2, '0');
-			
-			        return `${year}-${month}-${day}`;
+				if (!value) return '';
+				const date = new Date(value);
+				if (isNaN(date.getTime())) {
+					return String(value).substring(0, 10);
+				}
+				const year = date.getFullYear();
+				const month = String(date.getMonth() + 1).padStart(2, '0');
+				const day = String(date.getDate()).padStart(2, '0');
+				return `${year}-${month}-${day}`;
 			}
 		},
 		computed: {
@@ -101,12 +100,10 @@
 				user: state => state.user,
 				token: state => state.token,
 			}),
-			// 计算容器顶部内边距（转为 rpx）
 			containerPaddingTop() {
 				const barHeight = (this.CustomBar || 0) * 2 + 'rpx';
 				return barHeight;
 			},
-			// 根据 currentTab 过滤订单列表
 			filteredList() {
 				if (this.currentTab === 'inProgress') {
 					return this.list.filter(item => !['已完成','协议解除', '已退款'].includes(item.statusTxt));
@@ -115,76 +112,57 @@
 				}
 			}
 		},
-		// 下拉刷新
 		onPullDownRefresh() {
-			this.init()
-			setTimeout(() => {
-				uni.stopPullDownRefresh();
-			}, 1000)
+			this.init();
+			setTimeout(() => uni.stopPullDownRefresh(), 1000);
 		},
-		// 滚动到底部加载更多
 		onReachBottom() {
-			console.log("触底了")
-
 			if (!this.pageOptions.is_end) {
-				this.pageOptions.page++
-				this.getList()
+				this.pageOptions.page++;
+				this.getList();
 			}
 		},
 		onLoad() {
-			this.init()
+			this.init();
 		},
 		data() {
 			return {
 				currentTab: 'inProgress',
 				pageOptions: {
-					page: 1, // 当前页
-					total: 0, // 总条数
-					pageSize: 10, // 每页显示的数据
-					is_end: false // 页面是否已加载完
+					page: 1,
+					total: 0,
+					pageSize: 10,
+					is_end: false
 				},
 				list: []
 			};
 		},
 		methods: {
 			goHome() {
-				uni.redirectTo({
-					url: '/pages/index/index'
-				})
+				uni.redirectTo({ url: '/pages/index/index' });
 			},
 			switchTab(tab) {
 				this.currentTab = tab;
 			},
-			// 重置分页数据
 			resetPage() {
-				this.pageOptions.page = 1
-				this.pageOptions.total = 0
-				this.pageOptions.is_end = false
-				this.list = []
+				this.pageOptions.page = 1;
+				this.pageOptions.total = 0;
+				this.pageOptions.is_end = false;
+				this.list = [];
 			},
-			// 初始化
 			init() {
-				this.resetPage()
-				this.getList()
+				this.resetPage();
+				this.getList();
 			},
 			showDetail(orderId) {
-				uni.navigateTo({
-					url: "/pages/order/detail?orderId=" + orderId
-				})
+				uni.navigateTo({ url: `/pages/order/detail?orderId=${orderId}` });
 			},
 			async getList() {
-				// uni.showLoading({
-				// 	title: '数据加载中'
-				// })
-
 				try {
-					const res = await api.getFdpOrderListForUser(this.user.userId,null,null);
+					let userId = this.user.userId;
+					const res = await api.getFdpOrderListForUser(userId, null, null);
 					if (res.code !== 200) {
-						//uni.hideLoading();
-						uni.showToast({
-							title: res.msg || '请求失败',
-							icon: 'none'
-						});
+						uni.showToast({ title: res.msg || '请求失败', icon: 'none' });
 						return;
 					}
 
@@ -193,41 +171,26 @@
 
 					if (rows && rows.length > 0) {
 						const processedRows = rows.map(row => {
-							
 							if (row.proStatus == 2) {
 								row.statusClass = 'unsigned';
-							}else if (row.proStatus == 3) {
+							} else if (row.proStatus == 3) {
 								row.statusClass = 'unbound';
 							} else {
 								row.statusClass = 'signed';
 							}
-
-							// 创建新的对象，保持原row的所有属性，添加新字段
-							return {
-								...row
-							};
+							return { ...row };
 						});
 
 						this.list.push(...processedRows);
 
-						// 判断是否加载完毕
 						if (this.list.length >= this.pageOptions.total || processedRows.length < this.pageOptions.pageSize) {
 							this.pageOptions.is_end = true;
 						}
 					}
 				} catch (error) {
 					console.error('请求出错:', error);
-					//uni.hideLoading();
-
-					// uni.showToast({
-					// 	title: '网络错误，请重试',
-					// 	icon: 'none'
-					// });
-				}finally{
-					//uni.hideLoading();
 				}
 			}
-
 		}
 	};
 </script>
@@ -240,14 +203,10 @@
 	.container {
 		background-color: #F5F5F5;
 		padding: 0rpx 26rpx;
-		height: 100vh;
-		overflow-y: scroll;
-	}
-
-	.content-container {
 		display: flex;
-		justify-content: center;
 		flex-direction: column;
+		min-height: 100vh; /* 替代 height: 100vh */
+		box-sizing: border-box;
 	}
 
 	.tab-switch {
@@ -275,6 +234,24 @@
 		color: #4A63E4;
 	}
 
+	/* 👇 关键：内容容器负责滚动 */
+	.content-container {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		overflow-y: auto;
+		touch-action: pan-y; /* 防止 iOS 手势冲突 */
+		padding: 0 26rpx; /* 保持左右边距 */
+	}
+
+	.empty-wrapper {
+		flex: 1;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		padding-top: 200rpx; /* 可选：避免太靠上 */
+	}
+
 	.order-card {
 		padding: 36rpx 20rpx;
 		margin-bottom: 40rpx;
@@ -282,6 +259,9 @@
 		box-shadow: 0rpx 10rpx 26rpx 0rpx rgba(0, 88, 133, 0.08);
 		border-radius: 40rpx;
 		position: relative;
+		/* 👇 解决 iOS 滚动卡顿 */
+		transform: translateZ(0);
+		will-change: transform;
 	}
 
 	.header {
@@ -322,10 +302,7 @@
 		text-align: center;
 		background-repeat: no-repeat;
 		background-size: contain;
-		text-align: center;
 		padding-top: 8rpx;
-		font-weight: bold;
-		font-size: 24rpx;
 	}
 
 	.status-tag.signed {
@@ -343,22 +320,18 @@
 		color: #FF9C00;
 	}
 
-	/* 修改 info-row 样式 */
 	.info-row {
 		display: grid;
 		grid-template-columns: 1fr 1fr;
 		gap: 10rpx 20rpx;
-		/* 行间距10，列间距20 */
 		padding-left: 18rpx;
 		margin-bottom: 16rpx;
-		/* 减小底部边距 */
 	}
 
 	.field {
 		display: flex;
 		align-items: center;
 		min-height: 40rpx;
-		/* 减小最小高度 */
 	}
 
 	.label {
@@ -380,20 +353,15 @@
 		text-overflow: ellipsis;
 		white-space: nowrap;
 		min-width: 0;
-		/* 重要：允许值区域压缩 */
 	}
 
-	/* 修改预产医院行样式 */
 	.hospital-row {
 		display: flex;
 		align-items: center;
-		/* 改为居中对齐，保持与其他行一致 */
 		padding-left: 18rpx;
 		margin-top: 8rpx;
-		/* 减小顶部边距 */
 		min-height: 40rpx;
 		padding-right: 20rpx;
-		/* 右侧增加内边距，防止文字贴边 */
 	}
 
 	.hospital-row .label {
@@ -415,7 +383,6 @@
 		text-overflow: ellipsis;
 		white-space: nowrap;
 		padding-right: 20rpx;
-		/* 右侧留出空间 */
 	}
 
 	.no-more {

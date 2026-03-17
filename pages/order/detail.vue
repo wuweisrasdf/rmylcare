@@ -66,10 +66,10 @@
 		</view>
 
 		<!-- 1-已签约、2-已付款、3-样本接收、4-病毒检测、5-制备完成、6-配送、7-已完成、8-申请解除、9-协议解除、10-已退款 -->
-<!-- 		<view class="tracking-number" v-if="currentStatusId >= 6">
+		<view class="tracking-number" v-if="currentStatusId >=6 && trackingNo">
 			<text>快递单号：</text>
-			<text>SFH234567890098765 TODO</text> 
-		</view> -->
+			<text>{{ trackingNo }}</text> 
+		</view>
 		
 		<view class="detail-btn">
 			<u-button :custom-style="detailBtnStyle" @click="handleAddress" v-if="[1,2,3,4].includes(currentStatusId)">
@@ -492,6 +492,7 @@
 				cardList: [],
 				info: {},
 				currentProgressIndex: 0,
+				trackingNo: '', // 快递单号
 				progressData: [{
 						OrderName: '未签约',
 						Desc: '仅录入基本信息，未签字',
@@ -624,6 +625,8 @@
 								.progressDataJiechu, this.progressData);
 						}
 						this.setProgress();
+						
+						this.getTrackingNo();
 					}
 				}
 			},
@@ -756,6 +759,21 @@
 					result = 'step-current';
 				}
 				return result;
+			},
+			// 获取快递单号
+			async getTrackingNo(){
+				if (this.currentStatusId < 6) {
+					return;
+				}
+				try{
+					const res = await api.getLogistics(this.orderId);
+					if (res.code == 200 && res.trackingNo) {
+						this.trackingNo = res.trackingNo;
+					}
+				}catch(error){
+					
+				}
+
 			},
 			// 处理收货地址逻辑
 			async handleAddress() {

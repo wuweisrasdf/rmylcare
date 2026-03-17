@@ -275,16 +275,34 @@
 				}
 
 				// 获取合同信息
+				let order = null;
 				const result = await api.getFdpOrder(this.orderId);
 				if (result.code == 200 && result.rows.length > 0) {
-					const order = result.rows[0];
+					order = result.rows[0];
 
 					this.info.price = order.priceOut;
 					this.info.orderCode = order.orderCode; // 协议号
 					this.info.payDate = order.payDate || ''; // 支付时间
-
-					// 接收电子发票邮箱
-					this.form.email = order.userEmail;
+				}
+				
+				// 获取发票信息（避免在支付前已经设置过发票）
+				try {
+					const res2 = await api.getInvoice(this.orderId);
+					if (res2.code == 200) {
+						this.form.taxId = res2.taxId || '';
+						this.form.invoiceTitle = res2.invoiceTitle || '';
+						this.form.invoiceType = res2.invoiceType == '2' ? '企业' : '个人';
+						
+						// 接收电子发票邮箱
+						this.form.email = res2.email || (order?.userEmail || '');
+					}
+				} catch (error) {
+					console.error('失败:', error);
+					
+					// 初始化默认值（新建场景）
+					this.form.invoiceType = '个人';
+					this.form.invoiceTitle = '个人';
+					this.form.email = order?.userEmail || '';
 				}
 
 			},
