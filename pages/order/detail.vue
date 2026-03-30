@@ -80,7 +80,7 @@
 				<u-icon name="car" size="38" color="#ffffff"></u-icon>
 				物流信息
 			</u-button>
-			<u-button :custom-style="detailBtnStyle" @click="handleInvoice" v-if="currentStatusId > 0 && currentStatusId < 7">
+			<u-button :custom-style="detailBtnStyle" @click="handleInvoice" v-if="currentStatusId > 0 && currentStatusId < 8">
 				<u-icon name="file-text" size="36" color="#ffffff"></u-icon>
 				发票管理 
 			</u-button>

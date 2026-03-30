@@ -18,6 +18,10 @@ Vue.config.productionTip = false
 import mpShare from 'uview-ui/libs/mixin/mpShare.js';
 Vue.mixin(mpShare);
 
+// 分享
+import shareMixin from '@/utils/shareMixin.js';
+Vue.mixin(shareMixin);
+
 
 App.mpType = 'app'
 const app = new Vue({

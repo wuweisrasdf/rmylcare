@@ -94,13 +94,13 @@
 					url: `/pages/product/promotion?type=${type}`
 				})
 			},
-			onShareAppMessage() {
-				return {
-					title: '科数健管 - 冻干粉服务',
-					path: '/pages/product/detail?productId=123',
-					imageUrl: '/static/share.jpg' // 可选：分享封面图
-				}
-			},
+			// onShareAppMessage() {
+			// 	return {
+			// 		title: '智数健管',
+			// 		path: '/pages/index/index',
+			// 		imageUrl: '/static/logo.png' // 可选：分享封面图
+			// 	}
+			// },
 			toSign() {
 				if (!this.isLogined) {
 					uni.redirectTo({

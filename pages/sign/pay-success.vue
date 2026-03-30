@@ -198,9 +198,10 @@
 					orderCode: '', // 协议号
 					payDate: '', // 支付时间
 				},
+				savedInvoiceTitle: '', // 用于缓存企业信息
 				form: {
 					invoiceType: '个人', // 默认选择个人 1 个人 2 企业
-					invoiceTitle: '',
+					invoiceTitle: '个人',
 					taxId: '',
 					email: ''
 				},
@@ -293,15 +294,17 @@
 						this.form.invoiceTitle = res2.invoiceTitle || '';
 						this.form.invoiceType = res2.invoiceType == '2' ? '企业' : '个人';
 						
+						if (this.form.invoiceType === '企业') {
+							this.savedInvoiceTitle = this.form.invoiceTitle;
+						}
+						
 						// 接收电子发票邮箱
 						this.form.email = res2.email || (order?.userEmail || '');
 					}
 				} catch (error) {
 					console.error('失败:', error);
 					
-					// 初始化默认值（新建场景）
-					this.form.invoiceType = '个人';
-					this.form.invoiceTitle = '个人';
+					// 初始化默认值
 					this.form.email = order?.userEmail || '';
 				}
 
@@ -321,9 +324,14 @@
 				try {
 					let invoiceType = 2;
 					let invoiceTitle = this.form.invoiceTitle.trim();
+					let taxId = this.form.taxId.trim();
+					
 					if (this.form.invoiceType === '个人') {
 						invoiceType = 1;
 						invoiceTitle = '个人';
+						taxId = '';
+					} else {
+						this.savedInvoiceTitle = invoiceTitle;
 					}
 					
 					const params = {
@@ -331,7 +339,7 @@
 					  invoiceTitle,
 					  invoiceType,
 					  orderId: this.orderId,
-					  taxId: this.form.taxId.trim()
+					  taxId: taxId
 					};
 										
 					const res = await api.updateInvoice(params);
@@ -347,13 +355,13 @@
 				const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 				return re.test(email);
 			},
-			onInvoiceTypeChange(value) {
-			  if (value === '个人') {
-				this.form.invoiceTitle = '个人';
-				this.form.taxId = '';
-			  } else {
-				this.form.invoiceTitle = ''; // 企业时允许输入
-			  }
+			onInvoiceTypeChange(value) {				  
+				if (value === '个人') {
+					this.savedInvoiceTitle = this.form.invoiceTitle;
+					this.form.invoiceTitle = '个人';
+				} else {
+					this.form.invoiceTitle = this.savedInvoiceTitle || '';
+				}
 			}
 		}
 	};
