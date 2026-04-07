@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.List;
 import javax.servlet.http.HttpServletResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.BindingResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -52,8 +53,15 @@ public class HmMotherController extends BaseController
      */
     @PreAuthorize("@ss.hasPermi('system:mother:list')")
     @GetMapping("/list")
-    public TableDataInfo list(HmMother hmMother)
+    public TableDataInfo list(HmMother hmMother,BindingResult result)
     {
+	    if (result.hasErrors()) {
+	        result.getAllErrors();
+	        TableDataInfo returnErr = new TableDataInfo();
+	        returnErr.setCode(500);
+	        returnErr.setMsg("查询条件的类型不匹配:请输入数字!");
+	        return returnErr;
+	    }
         startPage();
         List<HmMother> list = hmMotherService.selectHmMotherList(hmMother);
         return getDataTable(list);
