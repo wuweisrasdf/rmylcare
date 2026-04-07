@@ -3,7 +3,10 @@ package com.healthcare.web.controller.system;
 import java.util.List;
 import javax.servlet.http.HttpServletResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -42,8 +45,16 @@ public class HmProductController extends BaseController
      */
     @PreAuthorize("@ss.hasPermi('system:product:list')")
     @GetMapping("/list")
-    public TableDataInfo list(HmProduct hmProduct)
+    public TableDataInfo list(HmProduct hmProduct, BindingResult result)
     {
+	    if (result.hasErrors()) {
+	        result.getAllErrors();
+	        TableDataInfo returnErr = new TableDataInfo();
+	        returnErr.setCode(500);
+	        returnErr.setMsg("查询条件的类型不匹配:请输入数字!");
+	        return returnErr;
+	    }
+
         startPage();
         List<HmProduct> list = hmProductService.selectHmProductList(hmProduct);
         return getDataTable(list);
