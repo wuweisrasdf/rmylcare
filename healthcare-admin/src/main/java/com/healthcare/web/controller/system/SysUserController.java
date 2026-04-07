@@ -7,6 +7,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -66,8 +67,15 @@ public class SysUserController extends BaseController
      */
     @PreAuthorize("@ss.hasPermi('system:user:list')")
     @GetMapping("/list")
-    public TableDataInfo list(SysUser user)
+    public TableDataInfo list(SysUser user,BindingResult result)
     {
+	    if (result.hasErrors()) {
+	        result.getAllErrors();
+	        TableDataInfo returnErr = new TableDataInfo();
+	        returnErr.setCode(500);
+	        returnErr.setMsg("查询条件的类型不匹配:请输入数字!");
+	        return returnErr;
+	    }
         startPage();
         List<SysUser> list = userService.selectUserList(user);
         return getDataTable(list);
