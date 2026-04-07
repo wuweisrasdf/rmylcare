@@ -7,6 +7,7 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.BindingResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -35,6 +36,7 @@ import io.swagger.annotations.ApiOperation;
 import com.healthcare.common.utils.OrderSystemUtils;
 import com.healthcare.common.utils.poi.ExcelUtil;
 import com.healthcare.common.core.page.TableDataInfo;
+import com.healthcare.common.core.redis.RedisCache;
 
 /**
  * 冻干粉订单退款Controller
@@ -54,14 +56,24 @@ public class HmOrderFdpReturnController extends BaseController
     
     @Autowired
 	private orderSystemConfig orderSystemConfig;
+    
+    @Autowired
+    private RedisCache redisCache;
 
     /**
      * 查询冻干粉订单退款列表
      */
     @PreAuthorize("@ss.hasPermi('system:return:list')")
     @GetMapping("/list")
-    public TableDataInfo list(HmOrderFdpReturn hmOrderFdpReturn)
+    public TableDataInfo list(HmOrderFdpReturn hmOrderFdpReturn,BindingResult result)
     {
+	    if (result.hasErrors()) {
+	        result.getAllErrors();
+	        TableDataInfo returnErr = new TableDataInfo();
+	        returnErr.setCode(500);
+	        returnErr.setMsg("查询条件的类型不匹配:请输入数字!");
+	        return returnErr;
+	    }
         startPage();
         List<HmOrderFdpReturn> list = hmOrderFdpReturnService.selectHmOrderFdpReturnList(hmOrderFdpReturn);
         return getDataTable(list);
@@ -76,6 +88,9 @@ public class HmOrderFdpReturnController extends BaseController
     public void export(HttpServletResponse response, HmOrderFdpReturn hmOrderFdpReturn)
     {
         List<HmOrderFdpReturn> list = hmOrderFdpReturnService.selectHmOrderFdpReturnList(hmOrderFdpReturn);
+        for(HmOrderFdpReturn	 obj : list) {
+        	obj.setOrderCode(obj.getOrderCode());
+        }
         ExcelUtil<HmOrderFdpReturn> util = new ExcelUtil<HmOrderFdpReturn>(HmOrderFdpReturn.class);
         util.exportExcel(response, list, "冻干粉订单退款数据");
     }
@@ -140,8 +155,9 @@ public class HmOrderFdpReturnController extends BaseController
     		HmOrderFdp orderObj = hmOrderFdpService.selectHmOrderFdpById(hmOrderFdpReturn.getOrderId());
     		
     		OrderSystemUtils orderSystemUtils = new OrderSystemUtils();
-            JSONArray progress = orderSystemUtils.getOrderDetail(orderSystemConfig, orderObj.getOrderCode());
-            
+    		orderSystemUtils.redisCache = redisCache;
+    		JSONObject dataObj = orderSystemUtils.getOrderDetail(orderSystemConfig, orderObj.getOrderCode());
+    		JSONArray progress = orderSystemUtils.getOrderProgress(dataObj);
             for (int i = 0; i < progress.size(); i++) {
         		Map<String, String> progObj = new HashMap<String, String>();
         	    String jsonString = progress.getString(i);
