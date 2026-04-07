@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.healthcare.system.mapper.HmRefundMapper">
+    
+    <resultMap type="HmRefund" id="HmRefundResult">
+        <result property="id"    column="id"    />
+        <result property="syncId"    column="sync_id"    />
+        <result property="orderId"    column="order_id"    />
+        <result property="firstName"    column="first_name"    />
+        <result property="amount"    column="amount"    />
+        <result property="refund"    column="refund"    />
+        <result property="user1Id"    column="user1_id"    />
+        <result property="user1Name"    column="user1_name"    />
+        <result property="user2Id"    column="user2_id"    />
+        <result property="user2Name"    column="user2_name"    />
+        <result property="commit1Date"    column="commit1_date"    />
+        <result property="commit2Date"    column="commit2_date"    />
+        <result property="wxStatus"    column="wx_status"    />
+        <result property="wxResult"    column="wx_result"    />
+        <result property="syncFlag"    column="sync_flag"    />
+        <result property="remark"    column="remark"    />
+        <result property="deleteFlag"    column="delete_flag"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="transactionId"    column="transaction_id"    />
+    </resultMap>
+
+    <sql id="selectHmRefundVo">
+        select r.id, r.sync_id, r.order_id, first_name, amount, refund, user1_id, u1.nick_name as user1_name, u2.nick_name as user2_name, user2_id, commit1_date, commit2_date, wx_status, wx_result, r.sync_flag, r.remark, r.create_by, r.create_time, p.transaction_id from hm_refund r
+        left join sys_user u1 on r.user1_id = u1.user_id
+        left join sys_user u2 on r.user2_id = u2.user_id 
+        left join hm_payment p on r.order_id = p.order_id
+    </sql>
+
+    <select id="selectHmRefundList" parameterType="HmRefund" resultMap="HmRefundResult">
+        <include refid="selectHmRefundVo"/>
+        <where>  
+            <if test="syncId != null "> and r.sync_id = #{syncId}</if>
+            <if test="orderId != null "> and r.order_id = #{orderId}</if>
+            <if test="firstName != null  and firstName != ''"> and r.first_name like concat('%', #{firstName}, '%')</if>
+            <if test="amount != null "> and r.amount = #{amount}</if>
+            <if test="refund != null "> and r.refund = #{refund}</if>
+            <if test="user1Id != null "> and r.user1_id = #{user1Id}</if>
+            <if test="user2Id != null "> and r.user2_id = #{user2Id}</if>
+            <if test="commit1Date != null "> and r.commit1_date = #{commit1Date}</if>
+            <if test="commit2Date != null "> and r.commit2_date = #{commit2Date}</if>
+            <if test="wxStatus != null "> and r.wx_status = #{wxStatus}</if>
+            <if test="wxResult != null  and wxResult != ''"> and r.wx_result = #{wxResult}</if>
+            <if test="syncFlag != null "> and r.sync_flag = #{syncFlag}</if>
+            <if test="checkStep == 1 "> and r.user1_id = 0</if>
+            <if test="checkStep == 2 "> and r.user1_id > 0 and r.user2_id = 0 </if>
+            <if test="checkStep == 3 "> and r.user2_id > 0</if>
+            <if test="deleteFlag != -1 "> and r.delete_flag = #{deleteFlag}</if>
+        </where>
+        order by r.id DESC
+    </select>
+    
+    <select id="selectHmRefundById" parameterType="Long" resultMap="HmRefundResult">
+        <include refid="selectHmRefundVo"/>
+        where id = #{id}
+    </select>
+        
+    <insert id="insertHmRefund" parameterType="HmRefund" useGeneratedKeys="true" keyProperty="id">
+        insert into hm_refund
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="syncId != null">sync_id,</if>
+            <if test="orderId != null">order_id,</if>
+            <if test="firstName != null">first_name,</if>
+            <if test="amount != null">amount,</if>
+            <if test="refund != null">refund,</if>
+            <if test="user1Id != null">user1_id,</if>
+            <if test="user2Id != null">user2_id,</if>
+            <if test="commit1Date != null">commit1_date,</if>
+            <if test="commit2Date != null">commit2_date,</if>
+            <if test="wxStatus != null">wx_status,</if>
+            <if test="wxResult != null">wx_result,</if>
+            <if test="syncFlag != null">sync_flag,</if>
+            <if test="remark != null">remark,</if>
+            <if test="deleteFlag != null">delete_flag,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="syncId != null">#{syncId},</if>
+            <if test="orderId != null">#{orderId},</if>
+            <if test="firstName != null">#{firstName},</if>
+            <if test="amount != null">#{amount},</if>
+            <if test="refund != null">#{refund},</if>
+            <if test="user1Id != null">#{user1Id},</if>
+            <if test="user2Id != null">#{user2Id},</if>
+            <if test="commit1Date != null">#{commit1Date},</if>
+            <if test="commit2Date != null">#{commit2Date},</if>
+            <if test="wxStatus != null">#{wxStatus},</if>
+            <if test="wxResult != null">#{wxResult},</if>
+            <if test="syncFlag != null">#{syncFlag},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="deleteFlag != null">#{deleteFlag},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+         </trim>
+    </insert>
+
+    <update id="updateHmRefund" parameterType="HmRefund">
+        update hm_refund
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="syncId != null">sync_id = #{syncId},</if>
+            <if test="orderId != null">order_id = #{orderId},</if>
+            <if test="firstName != null">first_name = #{firstName},</if>
+            <if test="amount != null">amount = #{amount},</if>
+            <if test="refund != null">refund = #{refund},</if>
+            <if test="user1Id != null">user1_id = #{user1Id},</if>
+            <if test="user2Id != null">user2_id = #{user2Id},</if>
+            <if test="commit1Date != null">commit1_date = #{commit1Date},</if>
+            <if test="commit2Date != null">commit2_date = #{commit2Date},</if>
+            <if test="wxStatus != null">wx_status = #{wxStatus},</if>
+            <if test="wxResult != null">wx_result = #{wxResult},</if>
+            <if test="syncFlag != null">sync_flag = #{syncFlag},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="deleteFlag != null">delete_flag = #{deleteFlag},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteHmRefundById" parameterType="Long">
+        delete from hm_refund where id = #{id}
+    </delete>
+
+    <delete id="deleteHmRefundByIds" parameterType="String">
+        delete from hm_refund where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    
+    <update id="updateDeleteFlag" >
+        update hm_refund set delete_flag=1 where user1_id=0 OR user2_id=0
+    </update>
+</mapper>
