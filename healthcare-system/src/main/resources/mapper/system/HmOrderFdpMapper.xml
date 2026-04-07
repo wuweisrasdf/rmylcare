@@ -75,7 +75,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="orderStatus != null "> and order_status = #{orderStatus}</if>
             <if test="userId != null  and userId != ''"> and fdp.user_id = #{userId}</if>
             <if test="salesId != null  and salesId != ''"> and sales_id = #{salesId}</if>
-            <if test="signDate != null "> and (fdp.sign_date &gt;=#{signDate} and fdp.sign_date &lt; #{signDate} + INTERVAL 1 DAY)</if>
+            <if test="signDate != null "> and (fdp.sign_date &gt;=#{signDate} and fdp.sign_date  &lt; #{signDate} + INTERVAL 1 DAY)</if>
             <if test="payDate != null "> and pay_date = #{payDate}</if>
             <if test="priceOut != null "> and price_out = #{priceOut}</if>
             <if test="motherId != null "> and fdp.mother_id = #{motherId}</if>
@@ -83,11 +83,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="id != null "> and fdp.id = #{id}</if>
             <if test="dueDateBegin != null"> and m.due_date >= #{dueDateBegin}</if>
             <if test="dueDateEnd != null"> and m.due_date &lt;= #{dueDateEnd}</if>
-            
             <if test="userName != null "> and fdp.user_info like concat('%', #{userName}, '%')</if>
             <if test="salesName != null "> and u.nick_name = #{salesName}</if>
             <if test="motherName != null "> and m.mother_name = #{motherName}</if>
         </where>
+    </select>
+    
+    <select id="selectNotPayList" parameterType="HmOrderFdp" resultMap="HmOrderFdpResult">
+    	<include refid="selectHmOrderFdpVo"/> f where (pro_code != '' and sign_date BETWEEN DATE_FORMAT(NOW() - INTERVAL 20 MINUTE, '%Y-%m-%d %H:%i:00') AND DATE_FORMAT(NOW() - INTERVAL 20 MINUTE, '%Y-%m-%d %H:%i:59')) AND NOT EXISTS(select order_id from hm_payment p where transaction_id!= '' and p.order_id=f.id);
     </select>
     
     <select id="selectHmOrderFdpById" parameterType="Long" resultMap="HmOrderFdpResult">
