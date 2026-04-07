@@ -393,10 +393,11 @@ public class WxEsignController extends BaseController
 	
 	/**
      * 接收解约签署成功消息
+	 * @throws Exception 
      */
 	@ApiOperation("接收解约签署成功消息")
     @PostMapping("/returnURL2")
-    public AjaxResult returnURL2(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException 
+    public AjaxResult returnURL2(HttpServletRequest request, HttpServletResponse response) throws Exception 
     {
     	SafeVerify sv  =new SafeVerify();
 		if(sv.checkPass(request,  EsignAppSecret))
@@ -436,12 +437,15 @@ public class WxEsignController extends BaseController
 		        	returnOrder.setSignDate(DateUtils.getNowDate());
 		        	hmOrderFdpReturnService.updateHmOrderFdpReturn(returnOrder);
 
-		        	//修改解约协议状态 为 4
+		        	//修改协议状态 为 4
 		        	Long oId = returnOrder.getOrderId();
 		        	HmOrderFdp orderObj = new HmOrderFdp();
 		        	orderObj.setId(oId);
 		        	orderObj.setProStatus(4);
 		        	hmOrderFdpService.updateHmOrderFdp(orderObj);
+		        	
+		        	//发送解约消息
+		        	this.sendWxMessage(oId, 2);
 				}
 	        	
 	        }
@@ -1010,29 +1014,64 @@ public class WxEsignController extends BaseController
 		 }
 	}
     
+	/**
+     * 发送未支付消息
+     * @throws Exception 
+     */
+	@ApiOperation("发送未支付消息")
+	@PostMapping("/sendNotPayMessage")
+	public void sendNotPayMessage() throws Exception{
+		List<HmOrderFdp> list = hmOrderFdpService.selectNotPayList();
+		for(HmOrderFdp orderObj : list) {
+			sendWxMessage(orderObj.getId(), 1);
+		}
+	}
 	
 	/**
      * 发送微信小程序消息
+     * orderId: 协议ID
+     * messageType: 消息类型(1,未付款;2,解除协议)
      * @throws Exception 
      */
 	@ApiOperation("发送微信小程序消息")
 	@PostMapping("/sendWxMessage")
 	public AjaxResult sendWxMessage(Long orderId, int messageType) throws Exception{
 		AjaxResult ajax = AjaxResult.success();
-		
+		logger.info("send wx Message:orderId["+orderId.toString()+"] messageType["+messageType+"]");
 		WxUtils wxUtils = new WxUtils();
 		String accessToken = wxUtils.getWxToken(redisCache);
 		
 		HmOrderFdp order = hmOrderFdpService.selectHmOrderFdpById(orderId);
-		if(messageType == 1) { //未支付
-			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-			SysUser userObj = userService.selectUserById(order.getUserId());
-			ajax.success(wxUtils.sendPayMessage(accessToken, userObj.getWxOpenId(), "胎盘冻干粉", "未支付", order.getPriceOut().toString(), sdf.format(order.getSignDate())));
-		}
-		else if(messageType == 2) {
-			
+		SysUser userObj = userService.selectUserById(order.getUserId());
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+		
+		if(userObj.getWxOpenId() == null) {
+			ajax = AjaxResult.error("用户没有openid");
+			logger.info("用户没有openid");
+			return ajax;
 		}
 		
+		if(messageType == 1) { //未支付
+			String result = wxUtils.sendPayMessage(accessToken, userObj.getWxOpenId(), "胎盘冻干粉", "未支付", order.getPriceOut().toString(), sdf.format(order.getSignDate()));
+			logger.info(result);
+			ajax.success(result);
+		}
+		else if(messageType == 2) { //解约
+			HmOrderFdpReturn cond = new HmOrderFdpReturn();
+			cond.setOrderId(orderId);
+			List<HmOrderFdpReturn> list = hmOrderFdpReturnService.selectHmOrderFdpReturnList(cond);
+			if(list.size() > 0) {
+				HmOrderFdpReturn returnObj = list.get(0);
+				String result = wxUtils.sendReturnMessage(accessToken, userObj.getWxOpenId(), order.getOrderCode(), "胎盘冻干粉", order.getPriceOut().toString(), sdf.format(returnObj.getSignDate()));
+				logger.info(result);
+				ajax.success(result);
+			}
+			else {
+				ajax = AjaxResult.error("协议未解除");
+				logger.info("协议未解除");
+				return ajax;
+			}
+		}
 		return ajax;
 	}
     
