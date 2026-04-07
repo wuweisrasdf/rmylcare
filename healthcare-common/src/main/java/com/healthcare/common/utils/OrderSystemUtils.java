@@ -66,21 +66,23 @@ public class OrderSystemUtils {
 		return result;
 	}
 	
-	public JSONArray getOrderDetail(orderSystemConfig orderSystemConfig, String orderCode) throws Exception {
+	public JSONObject getOrderDetail(orderSystemConfig orderSystemConfig, String orderCode) throws Exception {
 		String interfaceName = "GetProtocolInfoV1";
-		String para = "{\"ProCode\":\"" + orderCode + "\"}";;
+		String para = "{\"ProCode\":\"" + orderCode + "\"}";
+		
 		
 		String result = send2OrderSystem(orderSystemConfig, interfaceName, para);
 		JSONObject returnObj = JSON.parseObject(result);
 		if(returnObj == null) {
 			throw new Exception("获取订单列表失败！");
 		}
-		String dataStr = returnObj.get("data").toString();
 		JSONObject dataObj = JSON.parseObject(returnObj.get("data").toString());
+		return dataObj;
+	}
+	
+	public JSONArray getOrderProgress(JSONObject dataObj) {
 		String progressStr = dataObj.getString("OrderProgress");
 		JSONArray jsonArray = JSONArray.parse(progressStr);
-
-		
     	return jsonArray;
 	}
 
@@ -102,8 +104,6 @@ public class OrderSystemUtils {
 			throw new Exception("获取订单列表失败！");
 		}
 		String dataStr = returnObj.get("data").toString();
-    	//String dataStr = "[{\"ProCode\":\"PFDP020023\",\"MotherName\":\"张灵\",\"HspId\":\"H0069\",\"HspName\":\"北京大学第三医院\",\"PreDate\":\"2026-04-01\",\"SignDate\":\"2026-02-05 00:00:00\",\"OrderStatus\":\"2\"}]";
-    	//String dataStr = "[{\"ProCode\":\"PFDP020022\",\"MotherName\":\"张灵\",\"HspId\":\"H0069\",\"HspName\":\"北京大学第三医院\",\"PreDate\":\"2026-04-01\",\"SignDate\":\"2026-02-05 00:00:00\",\"OrderStatus\":\"1\"},{\"ProCode\":\"PFDP020023\",\"MotherName\":\"张灵\",\"HspId\":\"H0069\",\"HspName\":\"北京大学第三医院\",\"PreDate\":\"2026-04-01\",\"SignDate\":\"2026-02-05 00:00:00\",\"OrderStatus\":\"2\"}]";
 		JSONArray jsonArray = JSONArray.parse(dataStr);
     	
     	List<OSOrder> orderList = new ArrayList<OSOrder>();
@@ -125,6 +125,41 @@ public class OrderSystemUtils {
     	}
 		return orderList;
 	}
+	
+	public JSONObject getShippingInfo(String orderCode, orderSystemConfig orderSystemConfig) throws Exception{
+		String interfaceName = "GetShippingInfoV1";
+
+		JSONObject para = new JSONObject();
+		para.put("ProCode", orderCode);
+		para.put("RefundType", 2);
+		
+		String result = send2OrderSystem(orderSystemConfig, interfaceName, para.toJSONString());
+		JSONObject returnObj = JSON.parseObject(result);
+		if(returnObj == null) {
+			throw new Exception("获取物流信息失败！");
+		}
+		JSONObject dataObj = JSON.parseObject(returnObj.get("data").toString());
+		return dataObj;
+	}
+	
+	public JSONObject syncRefund(String syncId, String orderCode, orderSystemConfig orderSystemConfig) throws Exception {
+		String interfaceName = "ConfirmRefundV1";
+		
+		JSONObject para = new JSONObject();
+		para.put("RefundId", syncId);
+		para.put("ProCode", orderCode);
+		para.put("ConfirmDate", DateUtils.getTime());
+
+		String result = send2OrderSystem(orderSystemConfig, interfaceName, para.toString());
+		
+		JSONObject returnObj = JSON.parseObject(result);
+		if(returnObj == null) {
+			throw new Exception("确认退款信息失败！");
+		}
+		
+		return returnObj;
+	}
+	
 	
     public String getStatusTxt(String id) {
     	Map<String, String> statusMap = new HashMap<String, String>();
