@@ -1,0 +1,73 @@
+<script>
+	import Vue from 'vue'
+	export default {
+		onLaunch: function() {
+			console.log('App onLaunch')
+			uni.getSystemInfo({
+				success: function(e) {
+					// #ifndef MP
+					Vue.prototype.StatusBar = e.statusBarHeight;
+					if (e.platform == 'android') {
+						Vue.prototype.CustomBar = e.statusBarHeight + 50;
+					} else {
+						Vue.prototype.CustomBar = e.statusBarHeight + 45;
+					}
+					// #endif
+
+					// #ifdef MP-WEIXIN
+					Vue.prototype.StatusBar = e.statusBarHeight;
+					let custom = wx.getMenuButtonBoundingClientRect();
+					Vue.prototype.Custom = custom;
+					Vue.prototype.CustomBar = custom.bottom + custom.top - e.statusBarHeight;
+					// #endif
+
+					// #ifdef MP-ALIPAY
+					Vue.prototype.StatusBar = e.statusBarHeight;
+					Vue.prototype.CustomBar = e.statusBarHeight + e.titleBarHeight;
+					// #endif
+				}
+			});
+			
+			//this.$store.dispatch('initUser'); // 初始化登录状态
+			this.init();
+		},
+		onShow: function() {
+			console.log('App Show')
+		},
+		onHide: function() {
+			console.log('App Hide')
+		},
+		methods: {
+			async init() {
+				const isLoggedIn = await this.$store.dispatch('initUser')
+				if (!isLoggedIn) {
+					const pages = getCurrentPages();
+					const currentRoute = pages.length > 0 ?
+						pages[pages.length - 1].route : '';
+
+					console.log('currentRoute', currentRoute)
+
+					// 白名单：这些页面允许未登录访问
+					const whiteList = [
+						'pages/login/login',
+						'pages/index/index',
+						'pages/index/scan',
+						'pages/product/promotion', // 产品宣传页
+						'pages/agreement/agreement', // 用户协议页
+						'pages/agreement/privacy' // 隐私政策页
+					];
+
+					// if (!whiteList.includes(currentRoute)) {
+					// 	uni.redirectTo({
+					// 		url: '/pages/login/login'
+					// 	});
+					// }
+				}
+			}
+		}
+	}
+</script>
+
+<style lang="scss">
+	@import "uview-ui/index.scss";
+</style>

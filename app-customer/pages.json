@@ -1,0 +1,227 @@
+{
+	"easycom": {
+		"^u-(.*)": "uview-ui/components/u-$1/u-$1.vue"
+	},
+	"pages": [ //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
+
+		// 首页 & 产品
+		// {
+		// 	"path": "pages/index/init",
+		// 	"style": {
+		// 		"navigationBarTitleText": "启动页",
+		// 		"navigationStyle": "custom"
+		// 	}
+		// },
+		{
+			"path": "pages/index/index",
+			"style": {
+				"navigationBarTitleText": "首页"
+			}
+		},
+		{
+			"path": "pages/index/scan",
+			"style": {
+				"navigationBarTitleText": "扫码解析页"
+			}
+		},
+		{
+			"path": "pages/product/promotion",
+			"style": {
+				"navigationBarTitleText": "首页宣传"
+			}
+		},
+
+		// 签约流程		
+		{
+			"path": "pages/index/intro",
+			"style": {
+				"navigationBarTitleText": "产品宣传页"
+			}
+		},
+		{
+			"path": "pages/sign/guide",
+			"style": {
+				"navigationBarTitleText": "签约引导"
+			}
+		},
+
+		{
+			"path": "pages/sign/form",
+			"style": {
+				"navigationBarTitleText": "填写信息"
+			}
+		},
+
+		{
+			"path": "pages/sign/agreement",
+			"style": {
+				"navigationBarTitleText": "服务协议"
+			}
+		},
+		{
+			"path": "pages/sign/auth",
+			"style": {
+				"navigationBarTitleText": "授权书"
+			}
+		},
+
+		{
+			"path": "pages/sign/signature",
+			"style": {
+				"navigationBarTitleText": "电子签名"
+				//	"pageOrientation": "landscape", // 必须是竖屏
+			}
+		},
+		{
+			"path": "pages/sign/confirm-price",
+			"style": {
+				"navigationBarTitleText": "确认费用"
+			}
+		},
+		{
+			"path": "pages/sign/success",
+			"style": {
+				"navigationBarTitleText": "签约成功"
+			}
+		},
+		{
+			"path": "pages/sign/pay-success",
+			"style": {
+				"navigationBarTitleText": "支付成功"
+			}
+		},
+		{
+			"path": "pages/sign/hospital-select",
+			"style": {
+				"navigationBarTitleText": "选择医院"
+			}
+		},
+		{
+			"path": "pages/middle/esign",
+			"style": {
+				"navigationBarTitleText": "刷脸加载"
+			}
+		},
+
+
+		// 订单
+		{
+			"path": "pages/order/order",
+			"style": {
+				"navigationBarTitleText": "我的订单",
+				// "enablePullDownRefresh": true,
+				"onReachBottomDistance": 50
+			}
+		},
+		{
+			"path": "pages/order/detail",
+			"style": {
+				"navigationBarTitleText": "订单详情"
+			}
+		},
+		{
+			"path": "pages/order/agreement",
+			"style": {
+				"navigationBarTitleText": "查看协议"
+			}
+		},
+		{
+			"path": "pages/invoice/invoice",
+			"style": {
+				"navigationBarTitleText": "发票管理"
+			}
+		},
+		{
+			"path": "pages/tracking/tracking",
+			"style": {
+				"navigationBarTitleText": "物流信息"
+			}
+		},
+
+		// 协议
+		{
+			"path": "pages/agreement/privacy",
+			"style": {
+				"navigationBarTitleText": "隐私政策"
+			}
+		},
+		{
+			"path": "pages/agreement/agreement",
+			"style": {
+				"navigationBarTitleText": "用户协议"
+			}
+		},
+
+		// 协议与退款
+		{
+			"path": "pages/refund/status",
+			"style": {
+				"navigationBarTitleText": "退款进度"
+			}
+		},
+		{
+			"path": "pages/refund/cancel-agreement",
+			"style": {
+				"navigationBarTitleText": "解约签字"
+			}
+		},
+		{
+			"path": "pages/refund/cancel-success",
+			"style": {
+				"navigationBarTitleText": "解约成功"
+			}
+		},
+		{
+			"path": "pages/refund/progress",
+			"style": {
+				"navigationBarTitleText": "退款处理中"
+			}
+		},
+
+		// 登录
+		{
+			"path": "pages/login/login",
+			"style": {
+				"navigationBarTitleText": "登录",
+				"navigationStyle": "custom"
+			}
+		},
+
+		// 个人中心
+		{
+			"path": "pages/me/profile",
+			"style": {
+				"navigationBarTitleText": "个人信息"
+			}
+		},
+		{
+			"path": "pages/me/me",
+			"style": {
+				"navigationBarTitleText": "我的"
+			}
+		},
+		{
+			"path": "pages/index/flow",
+			"style": {
+				"navigationBarTitleText": "扫码签约流程"
+			}
+		}
+
+	],
+	"globalStyle": {
+		"navigationBarTextStyle": "black",
+		"navigationBarTitleText": "智数健管",
+		"navigationBarBackgroundColor": "#ffffff",
+		"backgroundColor": "#f5f5f5",
+		"navigationStyle": "custom"
+	},
+	"uniIdRouter": {},
+	"mp-weixin": {
+		"privacy": {
+			"agreements": {
+				"user_agreement": "https://yourdomain.com/user-agreement.html",
+				"privacy_policy": "https://yourdomain.com/privacy-policy.html"
+			}
+		}
+	}
+}

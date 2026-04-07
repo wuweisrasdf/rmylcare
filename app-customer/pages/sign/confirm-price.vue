@@ -1,0 +1,389 @@
+<template>
+	<view class="container" :style="{ paddingTop: containerPaddingTop }">
+		<u-navbar :fixed="true" :autoBack="true" title="价格确认" leftIconSize="36" leftIconColor="#2C2C2C"
+			:titleStyle="{ fontWeight: 'bold', fontSize: '36rpx', color: '#2C2C2C' }">
+		</u-navbar>
+
+		<view class="content-container">
+			<view class="info">
+				<view class="item">
+					<text class="label">产品名称</text>
+					<text class="value">{{ productInfo.productName }}</text>
+				</view>
+
+				<!-- 分隔线 -->
+				<view class="divider"></view>
+
+				<!-- 服务费用 -->
+				<view class="item">
+					<text class="label">服务费用</text>
+					<view class="price-section">
+						<text class="price">¥{{ productInfo.price }}</text>
+
+					</view>
+				</view>
+
+				<view class="payment-type">
+					<text>一次性支付</text>
+				</view>
+
+			</view>
+		</view>
+
+		<!-- 底部按钮  -->
+		<view class="btn-group">
+			<u-button :custom-style="prevBtnStyle" @click="goPrev">
+				返回修改
+			</u-button>
+			<u-button :custom-style="nextBtnStyle" @click="submit">
+				确认价格，去签字
+			</u-button>
+		</view>
+	</view>
+</template>
+
+<script>
+	import * as api from '@/utils/api.js'
+	import {
+		mapState
+	} from 'vuex'
+
+	export default {
+		computed: {
+			...mapState({
+				user: state => state.user,
+				token: state => state.token,
+			}),
+			containerPaddingTop() {
+				const barHeight = (this.CustomBar || 0) * 2 + 'rpx';
+				return barHeight;
+			},
+			prevBtnStyle() {
+				return {
+					height: '98rpx',
+					borderRadius: '49rpx',
+					backgroundColor: '#FFFFFF',
+					border: '2px solid rgba(142,142,142,0.5)',
+					color: '#3D3D3D',
+					fontSize: '32rpx',
+					fontWeight: 'bold',
+					marginRight: '26rpx',
+				};
+			},
+			nextBtnStyle() {
+				return {
+					height: '98rpx',
+					borderRadius: '49rpx',
+					backgroundColor: '#4A63E4',
+					color: '#FFFFFF',
+					fontSize: '32rpx',
+					fontWeight: 'bold',
+				};
+			}
+		},
+		onLoad(options) {
+			if (options.fromOrder) {
+				this.fromOrder = options.fromOrder;
+			}
+
+			if (options.orderId) {
+				this.orderId = options.orderId;
+				
+				this.init();
+			}else{
+				uni.showToast({
+					title: "获取订单失败",
+					icon: 'none'
+				});
+			}
+			
+		},
+		onShow() {
+			// 改在签名页通过 @message 监听签字
+			// 如果刚从签署页返回，检查订单是否已签署
+			// if (this.isSigning) {
+			// 	// 增加一个提示框，避免直接跳转，会影响性能
+			// 	uni.showModal({
+			// 		title: '签署完成确认',
+			// 		content: '您已完成电子签署？',
+			// 		confirmText: '已完成',
+			// 		cancelText: '取消',
+			// 		success: (res) => {
+			// 			if (res.confirm) {
+			// 				// 用户点击“确认”
+			// 				this.checkIfSigned();
+			// 			} else if (res.cancel) {
+			// 				// 用户点击“取消”，可选：重置状态或不做处理
+			// 				this.isSigning = false;
+			// 			}
+			// 		},
+			// 		fail: (err) => {
+			// 			console.error('弹窗失败:', err);
+			// 			this.isSigning = false;
+			// 		}
+			// 	});
+			// }
+		},
+		data() {
+			return {
+				productInfo: {
+					id: '',
+					productName: '',
+					price: '',
+					navbar: '',
+					details: ''
+				},
+				userInfo: {}, // 甲方信息
+				motherInfo: {},
+				motherId: 0, // 产妇id
+				salesId: 0, // 销售id
+				orderId: '', // 订单id
+				orderInfo: {},
+				isSigning: false, // 标记是否刚从签署页返回
+				fromOrder: 0, // 从订单详情过来的
+			};
+		},
+		methods: {
+			async init() {
+				// 1. 获取产品信息（固定 productId = 1）
+				const productId = 1;
+				const productRes = await api.getProductById(productId);
+				if (productRes.code === 200) {
+					const data = productRes.data || {};
+					this.productInfo = {
+						id: data.id ?? '',
+						productName: data.productName || '',
+						price: data.price ?? '',
+						navbar: data.navbar || '',
+						details: data.details || ''
+					};
+				}
+				
+				// 2. 通过 orderId 获取订单，拿到 motherId
+				let motherId = null;
+				const orderRes = await api.getFdpOrder(this.orderId);
+				if (orderRes.code === 200 && orderRes.rows?.[0]) {
+					const order = orderRes.rows[0];
+					this.orderInfo = order;
+					motherId = order.motherId;
+					if (!motherId) {
+						uni.showToast({ title: '订单未关联产妇', icon: 'none' });
+						return;
+					}
+				} else {
+					uni.showToast({ title: '订单信息获取失败', icon: 'none' });
+					return;
+				}
+				
+				// 3. 获取产妇和甲方信息
+				const result = await api.getMotherAndUser();
+				if (result.code !== 200) {
+					uni.showToast({ title: '母亲和甲方加载失败', icon: 'none' });
+					return;
+				}
+				
+				console.log('result',result);
+				
+				// 4. 根据 motherId 精确查找产妇
+				let motherInfo = {};
+				if (Array.isArray(result.mother)) {
+					motherInfo = result.mother.find(m => String(m.id) === String(motherId)) || {};
+				}
+				this.motherInfo = motherInfo;
+				this.motherId = motherInfo.id || 0;
+			
+				// 5. 设置甲方（用户）信息
+				this.userInfo = result.user || {};
+			},
+			// 提交数据生成合同
+			async submit() {
+				this.getSignUrl();
+				
+			},
+			// 获取签名URL
+			async getSignUrl() {
+				if (!this.userInfo.nickName || !this.userInfo.phonenumber) {
+					uni.showToast({
+						title: "获取甲方信息失败",
+						icon: 'none'
+					});
+					return;
+				}
+
+				const orderId = this.orderId;
+				const params = {
+					orderId: orderId,
+					returnURL: "",
+					//returnURL: api.signReturnUrl,
+					signType: '1', // 签约=1，解约=2
+					signerName: this.userInfo.nickName, // 签约甲方的姓名
+					signerPhone: this.userInfo.phonenumber, // 签约甲方的手机号
+				}
+
+				uni.showLoading({
+					title: '正在生成签署链接...',
+					mask: true // 防止用户点击穿透
+				});
+
+				try {
+					const res = await api.getSignUrl(params);
+
+					uni.hideLoading();
+
+					if (res.code == 200) {
+						console.log('getSignUrl:', res)
+						if (res.signUrl) {
+							this.isSigning = true; // 标记即将进入签署流程
+							uni.redirectTo({
+								url: `/pages/sign/signature?signUrl=${encodeURIComponent(res.signUrl)}&orderId=${this.orderId}&type=1`
+							});
+							return;
+						}
+					}
+				} catch (err) {
+					uni.hideLoading();
+
+					console.log("签名失败：", err)
+					let errMsg = '';
+					
+					if (err && err.message) {
+					    // 大多数情况下，err.message 就是 "创建签署流程失败: ..."
+					    errMsg = err.message;
+					} else if (err && err.msg) {
+					    errMsg = err.msg;
+					} else if (err && err.data && err.data.msg) {
+					    errMsg = err.data.msg;
+					} else {
+					    errMsg = '签名失败，请稍后重试';
+					}
+					
+					uni.showToast({
+						title: errMsg,
+						icon: 'none',
+						duration: 5000
+					});
+				}
+			},
+			// 从e签宝回退后，检查是否签字成功
+			async checkIfSigned() {
+				try {
+					const orderId = this.orderId;
+
+					const res = await api.getFdpOrder(orderId);
+					if (res.code == 200 && res.rows.length > 0) {
+						const order = res.rows[0];
+						
+						this.isSigning = false;
+						
+						if (order.proStatus == 1) { // proStatus == 1 已签署
+
+							this.isSigning = false;
+							uni.redirectTo({
+								url: `/pages/sign/success?orderId=${this.orderId}`
+							});
+						} else {
+							// 如果未签署，提示用户
+							uni.showToast({
+								title: '未完成签署',
+								icon: 'none'
+							});
+							this.isSigning = false;
+						}
+						
+					}
+
+				} catch (err) {
+					console.error('检查签署状态失败:', err);
+					this.isSigning = false;
+				}
+			},
+			goPrev() {
+				// 返回产妇和甲方填写页
+				uni.redirectTo({
+					url: `/pages/sign/form?orderId=${this.orderId}`
+				})
+			}
+		}
+	};
+</script>
+
+<style lang="scss" scoped>
+	.container {
+		background-color: #ffffff;
+		padding: 0 26rpx;
+		min-height: 100vh;
+		box-sizing: border-box;
+		position: relative;
+		display: flex;
+		flex-direction: column;
+	}
+
+	.content-container {
+		flex: 1;
+		margin-top: 74rpx;
+		box-sizing: border-box;
+	}
+
+	.info {
+		background: #F6F7FC;
+		border-radius: 40rpx;
+		padding: 50rpx 40rpx;
+		box-sizing: border-box;
+		margin-bottom: 80rpx;
+
+		.item {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			margin-bottom: 40rpx;
+
+			.label {
+				font-weight: 500;
+				font-size: 30rpx;
+				color: #727272;
+			}
+
+			.value {
+				font-weight: 800;
+				font-size: 30rpx;
+				color: #151515;
+				flex: 1;
+				text-align: right;
+			}
+		}
+
+		.divider {
+			height: 2rpx;
+			background: #161421;
+			opacity: 0.1;
+			margin-bottom: 40rpx;
+		}
+
+		.price-section {
+			display: flex;
+			flex-direction: column;
+			align-items: flex-end;
+		}
+
+		.price {
+			font-weight: 800;
+			font-size: 44rpx;
+			color: #4A63E2;
+		}
+	}
+
+	.payment-type {
+		width: 100%;
+		text-align: right;
+		//font-weight: 500;
+		font-size: 24rpx;
+		color: #4A63E2;
+		margin-top: -10rpx;
+	}
+
+	.btn-group {
+		display: flex;
+		justify-content: space-between;
+		margin-bottom: 120rpx;
+	}
+</style>
