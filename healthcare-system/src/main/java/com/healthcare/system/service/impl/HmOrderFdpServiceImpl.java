@@ -56,6 +56,19 @@ public class HmOrderFdpServiceImpl implements IHmOrderFdpService
     {
         return hmOrderFdpMapper.selectHmOrderFdpMotherList(hmOrderFdp);
     }
+    
+    /**
+     * 查询20分钟还未支付的订单
+     * 
+     * @return 冻干粉订单
+     */
+    @Override
+    public List<HmOrderFdp> selectNotPayList()
+    {
+        return hmOrderFdpMapper.selectNotPayList();
+    }
+    
+    
 
     /**
      * 新增冻干粉订单
