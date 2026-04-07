@@ -36,6 +36,13 @@ public interface HmOrderFdpMapper
     public List<HmOrderFdp> selectHmOrderFdpMotherList(HmOrderFdp hmOrderFdp);
 
     /**
+     * 查询20分钟还未支付的订单
+     * 
+     * @return 冻干粉订单集合
+     */
+    public List<HmOrderFdp> selectNotPayList();
+    
+    /**
      * 新增冻干粉订单
      * 
      * @param hmOrderFdp 冻干粉订单
