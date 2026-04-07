@@ -1,37 +1,52 @@
 package com.healthcare.common.utils;
 
-import java.io.InputStream;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
-import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.security.PrivateKey;
-import java.security.Signature;
-import java.time.Instant;
-import java.util.Base64;
+import java.security.KeyManagementException;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.http.HttpHeaders;
-import org.apache.http.client.methods.CloseableHttpResponse;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+
+import org.apache.http.conn.socket.ConnectionSocketFactory;
+import org.apache.http.conn.socket.PlainConnectionSocketFactory;
+import org.apache.http.conn.ssl.DefaultHostnameVerifier;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.ContentType;
+import org.apache.http.config.RegistryBuilder;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.conn.BasicHttpClientConnectionManager;
 import org.apache.http.util.EntityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -39,21 +54,14 @@ import org.springframework.web.client.RestTemplate;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
-import com.github.binarywang.wxpay.bean.request.WxPayUnifiedOrderRequest;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.healthcare.common.config.RuoYiConfig;
 import com.healthcare.common.config.WxPayConfig;
-import com.healthcare.common.config.eSignConfig;
+import com.healthcare.common.core.domain.AjaxResult;
 import com.healthcare.common.core.redis.RedisCache;
 import com.healthcare.common.utils.http.HttpUtils;
 import com.healthcare.common.utils.uuid.UUID;
-
-import com.wechat.pay.java.service.payments.jsapi.model.PrepayRequest;
-import com.wechat.pay.java.core.util.PemUtil;
-import com.wechat.pay.java.service.payments.jsapi.model.Amount;
-import com.wechat.pay.java.service.payments.jsapi.model.Payer;
-import com.wechat.pay.java.service.payments.jsapi.model.PrepayWithRequestPaymentResponse;
 
 /**
  * 微信工具类
@@ -114,7 +122,7 @@ public class WxUtils
         jsonObject.put("check_path", false);
         String scene = ""+userId.toString()+"/"+qrToken;
         jsonObject.put("scene", scene);
-        System.out.print(scene);
+        //System.out.print(scene);
         //jsonObject.put("scene", "salesId="+userId.toString());
         String requestBody = jsonObject.toJSONString();
         
@@ -270,6 +278,110 @@ public class WxUtils
 	    return payParams; // 返回给小程序前端
 	}
 	
+	public AjaxResult createWeChatRefund(String orderNo, String syncId, BigDecimal amount, BigDecimal refund, WxPayConfig wxPayConfig) throws Exception {
+
+		// 1. 构建统一下单参数
+	    SortedMap<String, String> params = new TreeMap<>();
+	    params.put("appid", wxPayConfig.getAppid());              // 小程序的 AppID
+	    params.put("mch_id", wxPayConfig.getMerchantId());            // 商户号
+//	    params.put("sub_mch_id", wxPayConfig.getSubMchId());     // 子商户号（如无，可移除）
+	    params.put("nonce_str", WxPayUtils.generateNonceStr());
+	    params.put("out_trade_no", orderNo);
+	    params.put("out_refund_no", syncId);
+	    
+	    params.put("total_fee", amount.multiply(BigDecimal.valueOf(100)).intValue() + ""); // 单位：分
+	    params.put("refund_fee", refund.multiply(BigDecimal.valueOf(100)).intValue() + ""); // 单位：分
+
+	    //log.info("小程序微信下单参数: {}", params);
+
+	    // 2. 生成签名
+	    String sign = WxPayUtils.createSign(params, wxPayConfig.getApiV2Key());
+	    params.put("sign", sign);
+
+	    // 3. 带证书的https请求
+	    String xmlRequest = WxPayUtils.mapToXml(params);
+	    
+	    BasicHttpClientConnectionManager connManager = requestOnce(wxPayConfig);
+	    
+	    HttpClient httpClient = HttpClientBuilder.create()
+                .setConnectionManager(connManager)
+                .build();
+
+        String url = "https://api.mch.weixin.qq.com/secapi/pay/refund";
+        HttpPost httpPost = new HttpPost(url);
+
+        RequestConfig requestConfig = RequestConfig.custom().setSocketTimeout(8000).setConnectTimeout(8000).build();
+        httpPost.setConfig(requestConfig);
+        
+        String userAgent = "WXPaySDK/3.0.9"+
+        " (" + System.getProperty("os.arch") + " " + System.getProperty("os.name") + " " + System.getProperty("os.version") +
+        ") Java/" + System.getProperty("java.version") + " HttpClient/" + HttpClient.class.getPackage().getImplementationVersion();
+
+
+        StringEntity postEntity = new StringEntity(xmlRequest, "UTF-8");
+        httpPost.addHeader("Content-Type", "text/xml");
+        httpPost.addHeader("User-Agent", userAgent + " " + wxPayConfig.getMerchantId());
+        httpPost.setEntity(postEntity);
+
+        // 4. 发送请求
+        HttpResponse httpResponse = httpClient.execute(httpPost);
+        HttpEntity httpEntity = httpResponse.getEntity();
+        String responseXml = EntityUtils.toString(httpEntity, "UTF-8");
+
+	    // 5. 解析结果
+	    Map<String, String> result = WxPayUtils.xmlToMap(responseXml);
+	    //log.info("微信下单结果: {}", result);
+
+	    if (!"SUCCESS".equals(result.get("return_code")) || !"SUCCESS".equals(result.get("result_code"))) {
+	        String errMsg = result.get("err_code_des") != null ? result.get("err_code_des") : result.get("return_msg");
+	        return AjaxResult.error("微信退款失败: " + errMsg);
+	    }
+
+	    // 5. 返回 prepay_id（前端需要它来调起支付）
+	    return AjaxResult.success();
+	}
+	
+	private InputStream getCertStream() throws IOException, URISyntaxException {
+		String certFilePath = RuoYiConfig.getProfile()+"/apiclient_cert.p12";
+		File file = new File(certFilePath);
+		InputStream certStream = new FileInputStream(file);
+		return certStream;
+	}
+	
+	private BasicHttpClientConnectionManager requestOnce(WxPayConfig wxPayConfig) throws UnrecoverableKeyException, KeyStoreException, NoSuchAlgorithmException, IOException, URISyntaxException, CertificateException, KeyManagementException {
+		// 证书
+        char[] password = wxPayConfig.getMerchantId().toCharArray();
+        InputStream certStream = getCertStream();
+        KeyStore ks = KeyStore.getInstance("PKCS12");
+        ks.load(certStream, password);
+
+        // 实例化密钥库 & 初始化密钥工厂
+        KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+        kmf.init(ks, password);
+
+        // 创建 SSLContext
+        SSLContext sslContext = SSLContext.getInstance("TLS");
+        sslContext.init(kmf.getKeyManagers(), null, new SecureRandom());
+
+        SSLConnectionSocketFactory sslConnectionSocketFactory = new SSLConnectionSocketFactory(
+                sslContext,
+                null,
+                null,
+                new DefaultHostnameVerifier());
+
+        BasicHttpClientConnectionManager connManager = new BasicHttpClientConnectionManager(
+                RegistryBuilder.<ConnectionSocketFactory>create()
+                        .register("http", PlainConnectionSocketFactory.getSocketFactory())
+                        .register("https", sslConnectionSocketFactory)
+                        .build(),
+                null,
+                null,
+                null
+        );
+        return connManager;
+	}
+	
+	
 	public String getWxToken(RedisCache redisCache) throws Exception {
 		
 		String accessToken = "";
@@ -315,6 +427,7 @@ public class WxUtils
         SysWxMessage wxMssVo = new SysWxMessage();
         wxMssVo.setTouser(openId);
         wxMssVo.setTemplate_id(this.payTemplateId);
+        
         //wxMssVo.setPage(PAGE);
 
         // 构造消息内容（key-value 对应模板中的关键词）
@@ -330,12 +443,30 @@ public class WxUtils
         return response.getBody();
 	}
 	
-	//发送未支付消息
-	public String sendReturnMessage(String token, String OpenId, String orderCode, String orderPrice, String returnTime) {
-		
-		return "";
+	//发送解约消息
+	public String sendReturnMessage(String accessToken, String openId, String orderCode, String prodName, String orderPrice, String returnTime) {
+
+		RestTemplate restTemplate = new RestTemplate();
+
+        String url = "https://api.weixin.qq.com/cgi-bin/message/subscribe/send?access_token=" + accessToken;
+
+        SysWxMessage wxMssVo = new SysWxMessage();
+        wxMssVo.setTouser(openId);
+        wxMssVo.setTemplate_id(this.returnTemplateId);
+        //wxMssVo.setPage(PAGE);
+
+        // 构造消息内容（key-value 对应模板中的关键词）
+        Map<String, SysWxTempData> data = new HashMap<String, SysWxTempData>();
+        data.put("character_string1", new SysWxTempData(orderCode));
+        data.put("thing2", new SysWxTempData(prodName));
+        data.put("amount6", new SysWxTempData(orderPrice));
+        data.put("time10", new SysWxTempData(returnTime));
+        wxMssVo.setData(data);
+
+        ResponseEntity<String> response = restTemplate.postForEntity(url, wxMssVo, String.class);
+        return response.getBody();
 	}
-	
+
 	public String getAppId() {
 		return appId;
 	}
