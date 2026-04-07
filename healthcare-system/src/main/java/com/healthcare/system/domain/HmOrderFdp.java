@@ -32,11 +32,11 @@ public class HmOrderFdp extends BaseEntity
     private Integer recordStatus;
 
     /** 协议编号 —— 电子签返回 */
-    @Excel(name = "协议编号")
+    @Excel(name = "电子签约号")
     private String proCode;
     
     /** 合同编号 —— 系统自动编号 */
-    @Excel(name = "合同编号")
+    @Excel(name = "协议编号")
     public String orderCode;
     
 
@@ -59,19 +59,17 @@ public class HmOrderFdp extends BaseEntity
     private Long userId;
     
     /** 销售ID */
-    @Excel(name = "销售ID")
     private Long salesId;
     
     /** 销售姓名 */
-    @Excel(name = "销售姓名")
+    @Excel(name = "销售")
     private String salesName;
     
     /** 产妇ID */
-    @Excel(name = "产妇ID")
     private Long motherId;
     
     /** 姓名 */
-    @Excel(name = "姓名")
+    @Excel(name = "产妇姓名")
     private String motherName;
     
     /** 产妇证件类型 */
@@ -87,7 +85,7 @@ public class HmOrderFdp extends BaseEntity
     private String motherPhonenumber;
     
     /** 同步标志 */
-    @Excel(name = "同步标志")
+    @Excel(name = "同步状态")
     private Integer syncFlag;
     
     ////////////////////////////////
@@ -108,7 +106,7 @@ public class HmOrderFdp extends BaseEntity
     private String userName;
 
     /** 手机号 */
-    @Excel(name = "手机号")
+    @Excel(name = "甲方电话")
     private String phonenumber;
 
     /** 证件类型(1-身份证、2-护照、3-永久居留身份证、4-台湾来往大陆通行证、5-香港来往大陆通行证、6-澳门来往大陆通行证、10-其它) */
@@ -150,8 +148,10 @@ public class HmOrderFdp extends BaseEntity
     private BigDecimal priceOut;
     
     /** 退款金额 */
-    @Excel(name = "退款金额")
     private BigDecimal amountRefund;
+    
+    /** 发票是否上传 */
+    private boolean invoiceUploaded = false;
     
     /** 预产期查询条件1 */
     private Date dueDateBegin;
@@ -451,6 +451,13 @@ public class HmOrderFdp extends BaseEntity
 	}
 	public void setSalesName(String salesName) {
 		this.salesName = salesName;
+	}
+	
+	public boolean isInvoiceUploaded() {
+		return invoiceUploaded;
+	}
+	public void setInvoiceUploaded(boolean invoiceUploaded) {
+		this.invoiceUploaded = invoiceUploaded;
 	}
 
 	@Override

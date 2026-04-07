@@ -1,6 +1,9 @@
 package com.healthcare.system.domain;
 
 import java.math.BigDecimal;
+
+import javax.validation.constraints.Pattern;
+
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import com.healthcare.common.annotation.Excel;
@@ -24,11 +27,9 @@ public class HmProduct extends BaseEntity
     private String productName;
 
     /** 导航栏小图 */
-    @Excel(name = "导航栏小图")
     private String navbar;
 
     /** 详情页大图 */
-    @Excel(name = "详情页大图")
     private String details;
 
     /** 价格 */

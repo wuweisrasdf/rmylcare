@@ -23,7 +23,6 @@ public class HmOrderFdpReturn extends BaseEntity
     private Long id;
 
     /** 冻干粉合同ID */
-    @Excel(name = "冻干粉合同ID")
     private Long orderId;
 
     /** 状态（1-申请,2-已退,3-取消） */
@@ -34,9 +33,9 @@ public class HmOrderFdpReturn extends BaseEntity
     @Excel(name = "退款金额")
     private BigDecimal price;
 
-    /** 签约日期 */
+    /** 解约日期 */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    @Excel(name = "签约日期", width = 30, dateFormat = "yyyy-MM-dd HH:mm:ss")
+    @Excel(name = "解约日期", width = 30, dateFormat = "yyyy-MM-dd HH:mm:ss")
     private Date signDate;
     
     /** 电子签约号 */

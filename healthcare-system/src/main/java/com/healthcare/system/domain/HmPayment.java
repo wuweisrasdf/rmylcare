@@ -23,7 +23,6 @@ public class HmPayment extends BaseEntity
     private Long id;
 
     /** 订单ID */
-    @Excel(name = "订单ID")
     private Long orderId;
     
     /** 协议编号 */
