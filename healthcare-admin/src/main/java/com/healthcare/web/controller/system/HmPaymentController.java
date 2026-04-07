@@ -3,6 +3,7 @@ package com.healthcare.web.controller.system;
 import java.util.List;
 import javax.servlet.http.HttpServletResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.BindingResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,6 +17,7 @@ import com.healthcare.common.annotation.Log;
 import com.healthcare.common.core.controller.BaseController;
 import com.healthcare.common.core.domain.AjaxResult;
 import com.healthcare.common.enums.BusinessType;
+import com.healthcare.system.domain.HmOrderFdp;
 import com.healthcare.system.domain.HmPayment;
 import com.healthcare.system.service.IHmPaymentService;
 
@@ -42,8 +44,15 @@ public class HmPaymentController extends BaseController
      */
     @PreAuthorize("@ss.hasPermi('system:payment:list')")
     @GetMapping("/list")
-    public TableDataInfo list(HmPayment hmPayment)
+    public TableDataInfo list(HmPayment hmPayment,BindingResult result)
     {
+	    if (result.hasErrors()) {
+	        result.getAllErrors();
+	        TableDataInfo returnErr = new TableDataInfo();
+	        returnErr.setCode(500);
+	        returnErr.setMsg("查询条件的类型不匹配:请输入数字!");
+	        return returnErr;
+	    }
         startPage();
         List<HmPayment> list = hmPaymentService.selectHmPaymentList(hmPayment);
         return getDataTable(list);
@@ -58,6 +67,9 @@ public class HmPaymentController extends BaseController
     public void export(HttpServletResponse response, HmPayment hmPayment)
     {
         List<HmPayment> list = hmPaymentService.selectHmPaymentList(hmPayment);
+        for(HmPayment obj : list) {
+        	obj.setOrderCode(obj.getOrderCode());
+        }
         ExcelUtil<HmPayment> util = new ExcelUtil<HmPayment>(HmPayment.class);
         util.exportExcel(response, list, "付款单数据");
     }
