@@ -10,6 +10,7 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.BindingResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -78,11 +79,35 @@ public class HmOrderFdpController extends BaseController
      */
     @GetMapping("/list")
     @ApiOperation("冻干粉订单列表")
-    public TableDataInfo list(HmOrderFdp hmOrderFdp) throws Exception
+    public TableDataInfo list(HmOrderFdp hmOrderFdp,BindingResult result) throws Exception
     {
+	    if (result.hasErrors()) {
+	        result.getAllErrors();
+	        TableDataInfo returnErr = new TableDataInfo();
+	        returnErr.setCode(500);
+	        returnErr.setMsg("查询条件的类型不匹配:请输入数字!");
+	        return returnErr;
+	    }
+	    
         startPage();
         if(hmOrderFdp.orderCode != null) {
-        	Long id = Long.parseLong(hmOrderFdp.orderCode.substring(6));
+        	String tmpStr = hmOrderFdp.orderCode.replace("P", "");
+        	tmpStr = tmpStr.replace("F", "");
+        	tmpStr = tmpStr.replace("D", "");
+        	Long id = 0L;
+        	try {
+        		id = Long.parseLong(tmpStr);        		
+        	}
+        	catch(NumberFormatException e) {
+        		;
+        	}
+        	
+        	if(id > 30000) {
+        		id -= 30000;
+        	}
+        	else if(id > 20000){
+        		id -= 20000;
+        	}
         	hmOrderFdp.setId(id);
         }
         TableDataInfo list = this.list4user(hmOrderFdp);
@@ -135,14 +160,18 @@ public class HmOrderFdpController extends BaseController
         }
         
         //如果是订单详情
-        if(hmOrderFdp.getId() != null) {
+        if(hmOrderFdp.getId() != null && list.size() > 0) {
         	SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         	HmOrderFdp tmpObj = list.get(0);
         	List<Map<String, String>> progressList = new ArrayList<Map<String, String>>();
         	if(tmpObj.getSyncFlag() == 1) {
         		OrderSystemUtils orderSystemUtils = new OrderSystemUtils();
                 orderSystemUtils.redisCache = redisCache;
-                JSONArray progress = orderSystemUtils.getOrderDetail(orderSystemConfig, tmpObj.getOrderCode());
+                JSONObject dataObj = orderSystemUtils.getOrderDetail(orderSystemConfig, tmpObj.getOrderCode());
+                String IsInvoiceUpload = dataObj.get("IsInvoiceUpload").toString();
+                if("1".equals(IsInvoiceUpload))
+                	tmpObj.setInvoiceUploaded(true);
+                JSONArray progress = orderSystemUtils.getOrderProgress(dataObj);
                 //"OrderProgress":[{"Id":"1","OrderName":"已签约","Status":"1","StatusDate":"2026-02-09","Desc":"签约已完成"},{"Id":"2","OrderName":"已付款","Status":"1","StatusDate":"2026-02-09","Desc":"支付已完成"},{"Id":"3","OrderName":"样本接收","Status":"1","StatusDate":"2026-02-09","Desc":"样本已送达处理中心"},{"Id":"4","OrderName":"病毒检测","Status":"0","StatusDate":"","Desc":"病毒检测已完成"},{"Id":"5","OrderName":"制备完成","Status":"0","StatusDate":"","Desc":"产品已制备完成"},{"Id":"6","OrderName":"配送","Status":"0","StatusDate":"","Desc":"产品已发出，请关注物流"},{"Id":"7","OrderName":"已完成","Status":"0","StatusDate":"","Desc":"产品已签收"}]
                 Map<String, String> progObj1 = new HashMap<String, String>();
                 progObj1.put("Id", "0");
@@ -190,7 +219,6 @@ public class HmOrderFdpController extends BaseController
         		}
         	}
         	tmpObj.setOrderProgress(progressList);
-        	
         	tmpObj = doFirstPart(tmpObj);
         	
         	//详情页需要加入是否已经签署解约 
@@ -208,7 +236,7 @@ public class HmOrderFdpController extends BaseController
         	list.set(0,  tmpObj);
         }
         
-        return getDataTable(list );
+        return getDataTable(list);
     }
     
     private HmOrderFdp doFirstPart(HmOrderFdp tmpObj) {
@@ -244,13 +272,18 @@ public class HmOrderFdpController extends BaseController
 
     /**
      * 导出冻干粉订单列表
+     * @throws Exception 
      */
     @PreAuthorize("@ss.hasPermi('system:fdp:export')")
     @Log(title = "冻干粉订单", businessType = BusinessType.EXPORT)
     @PostMapping("/export")
-    public void export(HttpServletResponse response, HmOrderFdp hmOrderFdp)
+    public void export(HttpServletResponse response, HmOrderFdp hmOrderFdp) throws Exception
     {
-        List<HmOrderFdp> list = hmOrderFdpService.selectHmOrderFdpList(hmOrderFdp);
+    	TableDataInfo tab = this.list4user(hmOrderFdp);
+        List<HmOrderFdp> list = (List<HmOrderFdp>) tab.getRows();
+        for(HmOrderFdp obj : list) {
+        	obj.setOrderCode(obj.getOrderCode());
+        }
         ExcelUtil<HmOrderFdp> util = new ExcelUtil<HmOrderFdp>(HmOrderFdp.class);
         util.exportExcel(response, list, "冻干粉订单数据");
     }
@@ -281,7 +314,7 @@ public class HmOrderFdpController extends BaseController
 	    ajax.put("hospitalList", hospitalList);
 	    return ajax;
     }
-
+    
     /**
      * 新增冻干粉订单
      */
