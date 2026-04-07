@@ -56,4 +56,3 @@ export const getProductById = (id) => { return $H.get(`${$C.baseUrl}/system/prod
 
 // 查看顺丰快递接口
 export const getLogistics = (orderId) => { return $H.post(`${$C.baseUrl}/interface/sf/orderTracking?orderId=${orderId}`) };
-
