@@ -6,7 +6,11 @@ import java.util.Collection;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -16,10 +20,15 @@ import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.healthcare.common.config.orderSystemConfig;
 import com.healthcare.common.core.controller.BaseController;
+import com.healthcare.common.core.domain.AjaxResult;
 import com.healthcare.common.core.domain.entity.SysUser;
 import com.healthcare.common.core.redis.RedisCache;
+import com.healthcare.common.utils.DateUtils;
 import com.healthcare.common.utils.OrderSystemUtils;
+import com.healthcare.system.domain.HmDeliveryAddress;
 import com.healthcare.system.domain.HmHospital;
+import com.healthcare.system.domain.HmInvoice;
+import com.healthcare.system.domain.HmMotherUser;
 import com.healthcare.system.domain.HmOrderFdp;
 import com.healthcare.system.domain.HmOrderFdpReturn;
 import com.healthcare.system.domain.HmPayment;
@@ -143,7 +152,7 @@ public class OrderSystemController extends BaseController
 			else
 				logger.info("sync false:orderreturnId="+orderReturn.getId()+"["+orderReturn.getProCode()+"]");
 		}
-		
+	
 		return "sync finished!";
 	}
 	
@@ -325,5 +334,173 @@ public class OrderSystemController extends BaseController
 	    }
 	    return "H0000";
 	}
-
+	
+	/**
+     * 从订单系统 获取收货地址
+	 * @throws Exception 
+     */
+	@ApiOperation("获取收货地址")
+	@GetMapping(value = "getDeliveryAddress/{orderId}")
+	public AjaxResult getDeliveryAddress(@PathVariable("orderId") Long orderId) throws Exception {
+		AjaxResult ajax = AjaxResult.success();
+		init();
+		//取合同编号
+		HmOrderFdp orderObj = hmOrderFdpService.selectHmOrderFdpById(orderId);
+		String orderCode = orderObj.getOrderCode();
+		JSONObject para = new JSONObject();
+		para.put("ProCode", orderCode);
+		
+		String result = orderSystemUtils.send2OrderSystem(orderSystemConfig, "GetCneeAddrV1", para.toString());
+		JSONObject returnObj = JSON.parseObject(result);
+		if(returnObj == null) {
+			throw new Exception("获取收货地址失败["+orderObj.getOrderCode()+"]！");
+		}
+		//{"code":"1","msg":"成功","data":{"CneeName":"王越","CneeTel":"18600581569","CneeAddr":"北京市朝阳区"}}
+		if(returnObj.get("code").equals("1") && returnObj.get("msg").equals("成功")) {
+			JSONObject dataObj = JSON.parseObject(returnObj.get("data").toString());
+			ajax.put("consignee", dataObj.getString("CneeName"));
+			ajax.put("contactNumber", dataObj.getString("CneeTel"));
+			ajax.put("deliveryAddress", dataObj.getString("CneeAddr"));
+		}
+		else {
+			ajax = AjaxResult.error(returnObj.get("msg").toString());
+		}
+		return ajax;
+	}
+	
+	/**
+     * 订单系统 更新收货地址
+	 * @throws Exception 
+     */
+	@ApiOperation("更新收货地址")
+	@PutMapping(value = "/updateDeliveryAddress")
+	public AjaxResult updateDeliveryAddress(@RequestBody HmDeliveryAddress user) throws Exception {
+		AjaxResult ajax = AjaxResult.success();
+		init();
+		//取合同编号
+		HmOrderFdp orderObj = hmOrderFdpService.selectHmOrderFdpById(user.getOrderId());
+		String orderCode = orderObj.getOrderCode();
+		JSONObject para = new JSONObject();
+		para.put("ProCode", orderCode);
+		para.put("CneeName", user.getConsignee());
+		para.put("CneeTel", user.getContactNumber());
+		para.put("CneeAddr", user.getDeliveryAddress());
+		para.put("UpdDate", DateUtils.getTime());
+		
+		String result = orderSystemUtils.send2OrderSystem(orderSystemConfig, "UpdCneeAddrV1", para.toString());
+		JSONObject returnObj = JSON.parseObject(result);
+		if(returnObj == null) {
+			throw new Exception("更新收货地址失败["+orderObj.getOrderCode()+"]！");
+		}
+		//{"code":"1","msg":"成功","data":{"CneeName":"王越","CneeTel":"18600581569","CneeAddr":"北京市朝阳区"}}
+		if(returnObj.get("code").equals("1") && returnObj.get("msg").equals("成功")) {
+			return ajax;
+		}
+		else {
+			ajax = AjaxResult.error(returnObj.get("msg").toString());
+		}
+		return ajax;
+	}
+	
+	
+	/**
+     * 从订单系统 获取发票信息
+	 * @throws Exception 
+     */
+	@ApiOperation("获取获取发票信息")
+	@GetMapping(value = "getInvoice/{orderId}")
+	public AjaxResult getInvoice(@PathVariable("orderId") Long orderId) throws Exception {
+		AjaxResult ajax = AjaxResult.success();
+		init();
+		//取合同编号
+		HmOrderFdp orderObj = hmOrderFdpService.selectHmOrderFdpById(orderId);
+		String orderCode = orderObj.getOrderCode();
+		JSONObject para = new JSONObject();
+		para.put("ProCode", orderCode);
+		
+		String result = orderSystemUtils.send2OrderSystem(orderSystemConfig, "GetInvoiceV1", para.toString());
+		JSONObject returnObj = JSON.parseObject(result);
+		if(returnObj == null) {
+			throw new Exception("获取发票信息失败["+orderObj.getOrderCode()+"]！");
+		}
+		//{"code":"1","msg":"成功","data":{"CneeName":"王越","CneeTel":"18600581569","CneeAddr":"北京市朝阳区"}}
+		if(returnObj.get("code").equals("1") && returnObj.get("msg").equals("成功")) {
+			JSONObject dataObj = JSON.parseObject(returnObj.get("data").toString());
+			ajax.put("invoiceType", dataObj.getString("BuyerType"));
+			ajax.put("invoiceTitle", dataObj.getString("BuyerName"));
+			ajax.put("taxId", dataObj.getString("TaxId"));
+			ajax.put("email", dataObj.getString("Email"));
+		}
+		else {
+			ajax = AjaxResult.error(returnObj.get("msg").toString());
+		}
+		return ajax;
+	}
+	
+	/**
+     * 订单系统 更新发票信息
+	 * @throws Exception 
+     */
+	@ApiOperation("更新发票信息")
+	@PutMapping(value = "/updateInvoice")
+	public AjaxResult updateInvoice(@RequestBody HmInvoice invoice) throws Exception {
+		AjaxResult ajax = AjaxResult.success();
+		init();
+		//取合同编号
+		HmOrderFdp orderObj = hmOrderFdpService.selectHmOrderFdpById(invoice.getOrderId());
+		String orderCode = orderObj.getOrderCode();
+		JSONObject para = new JSONObject();
+		para.put("ProCode", orderCode);
+		para.put("BuyerType", invoice.getInvoiceType());
+		para.put("BuyerName", invoice.getInvoiceTitle());
+		para.put("TaxId", invoice.getTaxId());
+		para.put("Email", invoice.getEmail());
+		para.put("UpdDate", DateUtils.getTime());
+		
+		String result = orderSystemUtils.send2OrderSystem(orderSystemConfig, "UpdInvoiceV1", para.toString());
+		JSONObject returnObj = JSON.parseObject(result);
+		if(returnObj == null) {
+			throw new Exception("更新发票信息失败["+orderObj.getOrderCode()+"]！");
+		}
+		//{"code":"1","msg":"成功","data":{"CneeName":"王越","CneeTel":"18600581569","CneeAddr":"北京市朝阳区"}}
+		if(returnObj.get("code").equals("1") && returnObj.get("msg").equals("成功")) {
+			return ajax;
+		}
+		else {
+			ajax = AjaxResult.error(returnObj.get("msg").toString());
+		}
+		return ajax;
+	}
+	
+	/**
+     * 订单系统 发送电子发票
+	 * @throws Exception 
+     */
+	@ApiOperation("发送电子发票")
+	@PostMapping("/sendInvoice")
+	public AjaxResult sendInvoice(@RequestBody HmInvoice invoice) throws Exception {
+		AjaxResult ajax = AjaxResult.success();
+		init();
+		//取合同编号
+		HmOrderFdp orderObj = hmOrderFdpService.selectHmOrderFdpById(invoice.getOrderId());
+		String orderCode = orderObj.getOrderCode();
+		JSONObject para = new JSONObject();
+		para.put("ProCode", orderCode);
+		para.put("Email", invoice.getEmail());
+	
+		String result = orderSystemUtils.send2OrderSystem(orderSystemConfig, "SendInvoiceEmailV1", para.toString());
+		JSONObject returnObj = JSON.parseObject(result);
+		if(returnObj == null) {
+			throw new Exception("发送电子发票失败["+orderObj.getOrderCode()+"]！");
+		}
+		//{"code":"1","msg":"成功","data":{"CneeName":"王越","CneeTel":"18600581569","CneeAddr":"北京市朝阳区"}}
+		if(returnObj.get("code").equals("1") && returnObj.get("msg").equals("成功")) {
+			return ajax;
+		}
+		else {
+			ajax = AjaxResult.error(returnObj.get("msg").toString());
+		}
+		return ajax;
+	}
+	
 }
