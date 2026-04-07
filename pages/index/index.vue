@@ -30,19 +30,7 @@
 							<text class="btn-text">胎盘冻干粉</text>
 						</view>
 					</view>
-
-					<view class="btn-card" @click="goToPromotion(1)">
-						<text class="btn-title">评估个人患病风险</text>
-						<view class="btn-content">
-							<image src="/static/icons/wave.png" class="btn-icon" mode="aspectFit" />
-							<text class="btn-text">基因检测</text>
-						</view>
-					</view>
-
-				</view>
-
-				<!-- 第二行：新增的卡片 (左对齐) -->
-				<view class="btn-row single-card-row">
+					
 					<view class="btn-card" @click="goToPromotion(2)">
 						<text class="btn-title">唤醒肌肤神奇之旅</text>
 						<view class="btn-content">
@@ -50,7 +38,27 @@
 							<text class="btn-text">细胞囊泡</text>
 						</view>
 					</view>
+
+<!-- 					<view class="btn-card" @click="goToPromotion(1)">
+						<text class="btn-title">评估个人患病风险</text>
+						<view class="btn-content">
+							<image src="/static/icons/wave.png" class="btn-icon" mode="aspectFit" />
+							<text class="btn-text">基因检测</text>
+						</view>
+					</view> -->
+
 				</view>
+
+				<!-- 第二行：新增的卡片 (左对齐) -->
+<!-- 				<view class="btn-row single-card-row">
+					<view class="btn-card" @click="goToPromotion(2)">
+						<text class="btn-title">唤醒肌肤神奇之旅</text>
+						<view class="btn-content">
+							<image src="/static/icons/molecule.png" class="btn-icon" mode="aspectFit" />
+							<text class="btn-text">细胞囊泡</text>
+						</view>
+					</view>
+				</view> -->
 			</view>
 		</view>
 
