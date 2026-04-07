@@ -1,19 +1,21 @@
 package com.healthcare.common.utils;
 
-import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Scanner;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
-import java.util.*;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.springframework.util.DigestUtils;
 import org.w3c.dom.Document;
-
-import javax.xml.parsers.DocumentBuilder;
-
-
-import java.nio.charset.StandardCharsets;
-import java.util.stream.Collectors;
 
 public class WxPayUtils {
 
